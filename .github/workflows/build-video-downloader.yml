@@ -1,0 +1,282 @@
+name: Multi-Platform Build and Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-onedir:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python 3.12.3
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12.3'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+        
+    - name: Build Windows Portable (--onedir)
+      run: |
+        Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
+        python -m PyInstaller `
+          --onedir `
+          --windowed `
+          --noupx `
+          --name "mt-vdl" `
+          --paths="./src" `
+          --icon="src/mediatools/video/downloader/assets/icon.ico" `
+          --add-data="src/mediatools/video/downloader/data;data" `
+          --add-data="src/mediatools/video/downloader/bin;bin" `
+          --add-data="src/mediatools/video/downloader/utils/cleanup_files.bat;utils" `
+          --add-data="src/mediatools/video/downloader/assets;assets" `
+          --add-data="src/mediatools/video/downloader/assets/*.gif;assets" `
+          --add-data="docs/UserGuide.pdf;docs" `
+          --add-data="README.md;docs" `
+          --add-data="LICENSE;docs" `
+          --hidden-import=mediatools `
+          --hidden-import=mediatools.video.downloader `
+          --hidden-import=mediatools.video.downloader.core `
+          --hidden-import=mediatools.video.downloader.gui `
+          --hidden-import=mediatools.video.downloader.utils `
+          --hidden-import=mediatools.video.downloader.compat `
+          --clean `
+          launch.py
+        
+    - name: Create Windows Portable ZIP
+      run: |
+        $mainFolder = "mt-vdl-Windows-Portable"
+        New-Item -ItemType Directory -Path $mainFolder -Force
+        Copy-Item -Path "dist\mt-vdl\*" -Destination $mainFolder\ -Recurse -Force
+        Compress-Archive -Path "$mainFolder" -DestinationPath "mt-vdl-Windows-Portable.zip" -Force
+        Remove-Item -Recurse -Force $mainFolder
+        
+    - name: Upload Windows Portable Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: mt-vdl-Windows-Portable
+        path: mt-vdl-Windows-Portable.zip
+
+  build-windows-onefile:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python 3.12.3
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12.3'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+        
+    - name: Build Windows Single File (--onefile)
+      run: |
+        Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
+        python -m PyInstaller `
+          --onefile `
+          --windowed `
+          --noupx `
+          --name "mt-vdl" `
+          --paths="./src" `
+          --icon="src/mediatools/video/downloader/assets/icon.ico" `
+          --add-data="src/mediatools/video/downloader/data;data" `
+          --add-data="src/mediatools/video/downloader/bin;bin" `
+          --add-data="src/mediatools/video/downloader/utils/cleanup_files.bat;utils" `
+          --add-data="src/mediatools/video/downloader/assets;assets" `
+          --add-data="docs/UserGuide.pdf;docs" `
+          --add-data="README.md;docs" `
+          --add-data="LICENSE;docs" `
+          --hidden-import=mediatools `
+          --hidden-import=mediatools.video.downloader `
+          --hidden-import=mediatools.video.downloader.core `
+          --hidden-import=mediatools.video.downloader.gui `
+          --hidden-import=mediatools.video.downloader.utils `
+          --hidden-import=mediatools.video.downloader.compat `
+          --clean `
+          launch.py
+        
+    - name: Upload Windows Single File Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: mt-vdl-Windows.exe
+        path: dist/mt-vdl.exe
+
+  build-linux-onedir:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python 3.12.3
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12.3'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+        
+    - name: Build Linux Portable (--onedir)
+      run: |
+        rm -rf build dist
+        python -m PyInstaller \
+          --onedir \
+          --windowed \
+          --name "mt-vdl" \
+          --paths="./src" \
+          --icon="src/mediatools/video/downloader/assets/icon.ico" \
+          --add-data="src/mediatools/video/downloader/data:data" \
+          --add-data="src/mediatools/video/downloader/bin:bin" \
+          --add-data="src/mediatools/video/downloader/utils/cleanup_files.sh:utils" \
+          --add-data="src/mediatools/video/downloader/assets:assets" \
+          --add-data="src/mediatools/video/downloader/assets/*.gif:assets" \
+          --add-data="docs/UserGuide.pdf:docs" \
+          --add-data="README.md:docs" \
+          --add-data="LICENSE:docs" \
+          --hidden-import=mediatools \
+          --hidden-import=mediatools.video.downloader \
+          --hidden-import=mediatools.video.downloader.core \
+          --hidden-import=mediatools.video.downloader.gui \
+          --hidden-import=mediatools.video.downloader.utils \
+          --hidden-import=mediatools.video.downloader.compat \
+          --clean \
+          launch.py
+        
+    - name: Create Linux Portable ZIP
+      run: |
+        mkdir -p mt-vdl-Linux-Portable
+        cp -r dist/mt-vdl/* mt-vdl-Linux-Portable/
+        zip -r mt-vdl-Linux-Portable.zip mt-vdl-Linux-Portable/
+        rm -rf mt-vdl-Linux-Portable
+        
+    - name: Upload Linux Portable Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: mt-vdl-Linux-Portable
+        path: mt-vdl-Linux-Portable.zip
+
+  build-linux-onefile:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python 3.12.3
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12.3'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+        
+    - name: Build Linux Single File (--onefile)
+      run: |
+        rm -rf build dist
+        python -m PyInstaller \
+          --onefile \
+          --windowed \
+          --name "mt-vdl" \
+          --paths="./src" \
+          --icon="src/mediatools/video/downloader/assets/icon.ico" \
+          --add-data="src/mediatools/video/downloader/data:data" \
+          --add-data="src/mediatools/video/downloader/bin:bin" \
+          --add-data="src/mediatools/video/downloader/utils/cleanup_files.sh:utils" \
+          --add-data="src/mediatools/video/downloader/assets:assets" \
+          --add-data="docs/UserGuide.pdf:docs" \
+          --add-data="README.md:docs" \
+          --add-data="LICENSE:docs" \
+          --hidden-import=mediatools \
+          --hidden-import=mediatools.video.downloader \
+          --hidden-import=mediatools.video.downloader.core \
+          --hidden-import=mediatools.video.downloader.gui \
+          --hidden-import=mediatools.video.downloader.utils \
+          --hidden-import=mediatools.video.downloader.compat \
+          --clean \
+          launch.py
+        
+    - name: Upload Linux Single File Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: mt-vdl-Linux
+        path: dist/mt-vdl
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [build-windows-onedir, build-windows-onefile, build-linux-onedir, build-linux-onefile]
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+      
+    - name: Prepare release files
+      run: |
+        # Copy and rename files
+        cp artifacts/mt-vdl-Linux-Portable/mt-vdl-Linux-Portable.zip .
+        cp artifacts/mt-vdl-Windows-Portable/mt-vdl-Windows-Portable.zip .
+        cp artifacts/mt-vdl-Windows.exe/mt-vdl.exe mt-vdl-Windows.exe
+        cp artifacts/mt-vdl-Linux/mt-vdl mt-vdl-Linux
+        
+        # Make Linux executable executable
+        chmod +x mt-vdl-Linux
+        
+        echo "✅ Release files prepared:"
+        ls -la mt-vdl-Windows-Portable.zip mt-vdl-Windows.exe mt-vdl-Linux-Portable.zip mt-vdl-Linux
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ github.run_number }}
+        name: "MediaTools Video Downloader v${{ github.run_number }}"
+        body: |
+          # MediaTools Video Downloader
+          
+          Cross-platform video downloader application built from source.
+          
+          ## Available Downloads:
+          
+          ### Windows
+          1. **mt-vdl-Windows-Portable.zip** - Portable folder (--onedir)
+            - Contains `mt-vdl.exe` + all dependencies
+            - Extract and run `mt-vdl.exe`
+            
+          2. **mt-vdl-Windows.exe** - Single executable (--onefile)
+            - Single file, self-contained
+            - Run directly
+            
+          ### Linux
+          3. **mt-vdl-Linux-Portable.zip** - Portable folder (--onedir)
+            - Contains `mt-vdl` binary + all dependencies
+            - Extract and run `./mt-vdl`
+            
+          4. **mt-vdl-Linux** - Single executable (--onefile)
+            - Single binary file
+            - Run with `./mt-vdl`
+          
+          ## Usage Notes:
+          - Windows: May trigger antivirus (false positive)
+          - Linux: Make executable with `chmod +x mt-vdl-Linux`
+          - Portable versions are recommended for better performance
+        files: |
+          mt-vdl-Windows-Portable.zip
+          mt-vdl-Windows.exe
+          mt-vdl-Linux-Portable.zip
+          mt-vdl-Linux

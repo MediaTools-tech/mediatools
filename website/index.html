@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaTools.tech - Your Media Processing Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom Font Setup (Retained as requested) */
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f7f9fb;
+        }
+
+
+        /* --- CONTAINER FORMAT ADDED FROM downloader.html FOR CONSISTENCY --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 clamp(16px, 4vw, 32px);
+        }
+        /* ------------------------------------------------------------------- */
+
+        /* --- STYLES PROVIDED BY USER FOR CONSISTENCY --- */
+        
+        /* Top Navigation Bar (Fixed) */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #ffffff; /* Solid white background */
+            backdrop-filter: blur(0px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Subtle border for definition */
+            z-index: 1000;
+            padding: 10px 0px 10px 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Optional: adds depth */
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-logo-icon {
+            height: 30px;
+            width: auto;
+        }
+
+        .nav-logo-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #012464;
+        }
+
+        /* Header Section (Below Fixed Nav) */
+        header {
+            margin-top: 60px; /* Adjust header to account for fixed nav */
+            background: linear-gradient(180deg, #ffffff, rgb(255, 255, 255));
+            color: white;
+            padding: clamp(15px, 6vw, 25px) 0 clamp(30px, 12vw, 50px) 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23000000" fill-opacity="0.1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,202.7C672,203,768,181,864,170.7C960,160,1056,160,1152,170.7C1248,181,1344,203,1392,213.3L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>'); */
+            background-size: cover;
+            background-position: bottom;
+            opacity: 0.2;
+        }
+        
+        .logo {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 700;
+            margin-top: clamp(15px, 4vw, 20px);
+            margin-bottom: 0px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            position: relative;
+            z-index: 1;
+            color: #012464; /* Ensure main header logo text is dark */
+        }
+        
+        /* Logo Image Styling */
+        .logo-icon {
+            /* Use 'em' to make the icon height relative to the parent's font-size (which is responsive via clamp) */
+            height: 1em; /* or 1.2em, depending on the visual look you prefer */
+            width: auto;   /* Important: let the width scale proportionally */
+            margin-bottom: 0px;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-radius: 4px;
+        }
+
+        .downloader-icon {
+            /* Use 'em' to make the icon height relative to the parent's font-size (which is responsive via clamp) */
+            height: 1.4em; /* or 1.2em, depending on the visual look you prefer */
+            width: auto;   /* Important: let the width scale proportionally */
+            margin-bottom: -3px;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-radius: 4px;
+        }
+
+
+        /* --- END OF USER-PROVIDED STYLES --- */
+
+        .category-icon {
+            font-size: clamp(1.1rem, 7vw, 1.6rem);
+            margin-bottom: 0px;
+            transition: all 0.3s ease;
+            position: relative;
+            display: inline-block;
+            color: #106ebe;
+        }
+
+        .tool-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(1, 36, 100, 0.1);
+        }
+
+        /* --- NEW FOOTER STYLES --- */
+        /* Footer */
+        footer {
+            background-color: #ffffff;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 3rem 0;
+            color: #4b5563; /* text-gray-600 */
+            /* --- FIX: Center align all text/elements inside the footer container --- */
+            text-align: center;
+        }
+        
+        .footer-logo {
+            font-size: clamp(1.8rem, 5vw, 2.2rem);
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            /* Ensure logo is centered by adding justify-content: center */
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .footer-logo .logo-icon {
+            width: clamp(30px, 6vw, 40px);
+        }
+        
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            /* Center links on mobile and desktop */
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        @media (min-width: 1024px) {
+            .footer-links {
+                /* Removed justify-content: flex-start and flex-grow: 1 to ensure centering on desktop */
+                margin: 0 0 1.5rem 0; /* Resetting the horizontal margin */
+            }
+        }
+        .footer-links a {
+            color: #4b5563; /* text-gray-600 */
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover {
+            color: #1d4ed8; /* blue-700 */
+        }
+
+        .copyright {
+            font-size: 0.875rem; /* text-sm */
+            color: #6b7280; /* text-gray-500 */
+            margin-top: 1rem;
+        }
+        @media (min-width: 1024px) {
+            .copyright {
+                margin-top: 0;
+            }
+        }
+        /* --- END NEW FOOTER STYLES --- */
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <a href="index.html" class="nav-logo">
+            <img src="./assets/mt_logo.png" alt="MediaTools Logo" class="nav-logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/30x30/012464/ffffff?text=MT';" title="Logo Placeholder">
+            <span class="nav-logo-text">MediaTools</span>
+        </a>
+    </div>
+
+    <header>
+        <div class="logo">
+            <a href="index.html" class="nav-logo">
+                <img src="./assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/50x50/012464/ffffff?text=MT';" title="Logo Placeholder">
+                MediaTools
+            </a>
+        </div>
+        <!-- <h2 class="text-3xl text-gray-700 font-light mt-4 relative z-10">Your Central Hub for Digital Media Processing</h2> -->
+    </header>
+
+    <main class="py-12">
+        <div class="container">
+            <section class="mb-12">
+                
+                <h3 class="text-3xl font-bold text-[#012464] mb-6 border-b-2 border-blue-100 pb-2 flex items-center">
+                    <!-- <div class="category-icon">
+                        <i class="fas fa-video"></i>
+                    </div> -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-video text-blue-500 mr-3">
+                    <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
+                    <path d="m10 8l6 4-6 4V8z"/>
+                    </svg>
+                    &nbspVideo Tools
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    
+                    <a href="video/downloader.html" class="tool-card block bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition duration-300">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <!-- <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download text-blue-600"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> -->
+                            <img src="./assets/video_downloader_icon.png" alt="MediaTools Logo" class="downloader-icon">
+                            <h4 class="text-xl font-bold text-[#012464]">Video Downloader</h4>
+                        </div>
+                        <p class="text-gray-600">Download videos from over 1000+ sites quickly and easily.</p>
+                        <span class="mt-4 inline-block text-blue-600 font-medium">Get Started &rarr;</span>
+                    </a>
+
+                    <!-- <a href="#" class="tool-card block bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition duration-300">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-convert-3d text-green-600"><path d="M19.8 17.5l-6.2 3.3c-2.3 1.2-5.1 1.2-7.4 0l-6.2-3.3c-1.2-.6-2-1.8-2-3.1V6.5c0-1.2.7-2.3 1.7-2.9l6.2-3.3c2.3-1.2 5.1-1.2 7.4 0l6.2 3.3c1.2.6 2 1.8 2 3.1v8c0 1.2-.7 2.3-1.7 2.9zm-3.3-11.8L12 8.7 7.5 6.3V10l4.5 2.4 4.5-2.4z"/><path d="M12 14.5l-4.5-2.4v3.7l4.5 2.4 4.5-2.4V12z"/></svg>
+                            <h4 class="text-xl font-bold text-[#012464]">Video Converter</h4>
+                        </div>
+                        <p class="text-gray-600">Convert videos between popular formats like MP4, MOV, AVI, and more.</p>
+                        <span class="mt-4 inline-block text-green-600 font-medium">Coming Soon &rarr;</span>
+                    </a>
+
+                    <a href="#" class="tool-card block bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition duration-300">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scissors-square text-red-600"><rect width="20" height="20" x="2" y="2" rx="2"/><circle cx="8" cy="8" r="2"/><path d="M10 10 18 2"/><circle cx="8" cy="16" r="2"/><path d="M10 14 18 6"/></svg>
+                            <h4 class="text-xl font-bold text-[#012464]">Video Trimmer</h4>
+                        </div>
+                        <p class="text-gray-600">Cut, trim, and merge video clips to create the perfect sequence.</p>
+                        <span class="mt-4 inline-block text-red-600 font-medium">Coming Soon &rarr;</span>
+                    </a> -->
+                </div>
+            </section>
+            
+            <section class="mb-12">
+                <h3 class="text-3xl font-bold text-[#012464] mb-6 border-b-2 border-blue-100 pb-2 flex items-center">
+                    <!-- <div class="category-icon">
+                        <i class="fas fa-music"></i>
+                    </div>                     -->
+                    <!-- <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-music text-purple-500 mr-3"><path d="M9 18V5l12-2v13"/><circle cx="9" cy="18" r="3"/><circle cx="21" cy="16" r="3"/></svg> -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-audio text-blue-500 mr-3">
+                    <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+                    <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/>
+                    <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+                    </svg>
+                    &nbspAudio Tools
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <a href="#" class="tool-card block bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition duration-300">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hard-hat text-purple-600"><path d="M16 16c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2v-4H2V8l4-4 4 4v4h4V8z"/><path d="M10 16v-4"/></svg>
+                            <h4 class="text-xl font-bold text-[#012464]">Audio Extractor</h4>
+                        </div>
+                        <p class="text-gray-600">Effortlessly rip audio tracks from video files (e.g., MP4 to MP3).</p>
+                        <span class="mt-4 inline-block text-purple-600 font-medium">Coming Soon &rarr;</span>
+                    </a>
+                    
+                    <!-- <a href="#" class="tool-card block bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition duration-300">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume-2 text-pink-600"><path d="M15 8a5 5 0 0 1 0 8"/><path d="M17.66 6.34a9 9 0 0 1 0 11.32"/><path d="M2 13h2l3 3V8l-3 3H2"/></svg>
+                            <h4 class="text-xl font-bold text-[#012464]">Audio Converter</h4>
+                        </div>
+                        <p class="text-gray-600">Convert audio files between formats like MP3, WAV, AAC, and more.</p>
+                        <span class="mt-4 inline-block text-pink-600 font-medium">Coming Soon &rarr;</span>
+                    </a>
+
+                    <a href="#" class="tool-card block bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition duration-300">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link text-orange-600"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07L13 7"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07L11 17"/></svg>
+                            <h4 class="text-xl font-bold text-[#012464]">Audio Joiner</h4>
+                        </div>
+                        <p class="text-gray-600">Combine multiple audio files into one continuous track.</p>
+                        <span class="mt-4 inline-block text-orange-600 font-medium">Coming Soon &rarr;</span>
+                    </a> -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-logo">
+                <a href="index.html" class="nav-logo">
+                    <img src="./assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/30x30/012464/ffffff?text=MT';" title="Logo Placeholder">
+                    MediaTools.tech
+                </a>
+            </div>
+            
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="Downloads.html">Downloads</a>
+                <a href="Documentation.html">Documentation</a>
+                <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
+                <a href="contact.html">Contact</a>
+                <a href="legal.html">Legal Info / Disclaimer</a>
+            </div>
+            
+            <p class="copyright">© 2025 MediaTools.tech. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Log a message if the logo fails to load (only for the large header logo)
+        document.querySelector('.logo-icon').addEventListener('error', function() {
+            console.warn('Logo image not found at /assets/mt_logo.png. Using placeholder text/icon.');
+        });
+    </script>
+</body>
+</html>

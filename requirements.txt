@@ -1,0 +1,21 @@
+# MediaTools - Development Requirements
+#
+# Quick Start:
+# 1. pip install -r requirements.txt  # Install all dependencies
+# 2. pip install -e .                # Install package in development mode
+# 3. See apps/*/README.txt for app-specific usage
+#
+# Project Structure:
+# 📁 apps/           - Individual applications
+# 📁 src/            - Shared library code  
+# 📄 pyproject.toml  - Package configuration
+#
+# App-specific dependencies are in apps/*/requirements.txt
+
+# Core application dependencies (via video downloader)
+-r apps/video/downloader/requirements.txt
+
+# Optional: Add common development tools
+# black>=23.0.0
+# flake8>=6.0.0
+# pytest>=7.0.0
