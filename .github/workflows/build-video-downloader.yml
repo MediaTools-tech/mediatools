@@ -38,7 +38,7 @@ jobs:
           --add-data="src/mediatools/video/downloader/utils/cleanup_files.bat;utils" `
           --add-data="src/mediatools/video/downloader/assets;assets" `
           --add-data="src/mediatools/video/downloader/assets/*.gif;assets" `
-          --add-data="docs/UserGuide.pdf;docs" `
+          --add-data="apps/video/downloader/docs/UserGuide.pdf;docs" `
           --add-data="README.md;docs" `
           --add-data="LICENSE;docs" `
           --hidden-import=mediatools `
@@ -94,7 +94,7 @@ jobs:
           --add-data="src/mediatools/video/downloader/data;data" `
           --add-data="src/mediatools/video/downloader/utils/cleanup_files.bat;utils" `
           --add-data="src/mediatools/video/downloader/assets;assets" `
-          --add-data="docs/UserGuide.pdf;docs" `
+          --add-data="apps/video/downloader/docs/UserGuide.pdf;docs" `
           --add-data="README.md;docs" `
           --add-data="LICENSE;docs" `
           --hidden-import=mediatools `
@@ -142,7 +142,7 @@ jobs:
           --add-data="src/mediatools/video/downloader/utils/cleanup_files.sh:utils" \
           --add-data="src/mediatools/video/downloader/assets:assets" \
           --add-data="src/mediatools/video/downloader/assets/*.gif:assets" \
-          --add-data="docs/UserGuide.pdf:docs" \
+          --add-data="apps/video/downloader/docs/UserGuide.pdf:docs" \
           --add-data="README.md:docs" \
           --add-data="LICENSE:docs" \
           --hidden-import=mediatools \
@@ -196,7 +196,7 @@ jobs:
           --add-data="src/mediatools/video/downloader/data:data" \
           --add-data="src/mediatools/video/downloader/utils/cleanup_files.sh:utils" \
           --add-data="src/mediatools/video/downloader/assets:assets" \
-          --add-data="docs/UserGuide.pdf:docs" \
+          --add-data="apps/video/downloader/docs/UserGuide.pdf:docs" \
           --add-data="README.md:docs" \
           --add-data="LICENSE:docs" \
           --hidden-import=mediatools \
