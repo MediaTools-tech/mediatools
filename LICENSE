@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 MediaTools-tech
+Copyright (c) 2025 MediaTools (Bala)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,35 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+THIRD-PARTY SOFTWARE
+
+This software depends on the following third-party components:
+
+1. yt-dlp
+   License: Unlicense
+   Source: https://github.com/yt-dlp/yt-dlp
+   
+2. FFmpeg
+   License: LGPL 2.1 / GPL 2.0 (depending on build configuration)
+   Source: https://ffmpeg.org
+   
+These components retain their original licenses and are not covered by the
+MIT License above. Please refer to their respective repositories for license
+details.
+
+---
+
+IMPORTANT NOTICE: This software is a GUI tool for yt-dlp. Users are responsible 
+for ensuring their use complies with applicable laws and platform terms of service.
+
+---
+
+CONTACT INFORMATION
+
+Developer: Bala
+Email: bala.lv.555@gmail.com
+Organization: MediaTools
+GitHub: https://github.com/MediaTools-tech/mediatools
