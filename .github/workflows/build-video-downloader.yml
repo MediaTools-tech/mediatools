@@ -47,6 +47,9 @@ jobs:
           --hidden-import=mediatools.video.downloader.gui `
           --hidden-import=mediatools.video.downloader.utils `
           --hidden-import=mediatools.video.downloader.compat `
+          --hidden-import=winshell `
+          --hidden-import=win32com `
+          --hidden-import=win32com.client `          
           --clean `
           apps/video/downloader/launch.py
         
@@ -103,6 +106,9 @@ jobs:
           --hidden-import=mediatools.video.downloader.gui `
           --hidden-import=mediatools.video.downloader.utils `
           --hidden-import=mediatools.video.downloader.compat `
+          --hidden-import=winshell `
+          --hidden-import=win32com `
+          --hidden-import=win32com.client `          
           --clean `
           apps/video/downloader/launch.py
         
