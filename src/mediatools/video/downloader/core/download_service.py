@@ -200,21 +200,33 @@ class DownloadService:
             "stream_and_merge_format", "bestvideo+bestaudio/best-mkv"
         )
 
-        stream_format = None
-        merge_format = None
+        # Define fallback chains based on user's format preference
         if format_setting == "b":
-            stream_format = "b"
-            merge_format = None
+            format_fallback_chain = [
+                ("b", None)  # Single attempt for 'b' format
+            ]
         elif format_setting == "bestvideo+bestaudio/best-mkv":
-            stream_format = "bestvideo+bestaudio/best"
-            merge_format = "mkv"
+            format_fallback_chain = [
+                ("bestvideo+bestaudio/best", "mkv"),  # Primary: MKV merge
+                ("bestvideo+bestaudio/best", "mp4"),  # Fallback: MP4 merge  
+                ("b", None)                           # Final: Pre-merged
+            ]
         elif format_setting == "bestvideo+bestaudio/best-mp4":
-            stream_format = "bestvideo+bestaudio/best"
-            merge_format = "mp4"
-               
+            format_fallback_chain = [
+                ("bestvideo+bestaudio/best", "mp4"),  # Primary: MP4 merge
+                ("b", None)                           # Fallback: Pre-merged
+            ]
+        else:
+            # Default fallback for unknown formats
+            format_fallback_chain = [
+                ("bestvideo+bestaudio/best", "mkv"),
+                ("bestvideo+bestaudio/best", "mp4"),
+                ("b", None)
+            ]
+
         if (
             not self.context.ffmpeg_status["is_ffmpeg_suite_available"]
-            and stream_format != "b"
+            and format_setting != "b"
         ):
             self.context.update_status(
                 "Ffmpeg Missing. Download now or Videos will be downloaded with sub-optimal setting: Format - b",
@@ -280,312 +292,285 @@ class DownloadService:
             )
 
         self.context.download_path_temp = os.path.join(self.download_path, "temp")
+        
+        return_code = 1
+        is_last_iteration = False
 
         try:
-            cmd = [
-                self.context.ytdlp_path,
-                "--format",
-                stream_format
-                ]
+            for iteration, (stream_format, merge_format) in enumerate(format_fallback_chain):
+                is_last_iteration = (iteration == len(format_fallback_chain) - 1)
+                # print(stream_format, merge_format)
 
-            if merge_format:
-                cmd.extend(["--merge-output-format", merge_format])
+                if iteration > 0:
+                    self.status_text = f"Retrying with stream_format-{stream_format},  merge_format-{merge_format}"
+                    # update_gui
+                    self.root.after(
+                        0,
+                        lambda: self.context.update_status(
+                            self.status_text,
+                            percent=0,
+                            fg=self.context.status_label_fg,
+                        ),
+                    )
+                try:
+                    cmd = [
+                        self.context.ytdlp_path,
+                        "--format",
+                        stream_format
+                        ]
 
-            cmd.extend([
-                "--no-overwrites",
-                "--continue",
-                "--output",
-                "%(title)s-%(id)s.%(ext)s",
-                url,
-                "--limit-rate",
-                self.settings.get("download_speed"),
-                "--embed-thumbnail",
-                # "--convert-thumbnails", "jpg",
-                "--no-write-thumbnail",
-                "--restrict-filenames",
-                "--trim-filenames",
-                "100",
-                "--progress-template",
-                "%(progress._percent_str)s",
-                "--console-title",
-                "--newline",
-                "--yes-playlist",
-                "--ignore-errors",
-                "--no-abort-on-error",
-                "--sleep-interval",
-                "2",
-                "--max-sleep-interval",
-                "8",
-                "--retries",
-                "15",
-                "--fragment-retries",
-                "15",
-                "--retry-sleep",
-                "3",
-                "--socket-timeout",
-                "30",
-                "--extractor-retries",
-                "3",
-                "--force-keyframes-at-cuts",
-                "--paths",
-                f"home:{self.download_path}",
-                "--paths",
-                f"temp:{self.context.download_path_temp}",
-            ])
+                    if merge_format:
+                        cmd.extend(["--merge-output-format", merge_format])
+
+                    cmd.extend([
+                        "--no-overwrites",
+                        "--continue",
+                        "--output",
+                        "%(title)s-%(id)s.%(ext)s",
+                        url,
+                        "--limit-rate",
+                        self.settings.get("download_speed"),
+                        "--embed-thumbnail",
+                        # "--convert-thumbnails", "jpg",
+                        "--no-write-thumbnail",
+                        "--restrict-filenames",
+                        "--trim-filenames",
+                        "100",
+                        "--progress-template",
+                        "%(progress._percent_str)s",
+                        "--console-title",
+                        "--newline",
+                        "--yes-playlist",
+                        "--ignore-errors",
+                        "--no-abort-on-error",
+                        "--sleep-interval",
+                        "2",
+                        "--max-sleep-interval",
+                        "8",
+                        "--retries",
+                        "15",
+                        "--fragment-retries",
+                        "15",
+                        "--retry-sleep",
+                        "3",
+                        "--socket-timeout",
+                        "30",
+                        "--extractor-retries",
+                        "3",
+                        "--force-keyframes-at-cuts",
+                        "--paths",
+                        f"home:{self.download_path}",
+                        "--paths",
+                        f"temp:{self.context.download_path_temp}",
+                    ])
 
 
-            # Add cookies if enabled
-            cookies_cmd = self.settings.get_cookies_cmd()
-            if cookies_cmd:
-                cmd.extend(cookies_cmd)
+                    # Add cookies if enabled
+                    cookies_cmd = self.settings.get_cookies_cmd()
+                    if cookies_cmd:
+                        cmd.extend(cookies_cmd)
 
-            # Add download archive if enabled
-            archive_enabled = self.settings.get("enable_download_archive")
-            if archive_enabled:
-                archive_path = self.settings.get(
-                    "download_archive_path", "downloaded.txt"
-                )
-                cmd.extend(["--download-archive", archive_path])
-
-            if self.context.ffmpeg_status["is_ffmpeg_suite_downloaded"]:
-                cmd.extend(
-                    [
-                        "--ffmpeg-location",
-                        os.path.dirname(self.context.ffmpeg_path),
-                    ]
-                )
-
-            cmd = [c for c in cmd if c]
-
-            # Check for connection
-            while True:
-                if self.context.check_internet_connection():
-                    break
-                else:
-                    if self.custom_msg_box.custom_askyesno(
-                        self.root,
-                        "Waiting for Connection",
-                        "No internet connection detected!\nConnect to the internet to continue.\n\nClick 'Yes' to retry. Click 'No' to Exit",
-                        self.messagebox_font,
-                    ):
-                        continue
-                    else:
-                        self.context.exit_app()
-                        return
-
-            self.context.video_index = None
-            self.context.total_videos = None
-            self.context.is_playlist = False
-            self.context.files_downloaded = 0
-            self.context.final_filename_check = ""
-            self.files_skipped_prev = 0
-            self.files_skipped_current = 0
-
-            # Your existing code with cross-platform window hiding:
-            process_kwargs = {
-                "stdout": subprocess.PIPE,
-                "stderr": subprocess.STDOUT,
-                "bufsize": 1,
-                "universal_newlines": True,
-                "encoding": "utf-8",
-                "errors": "replace",
-                "start_new_session": True,
-            }
-
-            # Add platform-specific window hiding
-            if IS_WINDOWS:
-                process_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
-                
-                # Optional: Additional window hiding for extra reliability
-                startupinfo = subprocess.STARTUPINFO()
-                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                startupinfo.wShowWindow = subprocess.SW_HIDE
-                process_kwargs["startupinfo"] = startupinfo
-
-            process = subprocess.Popen(cmd, **process_kwargs)
-
-            # Store process reference for pause/resume/stop control
-            self.context.current_process = process
-
-            try:
-                import inspect
-                for line in process.stdout:
-                    # Check for stop condition - check more frequently
-                    if self.context.is_stopped:
-                        # print("Stop condition detected in download loop")
-                        break
-
-                    if self.context.is_paused:
-                        # print("Pause condition detected in download loop")
-                        break
-
-                    if self.context.is_exit:
-                        # print("Exit condition detected in download loop")
-                        break
-
-                    # Check if process has been terminated externally
-                    if process.poll() is not None:
-                        print("Process terminated externally")
-                        break
-
-                    line = line.strip()
-                    if line.startswith("DownloadedFile:"):
-                        self.context.final_filename_check = line.split(
-                            "DownloadedFile:", 1
-                        )[1].strip()
-                    else:
-                        match = re.search(
-                            r"(.*\.(?:mp4|mkv|webm|avi|mov|flv|m4v|wmv))",
-                            line.strip().strip('"').strip("'"),
-                            re.IGNORECASE,
+                    # Add download archive if enabled
+                    archive_enabled = self.settings.get("enable_download_archive")
+                    if archive_enabled:
+                        archive_path = self.settings.get(
+                            "download_archive_path", "downloaded.txt"
                         )
-                        if match:
-                            full_path = match.group(1)
-                            self.context.final_filename_check = os.path.basename(
-                                full_path
-                            )  # Just the filename with extension
+                        cmd.extend(["--download-archive", archive_path])
 
-                    # Detect playlist info - try multiple patterns
-                    playlist_patterns = [
-                        r"Downloading video (\d+) of (\d+)",
-                        r"[download] Downloading video (\d+) of (\d+)",
-                        r"Downloading item (\d+) of (\d+)",
-                    ]
+                    if self.context.ffmpeg_status["is_ffmpeg_suite_downloaded"]:
+                        cmd.extend(
+                            [
+                                "--ffmpeg-location",
+                                os.path.dirname(self.context.ffmpeg_path),
+                            ]
+                        )
 
-                    for pattern in playlist_patterns:
-                        match = re.search(pattern, line)
-                        if match:
-                            self.context.video_index = int(match.group(1))
-                            self.context.total_videos = int(match.group(2))
-                            self.context.is_playlist = True
+                    cmd = [c for c in cmd if c]
+
+                    # Check for connection
+                    while True:
+                        if self.context.check_internet_connection():
+                            break
+                        else:
+                            if self.custom_msg_box.custom_askyesno(
+                                self.root,
+                                "Waiting for Connection",
+                                "No internet connection detected!\nConnect to the internet to continue.\n\nClick 'Yes' to retry. Click 'No' to Exit",
+                                self.messagebox_font,
+                            ):
+                                continue
+                            else:
+                                self.context.exit_app()
+                                return
+
+                    self.context.video_index = None
+                    self.context.total_videos = None
+                    self.context.is_playlist = False
+                    self.context.files_downloaded = 0
+                    self.context.final_filename_check = ""
+                    self.files_skipped_prev = 0
+                    self.files_skipped_current = 0
+
+                    # Your existing code with cross-platform window hiding:
+                    process_kwargs = {
+                        "stdout": subprocess.PIPE,
+                        "stderr": subprocess.STDOUT,
+                        "bufsize": 1,
+                        "universal_newlines": True,
+                        "encoding": "utf-8",
+                        "errors": "replace",
+                        "start_new_session": True,
+                    }
+
+                    # Add platform-specific window hiding
+                    if IS_WINDOWS:
+                        process_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+                        
+                        # Optional: Additional window hiding for extra reliability
+                        startupinfo = subprocess.STARTUPINFO()
+                        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                        startupinfo.wShowWindow = subprocess.SW_HIDE
+                        process_kwargs["startupinfo"] = startupinfo
+
+                    process = subprocess.Popen(cmd, **process_kwargs)
+
+                    # Store process reference for pause/resume/stop control
+                    self.context.current_process = process
+
+                    import inspect
+                    for line in process.stdout:
+                        # Check for stop condition - check more frequently
+                        if self.context.is_stopped:
+                            # print("Stop condition detected in download loop")
                             break
 
-                    # Detect title from multiple possible sources
-                    title_indicators = [
-                        "Destination:",
-                        "[download]",
-                        "Extracting URL:",
-                    ]
-                    for indicator in title_indicators:
-                        if indicator in line and (
-                            "Destination:" in line or "Extracting URL:" in line
+                        if self.context.is_paused:
+                            # print("Pause condition detected in download loop")
+                            break
+
+                        if self.context.is_exit:
+                            # print("Exit condition detected in download loop")
+                            break
+
+                        # Check if process has been terminated externally
+                        if process.poll() is not None:
+                            print("Process terminated externally")
+                            break
+
+                        line = line.strip()
+                        if line.startswith("DownloadedFile:"):
+                            self.context.final_filename_check = line.split(
+                                "DownloadedFile:", 1
+                            )[1].strip()
+                        else:
+                            match = re.search(
+                                r"(.*\.(?:mp4|mkv|webm|avi|mov|flv|m4v|wmv))",
+                                line.strip().strip('"').strip("'"),
+                                re.IGNORECASE,
+                            )
+                            if match:
+                                full_path = match.group(1)
+                                self.context.final_filename_check = os.path.basename(
+                                    full_path
+                                )  # Just the filename with extension
+
+                        # Detect playlist info - try multiple patterns
+                        playlist_patterns = [
+                            r"Downloading video (\d+) of (\d+)",
+                            r"[download] Downloading video (\d+) of (\d+)",
+                            r"Downloading item (\d+) of (\d+)",
+                        ]
+
+                        for pattern in playlist_patterns:
+                            match = re.search(pattern, line)
+                            if match:
+                                self.context.video_index = int(match.group(1))
+                                self.context.total_videos = int(match.group(2))
+                                self.context.is_playlist = True
+                                break
+
+                        # Detect title from multiple possible sources
+                        title_indicators = [
+                            "Destination:",
+                            "[download]",
+                            "Extracting URL:",
+                        ]
+                        for indicator in title_indicators:
+                            if indicator in line and (
+                                "Destination:" in line or "Extracting URL:" in line
+                            ):
+                                if "Destination:" in line:
+                                    parts = line.split("Destination:", 1)
+                                    if len(parts) > 1:
+                                        filename = parts[1].strip()
+                                        self.context.safe_title = os.path.basename(filename)
+                                elif "Extracting URL:" in line:
+                                    # Try to extract title from URL extraction line
+                                    if ":" in line:
+                                        potential_title = line.split(":")[-1].strip()
+                                        if potential_title and len(potential_title) < 100:
+                                            self.context.safe_title = potential_title
+                                break
+
+                        # Update GUI with current video info and queue status
+                        if (
+                            self.context.safe_title
+                            and self.context.safe_title != "Unknown Video"
                         ):
-                            if "Destination:" in line:
-                                parts = line.split("Destination:", 1)
-                                if len(parts) > 1:
-                                    filename = parts[1].strip()
-                                    self.context.safe_title = os.path.basename(filename)
-                            elif "Extracting URL:" in line:
-                                # Try to extract title from URL extraction line
-                                if ":" in line:
-                                    potential_title = line.split(":")[-1].strip()
-                                    if potential_title and len(potential_title) < 100:
-                                        self.context.safe_title = potential_title
-                            break
-
-                    # Update GUI with current video info and queue status
-                    if (
-                        self.context.safe_title
-                        and self.context.safe_title != "Unknown Video"
-                    ):
-                        display_title = self.context.safe_title[:65]
-                        queue_count = self.queue_manager.get_queue_count()
-                        if self.context.is_resumed:
-                            if (
-                                self.context.is_playlist
-                                and self.context.video_index
-                                and self.context.total_videos
-                            ):
-                                self.status_text = f"{self.style_manager.get_emoji('loading')} Video {self.context.video_index}/{self.context.total_videos}: {display_title}"
-                            else:
-                                self.status_text = f"{self.style_manager.get_emoji('loading')} Resuming: {display_title}"
-                        else:
-                            if (
-                                self.context.is_playlist
-                                and self.context.video_index
-                                and self.context.total_videos
-                            ):
-                                self.status_text = f"{self.style_manager.get_emoji('loading')} Video {self.context.video_index}/{self.context.total_videos}: {display_title}"
-                            else:
-                                self.status_text = f"{self.style_manager.get_emoji('loading')} Preparing to download...: {display_title}"
-
-                        if self.context.is_resumed:
-                            self.root.after(
-                                0,
-                                lambda: self.context.update_status(
-                                    self.status_text, fg=self.context.status_label_fg
-                                ),
-                            )
-                        else:
-                            self.root.after(
-                                0,
-                                lambda: self.context.update_status(
-                                    self.status_text,
-                                    percent=0,
-                                    fg=self.context.status_label_fg,
-                                ),
-                            )
-
-                    # Handle skipped files
-                    skip_indicators = [
-                        "has already been downloaded",
-                        "File is already present and --no-overwrites is enabled",
-                        "Skipping",
-                        "already in archive",
-                    ]
-
-                    for skip_indicator in skip_indicators:
-                        if skip_indicator in line:
-                            self.files_skipped_current += 1
-                            display_title = (
-                                self.context.safe_title[:65]
-                                if self.context.safe_title
-                                else "Previously Downloaded Video"
-                            )
+                            display_title = self.context.safe_title[:65]
                             queue_count = self.queue_manager.get_queue_count()
-
-                            if (
-                                self.context.is_playlist
-                                and self.context.video_index
-                                and self.context.total_videos
-                            ):
-                                self.status_text = f"↷ Video {self.context.video_index}/{self.context.total_videos}: Skipped - {display_title}"
+                            if self.context.is_resumed:
+                                if (
+                                    self.context.is_playlist
+                                    and self.context.video_index
+                                    and self.context.total_videos
+                                ):
+                                    self.status_text = f"{self.style_manager.get_emoji('loading')} Video {self.context.video_index}/{self.context.total_videos}: {display_title}"
+                                else:
+                                    self.status_text = f"{self.style_manager.get_emoji('loading')} Resuming: {display_title}"
                             else:
-                                self.status_text = f"↷ Skipped: {display_title} (check if already exists in downloads folder)"
+                                if (
+                                    self.context.is_playlist
+                                    and self.context.video_index
+                                    and self.context.total_videos
+                                ):
+                                    self.status_text = f"{self.style_manager.get_emoji('loading')} Video {self.context.video_index}/{self.context.total_videos}: {display_title}"
+                                else:
+                                    self.status_text = f"{self.style_manager.get_emoji('loading')} Preparing to download...: {display_title}"
 
-                            # update_gui(percent=100, text=self.status_text)
-                            self.root.after(
-                                0,
-                                lambda: self.context.update_status(
-                                    self.status_text,
-                                    percent=0,
-                                    fg=self.context.status_label_fg,
-                                ),
-                            )
-                            # Skipped files - Clean up incomplete files
-                            if hasattr(self.context, 'safe_title') and self.context.safe_title:
-                                self.context.final_filename_check = self.context.safe_title
-                                # base_name = self.context.safe_title.split(".")[0].strip()
-                                base_name = self.get_base_name_from_ytdlp_file(self.context.safe_title)
-                                self.cleanup_video_leftovers(base_name, self.context.download_path_temp)
+                            if self.context.is_resumed:
+                                self.root.after(
+                                    0,
+                                    lambda: self.context.update_status(
+                                        self.status_text, fg=self.context.status_label_fg
+                                    ),
+                                )
+                            else:
+                                self.root.after(
+                                    0,
+                                    lambda: self.context.update_status(
+                                        self.status_text,
+                                        percent=0,
+                                        fg=self.context.status_label_fg,
+                                    ),
+                                )
 
-                            break
+                        # Handle skipped files
+                        skip_indicators = [
+                            "has already been downloaded",
+                            "File is already present and --no-overwrites is enabled",
+                            "Skipping",
+                            "already in archive",
+                        ]
 
-                    # Detect progress
-                    if line and re.match(r"^\s*\d+\.\d+%\s*$", line):
-                        percent_str = line.replace("%", "").strip()
-                        try:
-                            self.percent_value = float(percent_str)
-                            if 0.0 <= self.percent_value <= 100.0:
-
-                                if self.context.is_resumed:
-                                    self.context.is_resumed = False
-
-                                self.context.progress_bar.value = self.percent_value
+                        for skip_indicator in skip_indicators:
+                            if skip_indicator in line:
+                                self.files_skipped_current += 1
                                 display_title = (
                                     self.context.safe_title[:65]
                                     if self.context.safe_title
-                                    else "Video"
+                                    else "Previously Downloaded Video"
                                 )
                                 queue_count = self.queue_manager.get_queue_count()
 
@@ -594,117 +579,165 @@ class DownloadService:
                                     and self.context.video_index
                                     and self.context.total_videos
                                 ):
-                                    self.status_text = f"↓ Video {self.context.video_index}/{self.context.total_videos}: {display_title} - {self.percent_value}%"
+                                    self.status_text = f"↷ Video {self.context.video_index}/{self.context.total_videos}: Skipped - {display_title}"
                                 else:
-                                    self.status_text = (
-                                        f"↓ {display_title} - {self.percent_value}%"
-                                    )
+                                    self.status_text = f"↷ Skipped: {display_title} (check if already exists in downloads folder)"
 
-                                # update_gui(percent=self.percent_value, text=self.status_text)
+                                # update_gui(percent=100, text=self.status_text)
                                 self.root.after(
                                     0,
                                     lambda: self.context.update_status(
                                         self.status_text,
-                                        percent=self.percent_value,
+                                        percent=0,
                                         fg=self.context.status_label_fg,
                                     ),
                                 )
-                        except ValueError:
+                                # Skipped files - Clean up incomplete files
+                                if hasattr(self.context, 'safe_title') and self.context.safe_title:
+                                    self.context.final_filename_check = self.context.safe_title
+                                    # base_name = self.context.safe_title.split(".")[0].strip()
+                                    base_name = self.get_base_name_from_ytdlp_file(self.context.safe_title)
+                                    self.cleanup_video_leftovers(base_name, self.context.download_path_temp)
+
+                                break
+
+                        # Detect progress
+                        if line and re.match(r"^\s*\d+\.\d+%\s*$", line):
+                            percent_str = line.replace("%", "").strip()
+                            try:
+                                self.percent_value = float(percent_str)
+                                if 0.0 <= self.percent_value <= 100.0:
+
+                                    if self.context.is_resumed:
+                                        self.context.is_resumed = False
+                                    if self.percent_value > self.context.progress_bar.value:
+                                        self.context.progress_bar.value = self.percent_value
+                                    display_title = (
+                                        self.context.safe_title[:65]
+                                        if self.context.safe_title
+                                        else "Video"
+                                    )
+                                    queue_count = self.queue_manager.get_queue_count()
+
+                                    if (
+                                        self.context.is_playlist
+                                        and self.context.video_index
+                                        and self.context.total_videos
+                                    ):
+                                        self.status_text = f"↓ Video {self.context.video_index}/{self.context.total_videos}: {display_title} - {self.percent_value}%"
+                                    else:
+                                        self.status_text = (
+                                            f"↓ {display_title} - {self.percent_value}%"
+                                        )
+
+                                    # update_gui(percent=self.percent_value, text=self.status_text)
+                                    self.root.after(
+                                        0,
+                                        lambda: self.context.update_status(
+                                            self.status_text,
+                                            percent=self.percent_value,
+                                            fg=self.context.status_label_fg,
+                                        ),
+                                    )
+                            except ValueError:
+                                pass
+
+                        # Count successful downloads
+                        if "[download] 100%" in line or "Deleting original file" in line:
+                            self.context.files_downloaded += 1
+
+                    # Wait for completion and handle exit codes properly
+                    return_code = process.wait()
+
+                    # Clear process reference
+                    self.context.current_process = None
+                    # Check if download was stopped
+                    if self.context.is_stopped or self.context.is_paused:
+                        # print("Download was pause/stopped, exiting download method")
+                        if self.root.winfo_exists():
+                            self.root.after(
+                                0,
+                                lambda: self.context.update_status(
+                                    f"{self.style_manager.get_emoji('stop')}  Download stopped",
+                                    percent=self.context.progress_bar.value,
+                                    fg=self.context.status_label_fg,
+                                ),
+                            )
+                        # Clear URL variables when stopped
+                        self.context.current_download_url = None
+                        self.context.paused_url = None
+                        return
+                    
+                    if return_code == 0: 
+                        break                    
+
+                    if return_code not in [0] and is_last_iteration:
+                        error_msg = f"Download failed (code {return_code})"
+                        self.queue_manager.add_failed_url(url, error_msg)
+                        raise Exception(error_msg)
+
+                finally:
+                    # Ensure process is cleaned up
+                    if process and process.poll() is None:
+                        try:
+                            process.terminate()
+                        except:
                             pass
 
-                    # Count successful downloads
-                    if "[download] 100%" in line or "Deleting original file" in line:
-                        self.context.files_downloaded += 1
+                    if return_code == 0 or is_last_iteration:
+                        if self.context.is_playlist:
+                            if self.context.is_stopped:
+                                self.status_text = f"{self.style_manager.get_emoji('stop')} Download stopped: {self.context.recent_url}"
+                                self.context.is_stopped = False                        
+                            elif self.context.is_paused:
+                                self.status_text = f"{self.style_manager.get_emoji('pause')} Download paused: {self.context.recent_url} - {self.percent_value}%"
+                            elif self.context.is_after_stopped:
+                                self.status_text = f"{self.style_manager.get_emoji('stop')} Download stopped: {self.context.recent_url}"
+                                self.context.is_after_stopped = False
+                            else:
+                                self.status_text = f"✓ Playlist complete: Downloaded {self.context.total_videos-self.files_skipped_current} videos"
+                                self.queue_manager.remove_url()
+                        else:
+                            if self.files_skipped_current > self.files_skipped_prev:
+                                self.status_text = "Skipped. Check if already downloaded"
+                                self.queue_manager.remove_url()
+                                self.files_skipped_prev = self.files_skipped_current
+                                if self.check_files_exist_by_base(f"{self.context.final_filename_check.rsplit('.', 1)[0]}", self.download_path):
+                                    # base_name = self.context.final_filename_check.rsplit('.', 1)[0]
+                                    base_name = self.get_base_name_from_ytdlp_file(self.context.final_filename_check)
+                                    self.context.add_to_delete_list(base_name, self.context.download_path_temp)
 
-                # Wait for completion and handle exit codes properly
-                return_code = process.wait()
+                            else:
+                                if self.context.is_stopped:
+                                    self.status_text = f"{self.style_manager.get_emoji('stop')} Download stopped: {self.context.recent_url}"
+                                    self.context.is_stopped = False
+                                elif self.context.is_paused:
+                                    self.status_text = f"{self.style_manager.get_emoji('pause')} Download paused: {self.context.recent_url} - {self.percent_value}%"
+                                elif self.context.is_after_stopped:
+                                    self.status_text = f"{self.style_manager.get_emoji('stop')} Download stopped {self.context.recent_url}"
+                                    self.context.is_after_stopped = False
+                                else:
+                                    self.status_text = "✓ Download complete"
+                                    if self.check_files_exist_by_base(f"{self.context.final_filename_check.rsplit('.', 1)[0]}", self.download_path):
+                                        # base_name = self.context.final_filename_check.rsplit('.', 1)[0]
+                                        base_name = self.get_base_name_from_ytdlp_file(self.context.final_filename_check)
+                                        self.context.add_to_delete_list(base_name, self.context.download_path_temp)
 
-                # Clear process reference
-                self.context.current_process = None
-                # Check if download was stopped
-                if self.context.is_stopped or self.context.is_paused:
-                    # print("Download was pause/stopped, exiting download method")
-                    if self.root.winfo_exists():
+                                    self.queue_manager.remove_url()
+
+                                queue_count = self.queue_manager.get_queue_count()
+
                         self.root.after(
                             0,
                             lambda: self.context.update_status(
-                                f"{self.style_manager.get_emoji('stop')}  Download stopped",
+                                self.status_text,
                                 percent=self.context.progress_bar.value,
                                 fg=self.context.status_label_fg,
                             ),
                         )
-                    # Clear URL variables when stopped
-                    self.context.current_download_url = None
-                    self.context.paused_url = None
-                    return
-                # FIXED: Accept codes 0 and 1 as success (1 is common with playlists)
-                # if return_code not in [0, 1]:
-                if return_code not in [0]:
-                    error_msg = f"Download failed (code {return_code})"
-                    self.queue_manager.add_failed_url(url, error_msg)
-                    raise Exception(error_msg)
-
-            finally:
-                # Ensure process is cleaned up
-                if process and process.poll() is None:
-                    try:
-                        process.terminate()
-                    except:
-                        pass
-
-                if self.context.is_playlist:
-                    if self.context.is_stopped:
-                        self.status_text = f"{self.style_manager.get_emoji('stop')} Download stopped: {self.context.recent_url}"
-                        self.context.is_stopped = False                        
-                    elif self.context.is_paused:
-                        self.status_text = f"{self.style_manager.get_emoji('pause')} Download paused: {self.context.recent_url} - {self.percent_value}%"
-                    elif self.context.is_after_stopped:
-                        self.status_text = f"{self.style_manager.get_emoji('stop')} Download stopped: {self.context.recent_url}"
-                        self.context.is_after_stopped = False
-                    else:
-                        self.status_text = f"✓ Playlist complete: Downloaded {self.context.total_videos-self.files_skipped_current} videos"
-                        self.queue_manager.remove_url()
-                else:
-                    if self.files_skipped_current > self.files_skipped_prev:
-                        self.status_text = "Skipped. Check if already downloaded"
-                        self.queue_manager.remove_url()
-                        self.files_skipped_prev = self.files_skipped_current
-                        if self.check_files_exist_by_base(f"{self.context.final_filename_check.rsplit('.', 1)[0]}", self.download_path):
-                            # base_name = self.context.final_filename_check.rsplit('.', 1)[0]
-                            base_name = self.get_base_name_from_ytdlp_file(self.context.final_filename_check)
-                            self.context.add_to_delete_list(base_name, self.context.download_path_temp)
-
-                    else:
-                        if self.context.is_stopped:
-                            self.status_text = f"{self.style_manager.get_emoji('stop')} Download stopped: {self.context.recent_url}"
-                            self.context.is_stopped = False
-                        elif self.context.is_paused:
-                            self.status_text = f"{self.style_manager.get_emoji('pause')} Download paused: {self.context.recent_url} - {self.percent_value}%"
-                        elif self.context.is_after_stopped:
-                            self.status_text = f"{self.style_manager.get_emoji('stop')} Download stopped {self.context.recent_url}"
-                            self.context.is_after_stopped = False
-                        else:
-                            self.status_text = "✓ Download complete"
-                            if self.check_files_exist_by_base(f"{self.context.final_filename_check.rsplit('.', 1)[0]}", self.download_path):
-                                # base_name = self.context.final_filename_check.rsplit('.', 1)[0]
-                                base_name = self.get_base_name_from_ytdlp_file(self.context.final_filename_check)
-                                self.context.add_to_delete_list(base_name, self.context.download_path_temp)
-
-                            self.queue_manager.remove_url()
-
-                        queue_count = self.queue_manager.get_queue_count()
-
-                self.root.after(
-                    0,
-                    lambda: self.context.update_status(
-                        self.status_text,
-                        percent=self.context.progress_bar.value,
-                        fg=self.context.status_label_fg,
-                    ),
-                )
-                latest_downloaded_video = os.path.join(
-                    self.download_path, self.context.final_filename_check
-                )
+                        latest_downloaded_video = os.path.join(
+                            self.download_path, self.context.final_filename_check
+                        )
 
         except Exception as e:
             error_msg = f"Download failed: {str(e)}"
