@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Smart format fallback system for improved download reliability
+- Automatic retry with alternative formats (MKV → MP4 → pre-merged)
+
+### Improved
+- Download success rate for problematic videos and edge cases
+- Error handling for container format and merging failures
+- Progress tracking consistency during format switching
+
 ### Planned
 - macOS build support
 - Additional video/audio tools

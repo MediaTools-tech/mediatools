@@ -41,6 +41,7 @@ MediaTools Video Downloader is a user-friendly desktop application that allows y
 - Thumbnail embedding
 - Cookie support for private videos
 - Cross-platform compatibility
+- Smart format fallback
 
 ## Documentation
 

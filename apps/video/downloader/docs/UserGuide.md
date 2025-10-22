@@ -57,6 +57,7 @@ MediaTools Video Downloader is a powerful, cross-platform desktop application de
 - **Auto-update option** – Auto update to latest yt-dlp
 - **Multi-platform support** - Download from yt-dlp supported 1000+ sites
 - **Format flexibility** - Choose between MKV (highest quality) or MP4 (best compatibility)
+- **Smart Format Fallback**: Automatically retries downloads with alternative formats if the preferred one fails
 - **Quality control** - Select optimal quality settings for your needs
 - **Speed management** - Control download speeds to manage bandwidth
 - **Queue system** - Download multiple videos sequentially
@@ -718,6 +719,26 @@ This is a common issue that can happen for several reasons:
 - **MKV:** Highest quality, supports pause/resume, better for archival
 - **MP4:** Best compatibility (phones, tablets, social media), smaller file sizes
 - **Single best (b):** Fastest download, no merging required, but may compromise on quality
+
+**Q. What happens if my chosen format fails to download?**
+**A.** The app automatically uses a smart fallback system to ensure your download succeeds:
+
+### Format Fallback Chain:
+- **MKV → MP4 → Single best** (if MKV fails, tries MP4, then single file)
+- **MP4 → Single best** (if MP4 fails, tries single file)
+- **Single best** (no fallback needed - most reliable)
+
+### How It Works:
+1. Starts with your preferred format selection
+2. If any issues occur (merging failures, codec problems, etc.)
+3. Automatically retries with the next format in the chain
+
+### Example Scenarios:
+- MKV download fails → Automatically tries MP4 → Download succeeds
+- MP4 download fails → Automatically tries single file → Download succeeds
+- No manual intervention needed - the app handles it automatically
+
+*This system ensures maximum download success rates while respecting your format preferences.*
 
 **Q. Why are MKV files bigger?**  
 **A.**
