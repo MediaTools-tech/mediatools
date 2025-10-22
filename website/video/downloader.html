@@ -14,7 +14,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link rel="stylesheet" href="../css/styles.css">
     <style>
         :root {
             --primary: #000000;
@@ -42,13 +42,6 @@
             scroll-behavior: smooth;
         }
         
-        body {
-            background-color: #f7f9fb;
-            color: #333333;
-            line-height: 1.6;
-            overflow-x: hidden;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
 
         #scroll-progress {
             position: fixed;
@@ -62,61 +55,7 @@
             transition: width 0.3s ease;
         }
         
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 clamp(16px, 4vw, 32px);
-        }
-        
-        .top-nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: #ffffff;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            z-index: 1000;
-            padding: 10px 0px 10px 15px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .nav-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nav-logo-icon {
-            height: 30px;
-            width: auto;
-        }
-
-        .nav-logo-text {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary-blue);
-        }
-
-        header {
-            background: #f7f9fb;
-            margin-top: 60px;
-            padding: clamp(15px, 6vw, 25px) 0 clamp(30px, 12vw, 50px) 0;
-            text-align: center;
-        }
-        
-        .logo {
-            font-size: clamp(1.8rem, 5vw, 2.5rem);
-            font-weight: 700;
-            margin-top: clamp(15px, 4vw, 20px);
-            margin-bottom: 0px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            color: var(--primary-blue);
-        }
-        
-        .logo-icon, .downloader-icon {
+        .downloader-icon {
             height: 1em;
             width: auto;
             border-radius: 4px;
@@ -240,39 +179,6 @@
 
         section {
             padding: 0 0 clamp(50px, 10vw, 100px) 0;
-        }
-        
-        .content-card {
-            background: white;
-            border-radius: 12px;
-            padding: clamp(30px, 6vw, 45px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            width: 100%;
-            margin-bottom: clamp(30px, 6vw, 40px);
-            border: 1px solid #e2e8f0;
-        }
-        
-        .section-title {
-            text-align: center;
-        }
-        
-        .section-title h2 {
-            font-size: clamp(2rem, 6vw, 2.5rem);
-            margin-bottom: 20px;
-            background: var(--primary-blue);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 700;
-        }
-        
-        .section-title p {
-            color: var(--gray);
-            max-width: 700px;
-            margin: 0 auto;
-            font-size: clamp(1rem, 3vw, 1.2rem);
-            line-height: 1.7;
-            margin-bottom: clamp(30px, 6vw, 40px);
         }
         
         @keyframes fadeInUp {
@@ -676,76 +582,8 @@
             box-shadow: 0 10px 25px rgba(1, 36, 100, 0.4);
         }
         
-        footer {
-            background-color: #ffffff;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-            padding: 3rem 0;
-            color: #4b5563;
-            text-align: center;
-        }
-        
-        .footer-logo {
-            font-size: clamp(1.8rem, 5vw, 2.2rem);
-            font-weight: 700;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            color: var(--primary-blue);
-        }
-
-        .footer-logo .logo-icon {
-            width: clamp(30px, 6vw, 40px);
-            height: auto;
-        }
-        
-        .footer-links {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1.5rem;
-            margin: 30px 0;
-        }
-        
-        .footer-links a {
-            color: #4b5563;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .footer-links a:hover {
-            color: var(--primary-blue);
-            transform: translateY(-2px);
-        }
-        
-        .copyright {
-            margin-top: 30px;
-            font-size: 0.875rem;
-            color: #6b7280;
-        }
-        
         @media (prefers-color-scheme: dark) {
-            body {
-                background-color: #0f172a;
-                color: #e2e8f0;
-            }
-            
-            .content-card {
-                background: #1e293b;
-                border: 1px solid #475569;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            }
-
-            .top-nav, footer {
-                background-color: #1e293b;
-                border-bottom: 1px solid #475569;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            }
-
-            .nav-logo-text, .footer-logo, .logo, .stat-label {
+            .stat-label {
                 color: #e2e8f0 !important;
             }
             
@@ -755,31 +593,10 @@
                 border: 1px solid #475569;
             }
             
-            .section-title h2 {
-                color: #e2e8f0;
-            }
-            
-            .highlight {
-                background-color: rgba(37, 99, 235, 0.15);
-                border: 1px solid rgba(37, 99, 235, 0.3);
-            }
-            
             .feature-card p, .privacy-card p, .privacy-card li {
                 color: #cbd5e1;
             }
             
-            .description-content p {
-                color: #e2e8f0;
-            }
-
-            .footer-links a {
-                color: #94a3b8;
-            }
-
-            .copyright {
-                color: #475569;
-            }
-
             .download-card {
                 background: #334155;
             }
@@ -799,14 +616,6 @@
                 color: #93c5fd;
             }
         }
-        
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
     </style>
 </head>
 
@@ -821,7 +630,7 @@
     <div id="scroll-progress"></div>
 
     <header>
-        <div class="container">
+        <div class="container_local">
             <div class="logo"> 
                 <img src="../assets/video_downloader_icon.png" alt="Video Downloader Icon" class="downloader-icon">
                 <span class="app-title-font">Mediatools Video Downloader</span>
@@ -831,7 +640,7 @@
     </header>
 
     <section id="slideshow-section">
-        <div class="container">
+        <div class="container_local">
             <div class="content-card">
                 <div class="section-title">
                     <h2 style="margin-bottom: 0;">Application Preview</h2>
@@ -869,7 +678,7 @@
     </section>
 
     <section class="features">
-        <div class="container">
+        <div class="container_local">
             <div class="content-card">
                 <div class="section-title">
                     <h2>Key Features</h2>
@@ -927,7 +736,7 @@
     </section>
 
     <section class="description">
-        <div class="container">
+        <div class="container_local">
             <div class="content-card">
                 <div class="section-title">
                     <h2>About MediaTools Video Downloader</h2>
@@ -947,7 +756,7 @@
     </section>
 
     <section id="privacy-legal">
-        <div class="container">
+        <div class="container_local">
             <div class="content-card">
                 <div class="section-title">
                     <h2>Privacy & Legal Information</h2>
@@ -992,7 +801,7 @@
     </section>
 
     <section class="downloads">
-        <div class="container">
+        <div class="container_local">
             <div class="content-card">
                 <div class="section-title">
                     <h2>Download Now</h2>
@@ -1067,7 +876,7 @@
     </section>
 
     <section class="github-info">
-        <div class="container">
+        <div class="container_local">
             <div class="content-card">
                 <div class="section-title">
                     <h2>Open Source Project</h2>
@@ -1096,7 +905,7 @@
     </section>
 
     <footer>
-        <div class="container">
+        <div class="container_local">
             <div class="footer-logo">
                 <a href="../index.html" class="nav-logo">
                     <img src="../assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/30x30/012464/ffffff?text=MT';" title="Logo Placeholder">
