@@ -119,6 +119,7 @@ class VideoDownloaderApp:
             update_buttons_based_on_format=self._update_buttons_based_on_format,
             check_internet_connection=self.check_internet_connection,
             add_to_delete_list=self.add_to_delete_list,
+            set_pause_resume_state=self.set_pause_resume_state,
             exit_app=self.exit_app,
             download_path_temp=self.download_path_temp,
             pending_button_update=self.pending_button_update,
@@ -230,7 +231,7 @@ class VideoDownloaderApp:
 
         self.warning_label = tk.Label(
             self.root,
-            text="Pause/Resume not supported for Settings option: Format - bestvideo+bestaudio/best-mp4",
+            text="Pause/Resume supported only for Settings option: Format - bestvideo+bestaudio/best-mkv",
             fg="#000000",
             font=(self.label_font[0], self.label_font[1]-1),
             bg=self.root.cget("bg"),
@@ -261,17 +262,17 @@ class VideoDownloaderApp:
             "stream_and_merge_format", "bestvideo+bestaudio/best-mp4"
         )
         is_disable_pause_resume = (
-            True if format_setting == "bestvideo+bestaudio/best-mp4" else False
+            True if format_setting == "bestvideo+bestaudio/best-mp4" or format_setting == "b" else False
         )
 
         if self.download_context.is_downloading:
             self.download_context.pending_button_update = True
             return
 
-        self._set_pause_resume_state(is_disable_pause_resume)
+        self.set_pause_resume_state(is_disable_pause_resume)
         self.download_context.pending_button_update = False
 
-    def _set_pause_resume_state(self, is_disable_pause_resume):
+    def set_pause_resume_state(self, is_disable_pause_resume):
         """Enable or disable pause/resume buttons"""
         state = "disabled" if is_disable_pause_resume else "normal"
 

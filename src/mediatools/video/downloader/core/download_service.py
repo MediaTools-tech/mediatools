@@ -52,6 +52,7 @@ class DownloadContext:
     update_buttons_based_on_format: Optional[Callable] = None
     check_internet_connection: Optional[Callable] = None
     add_to_delete_list: Optional[Callable] = None
+    set_pause_resume_state: Optional[Callable] = None
     exit_app: Optional[Callable] = None
 
     download_path_temp: str = ""
@@ -300,6 +301,10 @@ class DownloadService:
             for iteration, (stream_format, merge_format) in enumerate(format_fallback_chain):
                 is_last_iteration = (iteration == len(format_fallback_chain) - 1)
                 # print(stream_format, merge_format)
+                if merge_format == "mkv":
+                    self.context.set_pause_resume_state(False)
+                else:
+                    self.context.set_pause_resume_state(True)
 
                 if iteration > 0:
                     self.status_text = f"Retrying with stream_format-{stream_format},  merge_format-{merge_format}"
