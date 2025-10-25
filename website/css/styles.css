@@ -44,18 +44,6 @@
         align-items: center;
         justify-content: center;
         gap: 15px;
-        color: var(--primary-blue);
-    }
-    
-    .logo {
-        font-size: clamp(1.8rem, 5vw, 2.5rem);
-        font-weight: 700;
-        margin-top: clamp(15px, 4vw, 20px);
-        margin-bottom: 0px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
         position: relative;
         z-index: 1;
         color: #012464; /* Ensure main header logo text is dark */
@@ -71,6 +59,15 @@
         justify-content: center;
         position: relative;
         border-radius: 4px;
+    }
+
+    .center-image {
+        margin-top: clamp(5px, 2vw, 10px);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
     }
 
     body {
@@ -94,6 +91,19 @@
         width: 100%;
         margin-bottom: clamp(20px, 6vw, 30px);
         border: 1px solid #e2e8f0;
+    }
+    
+    .content-card-title {
+        background: white;
+        border-radius: 25px;
+        padding: clamp(30px, 5vw, 45px);
+        /* box-shadow: 0 4px 6px rgba(2, 56, 192, 0.2); */
+        width: 100%;
+        margin-top: clamp(10px, 3vw, 15px);
+        margin-bottom: clamp(20px, 6vw, 30px);
+        border: 1px solid #e2e8f0;
+        /* border: 1px solid #529dff7e; */
+        text-align: center;
     }
     
     .section-title {
