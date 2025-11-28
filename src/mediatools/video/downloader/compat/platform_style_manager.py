@@ -164,7 +164,7 @@ class PlatformStyleManager:
                 with open("/proc/version", "r") as f:
                     if "microsoft" in f.read().lower():
                         return True
-        except:
+        except Exception:
             pass
         return False
 
@@ -199,7 +199,7 @@ class PlatformStyleManager:
 
             test_label.destroy()
             return width > 0
-        except:
+        except Exception:
             return False
 
     def _detect_emoji_compatibility(self):

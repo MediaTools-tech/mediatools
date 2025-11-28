@@ -208,3 +208,13 @@ __marimo__/
 
 # Other stuff
 other_stuff/
+GEMINI.md
+setup.cfg
+~$*.docx
+docs/UserGuide.docx
+src/mediatools/video/downloader/bin/
+src/mediatools/video/downloader/data/failed_url.txt
+src/mediatools/video/downloader/data/first_run.flag
+src/mediatools/video/downloader/data/queue.txt
+src/mediatools/video/downloader/data/settings.json
+apps/video/downloader/docs/UserGuide.docx

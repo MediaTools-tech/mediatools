@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from mediatools.video.downloader.core.settings_manager import SettingsManager
 
+
 class QueueManager:
     def __init__(self, style_manager, root):
         self.settings = SettingsManager()
@@ -35,28 +36,31 @@ class QueueManager:
         # Track file states for quick comparison
         self._queue_file_state = self._get_file_state(self.queue_file)
         self._failed_file_state = self._get_file_state(self.failed_url_file)
-        
+
         self.setup_efficient_monitoring()
-    
+
     def _get_file_state(self, filename):
         """Get current file state (mtime + size)"""
         try:
             stat = os.stat(filename)
-            return {'mtime': stat.st_mtime, 'size': stat.st_size}
+            return {"mtime": stat.st_mtime, "size": stat.st_size}
         except OSError:
-            return {'mtime': 0, 'size': 0}
-    
+            return {"mtime": 0, "size": 0}
+
     def _is_file_changed(self, filename, last_state):
         """Quick check if file changed using mtime + size"""
         try:
             current_state = self._get_file_state(filename)
-            return (current_state['mtime'] != last_state['mtime'] or 
-                    current_state['size'] != last_state['size'])
+            return (
+                current_state["mtime"] != last_state["mtime"]
+                or current_state["size"] != last_state["size"]
+            )
         except OSError:
             return False
-    
+
     def setup_efficient_monitoring(self):
         """Efficient polling using file state checks"""
+
         def check_files():
             # Check queue file (extremely fast - just stat call)
             if self._is_file_changed(self.queue_file, self._queue_file_state):
@@ -64,25 +68,25 @@ class QueueManager:
                 self._queue_entries = self._parse_file(self.queue_file)
                 self._queue_file_state = self._get_file_state(self.queue_file)
                 self.update_button_display()
-            
+
             # Check failed URLs file
             if self._is_file_changed(self.failed_url_file, self._failed_file_state):
                 # print("Failed URLs file changed - reloading content")
                 self._failed_entries = self._parse_file(self.failed_url_file)
                 self._failed_file_state = self._get_file_state(self.failed_url_file)
                 self.update_button_display()
-            
-            # Check again in 4 second
-            self.root.after(4000, check_files)
-        
+
+            # Check again in 2 second
+            self.root.after(2000, check_files)
+
         check_files()
-    
+
     def _parse_file(self, filename):
         """Only called when file actually changed"""
         # Your existing file parsing logic here
         entries = []
         try:
-            with open(filename, 'r', encoding='utf-8') as f:
+            with open(filename, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if line:
@@ -145,18 +149,17 @@ class QueueManager:
         """Check for white spaces or missing newline in last line"""
         if not filepath or not os.path.exists(filepath):
             return
-            
+
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
-                
                 if not content.strip():  # Empty file
                     return
-                    
+
                 lines = [line.strip() for line in content.splitlines() if line.strip()]
                 if not lines:
                     return
-                    
+
                 update_file = False
                 new_lines = []
                 
@@ -171,21 +174,21 @@ class QueueManager:
                     update_file = True
                     
                 # Check 2: If last line doesn't end with newline
-                elif not content.endswith('\n'):
+                if not content.endswith("\n"):
                     # print(f"Last line missing newline in {filepath}, fixing...")
                     new_lines = lines
                     update_file = True
-                    
-                else:
-                    # File is already in good format
-                    return
-                
+
+                # else:
+                #     # File is already in good format
+                #     return
+
             if update_file:
                 with open(filepath, "w", encoding="utf-8") as f:
                     for line in new_lines:
                         f.write(f"{line}\n")
                 # print(f"Normalized {len(new_lines)} entries in {filepath}")
-            
+
         except Exception as e:
             print(f"Error checking entries in {filepath}: {e}")
 
@@ -338,22 +341,37 @@ class QueueManager:
             if self.track_failed_url:
                 self._move_to_old_file(self.failed_url_file, self.failed_url_old_file)
 
-    def add_url(self, url):
+    def add_url(self, url, download_type="video"):
         """Add URL to queue (thread-safe)"""
         if not url.strip():
             return False
 
         url = url.strip()
+        # entry = f"{url},{download_type}"
+
+        entry = url if download_type == "video" else "audio:" + url
 
         with self.queue_lock:
-            self._append_to_file(self.queue_file, url)
+            self._append_to_file(self.queue_file, entry)
         return True
 
     def get_next_url(self):
         """Get next URL from queue (thread-safe)"""
         with self.queue_lock:
             urls = self._read_file_lines(self.queue_file)
-            return urls[0] if urls else None
+            if not urls:
+                return None, None
+
+            if urls[0].startswith("audio:"):
+                url = urls[0].removeprefix("audio:")
+                download_type = "audio"
+            else:
+                url = urls[0]
+                download_type = "video"
+            # parts = urls[0].split(",")
+            # url = parts[0]
+            # download_type = parts[1] if len(parts) > 1 else "video"
+            return url, download_type
 
     def remove_url(self, url=None):
         """Remove URL from queue (thread-safe)"""
@@ -362,7 +380,7 @@ class QueueManager:
             if urls:
                 if url:
                     # Remove specific URL
-                    urls = [u for u in urls if u != url]
+                    urls = [u for u in urls if u.split(",")[0] != url]
                 else:
                     # Remove first URL
                     urls = urls[1:]
@@ -382,12 +400,15 @@ class QueueManager:
         """Check if there are URLs in queue"""
         return self.get_queue_count() > 0
 
-    def add_failed_url(self, url, error_message=""):
+    def add_failed_url(self, url, download_type, error_message=""):
         """Add URL to failed list"""
         if not self.track_failed_url:
             return
-
-        failed_entry = url  # Simplified - can add timestamp/error if needed
+        
+        if download_type == "audio":
+            failed_entry = "audio:" + url
+        else:
+            failed_entry = url
 
         with self.queue_lock:
             if self.multisession_support:
@@ -403,10 +424,10 @@ class QueueManager:
         with self.queue_lock:
             return self._read_file_lines(self.queue_file)
 
-
     def get_previous_session_check_done(self):
         """Previous session check done"""
         return self.previous_session_check_done
+
 
 class PreviousSessionDialog:
     """Custom dialog for previous session options (cross-platform safe)"""

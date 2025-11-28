@@ -67,7 +67,7 @@ class SettingsWindow:
 
         self.window = tk.Toplevel(self.parent)
         self.window.title("Downloader Settings")
-        self.window.geometry("500x700")
+        self.window.geometry("550x770")
         self.window.resizable(False, False)
 
         # Explicit background for the window
@@ -122,7 +122,7 @@ class SettingsWindow:
         # Format
         self._create_dropdown(
             scrollable_frame,
-            "Format:",
+            "Video/Audio file format:",
             "stream_and_merge_format",  # New key name
             [
                 "bestvideo+bestaudio/best-mkv",
@@ -132,13 +132,34 @@ class SettingsWindow:
             2,
         )
 
+        # Audio Format
+        self._create_dropdown(
+            scrollable_frame,
+            "Audio only file format:",
+            "audio_format",
+            ["m4a", "mp3", "bestaudio"],
+            3,
+        )
+
+        # Embed thumbnail in audio file
+        self._create_dropdown(
+            scrollable_frame,
+            "Embed thumbnail in audio file:",
+            "embed_thumbnail_in_audio",
+            [
+                "Yes",
+                "No",
+            ],
+            4,
+        )
+
         # Download Archive
         self._create_dropdown(
             scrollable_frame,
             "Download archive:",
             "enable_download_archive",
             ["True", "False"],
-            3,
+            5,
         )
 
         # Multisession Queue Support
@@ -147,7 +168,7 @@ class SettingsWindow:
             "Multisession queue support:",
             "multisession_queue_download_support",
             ["True", "False"],
-            4,
+            6,
         )
 
         # Track Failed URL
@@ -156,7 +177,7 @@ class SettingsWindow:
             "Track failed URL:",
             "track_failed_url",
             ["True", "False"],
-            5,
+            7,
         )
 
         # Cookies from Browser
@@ -165,7 +186,7 @@ class SettingsWindow:
             "Cookies from browser:",
             "enable_cookies_from_browser",
             "cookies_browser",
-            6,
+            8,
         )
 
         # Browser Profile/Path (with browse file button)
@@ -174,7 +195,7 @@ class SettingsWindow:
             "Browser profile/path:",
             "cookies_browser_profile",
             "Select browser profile file",
-            7,
+            9,
             file_types=[("All files", "*.*")],
         )
 
@@ -184,7 +205,7 @@ class SettingsWindow:
             "Cookies file path:",
             "cookies_path",
             "Select cookies.txt file",
-            8,
+            10,
             file_types=[("Text files", "*.txt")],
         )
 
@@ -203,7 +224,7 @@ class SettingsWindow:
                 "Minimalist_2",
                 "Minimalist_3",
             ],
-            9,
+            11,
         )
 
         # Download Path
@@ -212,7 +233,7 @@ class SettingsWindow:
             "Download path:",
             "downloads_dir",
             "Select download directory",
-            10,
+            12,
         )
 
         # Download in Subfolders
@@ -221,7 +242,7 @@ class SettingsWindow:
             "Download in subfolders:",
             "platform_specific_download_folders",
             ["True", "False"],
-            11,
+            13,
         )
 
         # Domain names entry - CREATE IN PROPER ORDER
@@ -256,27 +277,26 @@ class SettingsWindow:
 
         # All buttons with takefocus=0 (no focus indicators)
         reset_btn = ttk.Button(
-            button_frame, 
-            text="Reset to Defaults", 
+            button_frame,
+            text="Reset to Defaults",
             command=self._reset_to_defaults,
-            takefocus=0  # No focus, no dotted border
+            takefocus=0,  # No focus, no dotted border
         )
         reset_btn.pack(side=tk.LEFT, padx=5)
 
         ttk.Button(
-            button_frame, 
-            text="Apply", 
+            button_frame,
+            text="Apply",
             command=self._apply_settings,
-            takefocus=0  # Apply to all buttons
+            takefocus=0,  # Apply to all buttons
         ).pack(side=tk.RIGHT, padx=5)
 
         ttk.Button(
-            button_frame, 
-            text="Cancel", 
+            button_frame,
+            text="Cancel",
             command=self.window.destroy,
-            takefocus=0  # Apply to all buttons
+            takefocus=0,  # Apply to all buttons
         ).pack(side=tk.RIGHT, padx=5)
-
 
     def _toggle_domain_entry(self, *args):
         """Show/hide domain entry when subfolder option is toggled"""
@@ -328,6 +348,13 @@ class SettingsWindow:
             "stream_and_merge_format", "bestvideo+bestaudio/best-mkv"
         )
         self.widgets["stream_and_merge_format"].set(format_value)
+
+        audio_format_value = current.get("audio_format", "m4a")
+        self.widgets["audio_format"].set(audio_format_value)
+
+        embed_thumbnail_in_audio = current.get("embed_thumbnail_in_audio", "Yes")
+        self.widgets["embed_thumbnail_in_audio"].set(embed_thumbnail_in_audio)
+
         self.widgets["multisession_queue_download_support"].set(
             str(current.get("multisession_queue_download_support", True))
         )
@@ -382,7 +409,7 @@ class SettingsWindow:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=5)
 
-        ttk.Label(frame, text=label_text, width=25).pack(side=tk.LEFT)
+        ttk.Label(frame, text=label_text, width=27).pack(side=tk.LEFT)
 
         var = tk.StringVar()
         combobox = ttk.Combobox(
@@ -395,7 +422,7 @@ class SettingsWindow:
     def _create_entry(self, parent, label_text, setting_key, placeholder, row):
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=5)
-        ttk.Label(frame, text=label_text, width=25).pack(side=tk.LEFT)
+        ttk.Label(frame, text=label_text, width=27).pack(side=tk.LEFT)
         var = tk.StringVar()
         entry = ttk.Entry(frame, textvariable=var, width=30)
         entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(10, 0))
@@ -425,7 +452,7 @@ class SettingsWindow:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=5)
 
-        ttk.Label(frame, text=label_text, width=25).pack(side=tk.LEFT)
+        ttk.Label(frame, text=label_text, width=27).pack(side=tk.LEFT)
 
         var = tk.StringVar()
         entry = ttk.Entry(frame, textvariable=var, width=25)
@@ -433,7 +460,9 @@ class SettingsWindow:
 
         browse_text = "Browse File" if file_types else "Browse Folder"
         ttk.Button(
-            frame, text=browse_text, command=lambda: self._browse_path(var, setting_key, file_types)
+            frame,
+            text=browse_text,
+            command=lambda: self._browse_path(var, setting_key, file_types),
         ).pack(side=tk.RIGHT)
 
         self.widgets[setting_key] = var
@@ -444,10 +473,17 @@ class SettingsWindow:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=5)
 
-        ttk.Label(frame, text=label_text, width=25).pack(side=tk.LEFT)
+        ttk.Label(frame, text=label_text, width=27).pack(side=tk.LEFT)
 
         enable_var = tk.BooleanVar()
-        enable_cb = tk.Checkbutton(frame, text="Enable", variable=enable_var, onvalue=True, offvalue=False, bg="#d3d3d3")
+        enable_cb = tk.Checkbutton(
+            frame,
+            text="Enable",
+            variable=enable_var,
+            onvalue=True,
+            offvalue=False,
+            bg="#d3d3d3",
+        )
         enable_cb.pack(side=tk.LEFT, padx=(0, 10))
 
         browser_var = tk.StringVar()
@@ -471,10 +507,18 @@ class SettingsWindow:
         self.widgets[browser_key] = browser_var
 
     def _browse_path(self, var, setting_key=None, file_types=None):
-        if setting_key=="cookies_path":
-            initial_path = os.path.dirname(self.settings.get("cookies_path")) if self.settings.get("cookies_path") else self.settings.get("data_path")
-        elif setting_key=="cookies_browser_profile":
-            initial_path = os.path.dirname(self.settings.get("cookies_browser_profile")) if self.settings.get("cookies_browser_profile") else self.settings.get("data_path")
+        if setting_key == "cookies_path":
+            initial_path = (
+                os.path.dirname(self.settings.get("cookies_path"))
+                if self.settings.get("cookies_path")
+                else self.settings.get("data_path")
+            )
+        elif setting_key == "cookies_browser_profile":
+            initial_path = (
+                os.path.dirname(self.settings.get("cookies_browser_profile"))
+                if self.settings.get("cookies_browser_profile")
+                else self.settings.get("data_path")
+            )
         else:
             initial_path = var.get() or str(Path.home())
 
@@ -515,9 +559,15 @@ class SettingsWindow:
                 )
                 self._last_domain_content = current_domains
 
-            downloads_dir_cleaned = self.clean_path_field(self.widgets["downloads_dir"].get())
-            cookies_path_cleaned = self.clean_path_field(self.widgets["cookies_path"].get())
-            cookies_browser_profile_cleaned = self.clean_path_field(self.widgets["cookies_browser_profile"].get())
+            downloads_dir_cleaned = self.clean_path_field(
+                self.widgets["downloads_dir"].get()
+            )
+            cookies_path_cleaned = self.clean_path_field(
+                self.widgets["cookies_path"].get()
+            )
+            cookies_browser_profile_cleaned = self.clean_path_field(
+                self.widgets["cookies_browser_profile"].get()
+            )
 
             new_settings = {
                 "auto_update": self.widgets["auto_update"].get() == "True",
@@ -527,6 +577,10 @@ class SettingsWindow:
                 == "True",
                 "stream_and_merge_format": self.widgets[
                     "stream_and_merge_format"
+                ].get(),
+                "audio_format": self.widgets["audio_format"].get(),
+                "embed_thumbnail_in_audio": self.widgets[
+                    "embed_thumbnail_in_audio"
                 ].get(),
                 "multisession_queue_download_support": self.widgets[
                     "multisession_queue_download_support"
@@ -593,6 +647,6 @@ class SettingsWindow:
         """Clean path field, ensuring empty strings stay empty"""
         if not path_string or not str(path_string).strip():
             return ""
-        
+
         cleaned = str(path_string).strip().strip('"').strip("'")
         return str(Path(cleaned)) if cleaned else ""

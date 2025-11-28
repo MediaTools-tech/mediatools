@@ -6,12 +6,12 @@ from tkinter import ttk
 from dataclasses import dataclass
 from typing import Callable, Optional, Dict, Any
 from pathlib import Path
-import logging
 
 # Determine platform
 IS_WINDOWS = platform.system() == "Windows"
 IS_MAC = platform.system() == "Darwin"
 IS_LINUX = platform.system() == "Linux"
+
 
 @dataclass
 class GUIContext:
@@ -40,6 +40,7 @@ class GUIContext:
     open_settings_gui: Optional[Callable] = None
     # open_settings_guide: Optional[Callable] = None
     exit_app: Optional[Callable] = None
+
 
 class ThemeManager:
     """GUI theme manager"""
@@ -82,7 +83,7 @@ class ThemeManager:
 
     def setup_gui(self):
         """Setup the main application GUI"""
-        self.root.title("MediaTools Video Downloader V1.0")
+        self.root.title("MediaTools Video Downloader v2.0.0")
         self.root.geometry("800x420")
         self.gui_window_bg = "#f8f9fa"
         self.root.configure(bg=self.gui_window_bg)  # Light gray background
@@ -110,40 +111,32 @@ class ThemeManager:
         except Exception as e:
             print(f"Could not load window icon: {e}")
 
-        # Get the current theme setting
-        theme = self.settings.get(
-            "gui_theme", "Default"
-        )  # Default to "Default" if not set
-
         # Create main layout with correct proportions
         self.create_main_layout()
         self.create_button_panels()
         self.setup_styles()
         self.setup_bindings()
 
-
     def resource_path(self, relative_path):
         """Get absolute path to resource, works for dev and for PyInstaller"""
         # Make sure frozen check comes first
         base_path = ""
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False):
             # PyInstaller build (onefile or onedir)
             exe_dir = Path(sys.executable).parent
-            if (exe_dir / '_internal').exists():
+            if (exe_dir / "_internal").exists():
                 base_path = os.path.dirname(sys.executable)
             else:
-                 base_path = sys._MEIPASS
+                base_path = sys._MEIPASS
         else:
             # Development
             base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
         # Handle Windows vs Linux path separators
         if os.name == "nt":  # Windows
             return os.path.join(base_path, relative_path.replace("/", "\\"))
         else:  # Linux/Mac
             return os.path.join(base_path, relative_path.replace("\\", "/"))
-
 
     def setup_styles(self):
         """Setup styles based on current theme"""
@@ -159,26 +152,33 @@ class ThemeManager:
             self.setup_styles_dark()
         else:
             self.setup_styles_default()
-        
 
     def set_download_buttom_img(self, theme="Default"):
         assets_dir = Path(self.settings.get("assets_dir", "assets"))
 
-        theme_download_btn_img_mapping: Dict[str, str] = { 
-                                                "Default": "d1.gif",
-                                                "Dark": "d2.gif",
-                                                "Unicolor_1": "u1.gif",
-                                                "Unicolor_2": "u2.gif",
-                                                "Unicolor_3": "u3.gif",
-                                                "Minimalist_1": "m12.gif",
-                                                "Minimalist_2": "m12.gif",
-                                                "Minimalist_3": "m3.gif",
-                                            }
-        
-        download_button_icon_path = assets_dir / theme_download_btn_img_mapping.get(theme, "d1.gif")
+        theme_download_btn_img_mapping: Dict[str, str] = {
+            "Default": "d1.gif",
+            "Dark": "d2.gif",
+            "Unicolor_1": "u1.gif",
+            "Unicolor_2": "u2.gif",
+            "Unicolor_3": "u3.gif",
+            "Minimalist_1": "m12.gif",
+            "Minimalist_2": "m12.gif",
+            "Minimalist_3": "m3.gif",
+        }
+
+        download_button_icon_path = assets_dir / theme_download_btn_img_mapping.get(
+            theme, "d1.gif"
+        )
+
         try:
-            self.download_button_icon = tk.PhotoImage(file=str(download_button_icon_path))
-        except:
+
+            self.download_button_icon = tk.PhotoImage(
+                file=str(download_button_icon_path)
+            )
+
+        except Exception:
+
             self.download_button_icon = tk.PhotoImage(width=20, height=20)
 
     def set_gui_window_bg_fg(self, theme="Default"):
@@ -266,9 +266,13 @@ class ThemeManager:
         self.footer.configure(bg=gui_window_bg, fg=footer_fg)
 
         # CANVAS PROGRESS BAR THEMING (replaces ttk style configuration)
-        if hasattr(self, 'progress_canvas'):
-            self.progress_canvas.configure(bg=progress_bar_bg_tc_bc[1])  # Trough background
-            self.progress_canvas.itemconfig(self.progress_rect, fill=progress_bar_bg_tc_bc[0])  # Progress color
+        if hasattr(self, "progress_canvas"):
+            self.progress_canvas.configure(
+                bg=progress_bar_bg_tc_bc[1]
+            )  # Trough background
+            self.progress_canvas.itemconfig(
+                self.progress_rect, fill=progress_bar_bg_tc_bc[0]
+            )  # Progress color
 
         self.style.configure(
             "Url.TEntry",
@@ -297,7 +301,6 @@ class ThemeManager:
 
         return
 
-
     def setup_styles_default(self):
         """Configure modern button styles"""
 
@@ -315,7 +318,9 @@ class ThemeManager:
             focuscolor="none",
         )
 
-        self.style.configure("Primary.TButton", image=self.download_button_icon, compound="left")
+        self.style.configure(
+            "Primary.TButton", image=self.download_button_icon, compound="left"
+        )
 
         color_set = [
             "#1fb4c2",
@@ -381,9 +386,11 @@ class ThemeManager:
             borderwidth=0,
             focuscolor="none",
         )
-        
-        self.style.configure("Primary.TButton", image=self.download_button_icon, compound="left")
-        
+
+        self.style.configure(
+            "Primary.TButton", image=self.download_button_icon, compound="left"
+        )
+
         # Dynamically create styles for buttons
         for i in range(0, 11):
             self.style.configure(
@@ -435,7 +442,9 @@ class ThemeManager:
             focuscolor="none",
         )
 
-        self.style.configure("Primary.TButton", image=self.download_button_icon, compound="left")
+        self.style.configure(
+            "Primary.TButton", image=self.download_button_icon, compound="left"
+        )
 
         # Dynamically create styles for buttons
         for i in range(0, 11):
@@ -500,7 +509,9 @@ class ThemeManager:
             focuscolor="none",
         )
 
-        self.style.configure("Primary.TButton", image=self.download_button_icon, compound="left")
+        self.style.configure(
+            "Primary.TButton", image=self.download_button_icon, compound="left"
+        )
 
         # Dynamically create styles for buttons
         for i in range(0, 11):
@@ -590,9 +601,7 @@ class ThemeManager:
         )
         self.context.status_label.pack(fill="x", padx=30, pady=(0, 3))
 
-        self.progress_frame = tk.Frame(
-            self.main_frame, bg=self.gui_window_bg, height=8
-        )
+        self.progress_frame = tk.Frame(self.main_frame, bg=self.gui_window_bg, height=8)
         self.progress_frame.pack(fill="x", pady=(3, 1), padx=32)
         self.progress_frame.pack_propagate(True)  # Maintain height
 
@@ -601,18 +610,21 @@ class ThemeManager:
             bg="#e9ecef",  # Default trough color (will be themed)
             height=6,
             highlightthickness=0,
-            relief='flat'
+            relief="flat",
         )
-        self.progress_canvas.pack(fill='x', pady=1)  # Center in frame
-        
+        self.progress_canvas.pack(fill="x", pady=1)  # Center in frame
+
         # Progress rectangle
         self.progress_rect = self.progress_canvas.create_rectangle(
-            0, 0, 0, 10,  # Will be updated
+            0,
+            0,
+            0,
+            10,  # Will be updated
             fill="#02aa20",  # Default progress color (will be themed)
-            outline='',    # No outline
-            width=0        # No border
+            outline="",  # No outline
+            width=0,  # No border
         )
-        
+
         # Create a progress bar controller object
         self.context.progress_bar = self.ProgressBarController(self)
 
@@ -637,25 +649,28 @@ class ThemeManager:
         def __init__(self, gui_instance):
             self.gui = gui_instance
             self._progress_value = 0
-        
+
         @property
         def value(self):
             return self._progress_value
-            
+
         @value.setter
         def value(self, percent):
             """Update progress (0-100) when value is set"""
             percent = max(0, min(100, percent))  # Clamp to 0-100 range
             self._progress_value = percent
-            
+
             # Update canvas visualization
             if self.gui.progress_canvas.winfo_width() > 1:
                 canvas_width = self.gui.progress_canvas.winfo_width()
                 progress_width = (percent / 100) * canvas_width
-                self.gui.progress_canvas.coords(self.gui.progress_rect, 0, 0, progress_width, 10)
+                self.gui.progress_canvas.coords(
+                    self.gui.progress_rect, 0, 0, progress_width, 10
+                )
 
     def create_button_panels(self):
         """Use inner frames with grid inside the pack-managed button_panel"""
+        global tk
         # Create a container frame inside button_panel that will use grid
         self.grid_container = tk.Frame(self.button_panel, bg=self.gui_window_bg)
         self.grid_container.pack(fill="both", expand=True)
@@ -673,20 +688,37 @@ class ThemeManager:
         # Row 1: Main actions
         self.context.buttons["download_btn"] = ttk.Button(
             self.grid_container,
-            text=f"    Download    |    Add To Queue",
+            text=f"   Video",
             style="Primary.TButton",
-            command=self.on_download_click,
+            command=lambda: self.on_download_click("video"),
         )
-        # self.setup_button()
         self.context.buttons["download_btn"].grid(
             row=0,
-            column=3,
+            column=1,
             columnspan=4,
-            padx=5,
+            padx=common_padx,
             pady=(15, 15),
-            sticky="nsew",
+            sticky="ew",
         )
         self.context.buttons["download_btn"].bind(
+            "<Button-1>", lambda e: self.root.after(10, self.root.focus_set)
+        )
+
+        self.context.buttons["audio_download_btn"] = ttk.Button(
+            self.grid_container,
+            text=f"   Audio",
+            style="Primary.TButton",
+            command=lambda: self.on_download_click("audio"),
+        )
+        self.context.buttons["audio_download_btn"].grid(
+            row=0,
+            column=5,
+            columnspan=4,
+            padx=common_padx,
+            pady=(15, 15),
+            sticky="ew",
+        )
+        self.context.buttons["audio_download_btn"].bind(
             "<Button-1>", lambda e: self.root.after(10, self.root.focus_set)
         )
         # Row 2: Status buttons
@@ -857,7 +889,7 @@ class ThemeManager:
 
         self.context.buttons["stop_btn"] = ttk.Button(
             self.grid_container,
-            text=f"{self.style_manager.get_emoji('stop')} Stop",
+            text=f"{self.style_manager.get_emoji('stop')} Stop & Del",
             style="Secondary9.TButton",
             command=self.context.stop_download_callback,
         )
@@ -894,25 +926,24 @@ class ThemeManager:
         # Add some decorative elements
         self.add_decorative_elements()
 
-
     def load_icon(self, icon_name, size=(20, 20)):
         """Load icon with transparency support"""
         try:
             assets_dir = Path(self.settings.get("assets_dir", "assets"))
             icon_path = assets_dir / f"{icon_name}.gif"
-            
+
             icon_path = tk.PhotoImage(file=str(icon_path))
             return icon_path
         except Exception as e:
             print(f"Failed to load icon: {e}")
             return None
-        
+
     def add_decorative_elements(self):
         """Add some decorative elements for better visual appeal"""
         # Footer with version info
         self.footer = tk.Label(
             self.root,
-            text="MediaTools Video Downloader V1.0 • © 2025",
+            text="MediaTools Video Downloader V2.0.0 • © 2025",
             bg=self.gui_window_bg,
             fg="#6c757d",
             font=(self.label_font[0], self.label_font[1] - 3),
@@ -927,7 +958,7 @@ class ThemeManager:
         """Setup event bindings with cross-platform support"""
         # URL entry binding
         self.context.url_entry.bind(
-            "<Return>", lambda e: self.context.add_url_to_queue()
+            "<Return>", lambda e: self.context.add_url_to_queue("video")
         )
 
         # Window close protocol (cross-platform)
@@ -1005,7 +1036,7 @@ class ThemeManager:
                 with open("/proc/version", "r") as f:
                     if "microsoft" in f.read().lower():
                         return True
-            except:
+            except Exception:
                 pass
 
             # Check /proc/sys/kernel/osrelease
@@ -1013,7 +1044,7 @@ class ThemeManager:
                 with open("/proc/sys/kernel/osrelease", "r") as f:
                     if "microsoft" in f.read().lower():
                         return True
-            except:
+            except Exception:
                 pass
 
             # Check environment variables
@@ -1022,13 +1053,11 @@ class ThemeManager:
             if os.environ.get("WSL_DISTRO_NAME") or os.environ.get("WSL_INTEROP"):
                 return True
 
-        except:
+        except Exception:
             pass
 
         return False
 
-    def on_download_click(self):
+    def on_download_click(self, download_type):
         """Handle download button click"""
-        self.context.add_url_to_queue()
-
-
+        self.context.add_url_to_queue(download_type)

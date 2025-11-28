@@ -10,8 +10,6 @@ import glob
 import logging
 from pathlib import Path
 
-
-# Constants for timeout configuration
 TIMEOUT_GRACEFUL = 3  # seconds for graceful termination
 TIMEOUT_FORCE = 2  # seconds for force termination
 TIMEOUT_CLEANUP = 5  # seconds for cleanup operations
@@ -22,6 +20,7 @@ logger = logging.getLogger(__name__)
 IS_WINDOWS = platform.system() == "Windows"
 IS_MAC = platform.system() == "Darwin"
 IS_LINUX = platform.system() == "Linux"
+
 
 @dataclass
 class DownloadContext:
@@ -49,14 +48,12 @@ class DownloadContext:
     update_download_state: Optional[Callable] = None
     update_pause_state: Optional[Callable] = None
     update_stop_state: Optional[Callable] = None
-    update_buttons_based_on_format: Optional[Callable] = None
     check_internet_connection: Optional[Callable] = None
     add_to_delete_list: Optional[Callable] = None
-    set_pause_resume_state: Optional[Callable] = None
+    pause_resume_disable: Optional[Callable] = None
     exit_app: Optional[Callable] = None
 
     download_path_temp: str = ""
-    pending_button_update: bool = False
     current_process: Optional[Any] = None
     is_downloading: bool = False
     is_stopped: bool = False
@@ -74,7 +71,9 @@ class DownloadContext:
     is_playlist: bool = False
     recent_url: str = ""
     status_label_fg: str = ""
+    download_type: str = ""
     stopped_downloads_to_be_deleted: List[str] = field(default_factory=list)
+
 
 class DownloadService:
     """Clean download service with minimal dependencies"""
@@ -116,7 +115,7 @@ class DownloadService:
         except Exception:
             self.messagebox_font = ("Arial", 10)
 
-    def download_video(self, url):
+    def download_video(self, url, download_type="video"):
         """Download a single video"""
         if not os.path.exists(self.context.ytdlp_path):
             if self.custom_msg_box.custom_askyesno(
@@ -165,25 +164,20 @@ class DownloadService:
             self.root.after(
                 0,
                 lambda: self.context.update_status(
-                    f"{emoji}Fetching video info...{self.context.recent_url}",
+                    f"{emoji}Fetching {download_type} info...{self.context.recent_url}",
                     fg=self.context.status_label_fg,
                 ),
             )
 
         try:
-            self.download(url)
+            self.download(url, download_type)
 
-            if self.context.pending_button_update:
-                self.context.update_buttons_based_on_format()
-
-        except Exception as e:
+        except Exception:
             self.root.after(
                 0,
-                lambda: self.context.update_status(
-                    f"Download failed: {str(e)}", error=True
-                ),
+                lambda: self.context.update_status("Download failed", error=True),
             )
-            self.queue_manager.add_failed_url(url, str(e))
+            self.queue_manager.add_failed_url(url, download_type, "Download failed")
         finally:
             self.context.is_downloading = False
             self.root.after(
@@ -191,60 +185,68 @@ class DownloadService:
                 self.context.update_queue_display(fg=self.context.status_label_fg),
             )
 
-    def download(self, url):
+    def download(self, url, download_type="video"):
         """Download cmd and execute cmd"""
         # Get current settings
         settings = self.settings
         self.percent_value = 0.0
+        format_fallback_chain = []
 
-        format_setting = self.settings.get(
-            "stream_and_merge_format", "bestvideo+bestaudio/best-mkv"
-        )
-
-        # Define fallback chains based on user's format preference
-        if format_setting == "b":
-            format_fallback_chain = [
-                ("b", None)  # Single attempt for 'b' format
-            ]
-        elif format_setting == "bestvideo+bestaudio/best-mkv":
-            format_fallback_chain = [
-                ("bestvideo+bestaudio/best", "mkv"),  # Primary: MKV merge
-                ("bestvideo+bestaudio/best", "mp4"),  # Fallback: MP4 merge  
-                ("b", None)                           # Final: Pre-merged
-            ]
-        elif format_setting == "bestvideo+bestaudio/best-mp4":
-            format_fallback_chain = [
-                ("bestvideo+bestaudio/best", "mp4"),  # Primary: MP4 merge
-                ("b", None)                           # Fallback: Pre-merged
-            ]
+        if download_type == "audio":
+            format_setting = self.settings.get("audio_format", "m4a")
+            if format_setting == "m4a":
+                format_fallback_chain = [
+                    (
+                        "bestaudio[ext=m4a]/bestaudio[ext=mp4]/bestaudio[acodec=aac]/bestaudio",
+                        None,
+                    )
+                ]
+            else:
+                format_fallback_chain = [("bestaudio", None)]
         else:
-            # Default fallback for unknown formats
-            format_fallback_chain = [
-                ("bestvideo+bestaudio/best", "mkv"),
-                ("bestvideo+bestaudio/best", "mp4"),
-                ("b", None)
-            ]
+            format_setting = self.settings.get(
+                "stream_and_merge_format", "bestvideo+bestaudio/best-mkv"
+            )
+            # Define fallback chains based on user's format preference
+            if format_setting == "b":
+                format_fallback_chain = [("b", None)]  # Single attempt for 'b' format
+            elif format_setting == "bestvideo+bestaudio/best-mkv":
+                format_fallback_chain = [
+                    ("bestvideo+bestaudio/best", "mkv"),  # Primary: MKV merge
+                    ("bestvideo+bestaudio/best", "mp4"),  # Fallback: MP4 merge
+                    ("b", None),  # Final: Pre-merged
+                ]
+            elif format_setting == "bestvideo+bestaudio/best-mp4":
+                format_fallback_chain = [
+                    ("bestvideo+bestaudio/best", "mp4"),  # Primary: MP4 merge
+                    ("b", None),  # Fallback: Pre-merged
+                ]
+            else:
+                # Default fallback for unknown formats
+                format_fallback_chain = [
+                    ("bestvideo+bestaudio/best", "mkv"),
+                    ("bestvideo+bestaudio/best", "mp4"),
+                    ("b", None),
+                ]
 
-        if (
-            not self.context.ffmpeg_status["is_ffmpeg_suite_available"]
-            and format_setting != "b"
-        ):
+        if not self.context.ffmpeg_status["is_ffmpeg_suite_available"]:
             self.context.update_status(
-                "Ffmpeg Missing. Download now or Videos will be downloaded with sub-optimal setting: Format - b",
+                "FFmpeg missing. Some features will be disabled. Download for full functionality.",
                 error=True,
             )
 
             if self.custom_msg_box.custom_askyesno(
                 self.root,
-                "ffmpeg Missing",
-                "Ffmpeg required for downloading best quality video\n\nPress 'Yes' to download missing Ffmpeg\nPress 'No' to use sub-optimal setting: Format - b",
+                "FFmpeg Missing",
+                "Download FFmpeg for full features?\n\nClick Yes:  Download FFmpeg now.\nClick No:  Download Media, probably not best quality",
                 self.messagebox_font,
             ):
-
                 self.context.update_status("")
                 self.context.do_update_ffmpeg()
             else:
-                self.settings.set("stream_and_merge_format", "b")
+                if download_type == "video":
+                    self.settings.set("stream_and_merge_format", "b")
+                    format_fallback_chain = [("b", None)]
                 self.settings.save_settings()
 
         # Remove old status frame if it exists
@@ -265,7 +267,7 @@ class DownloadService:
             self.root.after(
                 0,
                 lambda: self.context.update_status(
-                    f"{emoji}Fetching video info...{self.context.recent_url}",
+                    f"{emoji}Fetching {download_type} info...{self.context.recent_url}",
                     fg=self.context.status_label_fg,
                 ),
             )
@@ -280,6 +282,13 @@ class DownloadService:
 
         # settings = self.settings
         self.download_path = settings.get("downloads_dir")
+        self.context.download_path_temp = os.path.join(self.download_path, "temp")
+        if download_type == "video":
+            self.download_path = os.path.join(self.download_path, "Video")
+        else:
+            self.download_path = os.path.join(self.download_path, "Audio")
+        os.makedirs(self.download_path, exist_ok=True)
+
         if settings.get("platform_specific_download_folders"):
             domains_list = re.split(
                 r"[,\s]+", settings.get("subfolder_domains").strip()
@@ -288,27 +297,26 @@ class DownloadService:
                 (url_from for url_from in domains_list if url_from in url),
                 "other",
             )
-            self.download_path = os.path.join(
-                settings.get("downloads_dir"), site.split(".", 1)[0]
-            )
+            print(site.split(".", 1)[0])
+            print(self.download_path)
+            self.download_path = os.path.join(self.download_path, site.split(".", 1)[0])
+            print(self.download_path)
 
-        self.context.download_path_temp = os.path.join(self.download_path, "temp")
-        
         return_code = 1
         is_last_iteration = False
-
+        embed_thumnail_flag = ""
         try:
-            for iteration, (stream_format, merge_format) in enumerate(format_fallback_chain):
-                is_last_iteration = (iteration == len(format_fallback_chain) - 1)
-                # print(stream_format, merge_format)
-                if merge_format == "mkv":
-                    self.context.set_pause_resume_state(False)
-                else:
-                    self.context.set_pause_resume_state(True)
+            for iteration, (stream_format, merge_format) in enumerate(
+                format_fallback_chain
+            ):
+                is_last_iteration = iteration == len(format_fallback_chain) - 1
+
+                self.context.pause_resume_disable(False)
+                if merge_format != "mkv" and download_type == "video":
+                    self.context.pause_resume_disable(True)
 
                 if iteration > 0:
                     self.status_text = f"Retrying with stream_format-{stream_format},  merge_format-{merge_format}"
-                    # update_gui
                     self.root.after(
                         0,
                         lambda: self.context.update_status(
@@ -318,57 +326,129 @@ class DownloadService:
                         ),
                     )
                 try:
-                    cmd = [
-                        self.context.ytdlp_path,
-                        "--format",
-                        stream_format
-                        ]
+                    cmd = [self.context.ytdlp_path]
 
                     if merge_format:
                         cmd.extend(["--merge-output-format", merge_format])
 
-                    cmd.extend([
-                        "--no-overwrites",
-                        "--continue",
-                        "--output",
-                        "%(title)s-%(id)s.%(ext)s",
-                        url,
-                        "--limit-rate",
-                        self.settings.get("download_speed"),
-                        "--embed-thumbnail",
-                        # "--convert-thumbnails", "jpg",
-                        "--no-write-thumbnail",
-                        "--restrict-filenames",
-                        "--trim-filenames",
-                        "100",
-                        "--progress-template",
-                        "%(progress._percent_str)s",
-                        "--console-title",
-                        "--newline",
-                        "--yes-playlist",
-                        "--ignore-errors",
-                        "--no-abort-on-error",
-                        "--sleep-interval",
-                        "2",
-                        "--max-sleep-interval",
-                        "8",
-                        "--retries",
-                        "15",
-                        "--fragment-retries",
-                        "15",
-                        "--retry-sleep",
-                        "3",
-                        "--socket-timeout",
-                        "30",
-                        "--extractor-retries",
-                        "3",
-                        "--force-keyframes-at-cuts",
-                        "--paths",
-                        f"home:{self.download_path}",
-                        "--paths",
-                        f"temp:{self.context.download_path_temp}",
-                    ])
+                    if download_type == "audio":
+                        embed_thumnail_flag = (
+                            self.settings.get("embed_thumbnail_in_audio", "Yes")
+                            == "Yes"
+                        )
+                        if not self.context.ffmpeg_status["is_ffmpeg_suite_available"]:
+                            embed_thumnail_flag = False
 
+                        if embed_thumnail_flag:
+                            if format_setting == "bestaudio":
+                                cmd.extend(
+                                    [
+                                        "--format",
+                                        stream_format,
+                                        "--write-thumbnail",
+                                    ]
+                                )
+                            elif format_setting == "m4a":
+                                cmd.extend(
+                                    [
+                                        "--format",
+                                        stream_format,
+                                        "--write-thumbnail",
+                                        "--embed-thumbnail",
+                                        "--no-write-thumbnail",
+                                    ]
+                                )
+                            else:
+                                cmd.extend(
+                                    [
+                                        "--format",
+                                        stream_format,
+                                        "--extract-audio",
+                                        "--audio-format",
+                                        "mp3",
+                                        "--audio-quality",
+                                        "0",
+                                        "--embed-thumbnail",
+                                        "--no-write-thumbnail",
+                                    ]
+                                )
+                        else:
+                            if format_setting == "bestaudio" or format_setting == "m4a":
+                                cmd.extend(["--format", stream_format])
+                            else:
+                                cmd.extend(
+                                    [
+                                        "--format",
+                                        stream_format,
+                                        "--extract-audio",
+                                        "--audio-format",
+                                        "mp3",
+                                        "--audio-quality",
+                                        "0",
+                                        "--no-write-thumbnail",
+                                    ]
+                                )
+
+                        # Create audio folder
+                        # audio_folder = os.path.join(self.download_path, "Audio")
+                        # os.makedirs(audio_folder, exist_ok=True)
+                        # cmd.extend(["--paths", f"home:{audio_folder}"])
+                    else:
+                        cmd.extend(
+                            [
+                                "--format",
+                                stream_format,
+                                "--no-write-thumbnail",
+                            ]
+                        )
+
+                        if self.context.ffmpeg_status["is_ffmpeg_suite_available"]:
+                            cmd.extend(["--embed-thumbnail"])
+
+                        # video_folder = os.path.join(self.download_path, "Video")
+                        # os.makedirs(video_folder, exist_ok=True)
+                        # cmd.extend(["--paths", f"home:{video_folder}"])
+                    # print(f"home:{self.download_path}")
+                    cmd.extend(
+                        [
+                            "--no-overwrites",
+                            "--continue",
+                            "--output",
+                            "%(title)s-%(id)s.%(ext)s",
+                            url,
+                            "--limit-rate",
+                            self.settings.get("download_speed"),
+                            "--restrict-filenames",
+                            "--trim-filenames",
+                            "100",
+                            "--progress-template",
+                            "%(progress._percent_str)s",
+                            "--console-title",
+                            "--newline",
+                            "--yes-playlist",
+                            "--ignore-errors",
+                            "--no-abort-on-error",
+                            "--sleep-interval",
+                            "2",
+                            "--max-sleep-interval",
+                            "8",
+                            "--retries",
+                            "15",
+                            "--fragment-retries",
+                            "15",
+                            "--retry-sleep",
+                            "3",
+                            "--socket-timeout",
+                            "30",
+                            "--extractor-retries",
+                            "3",
+                            "--force-keyframes-at-cuts",
+                            "--paths",
+                            f"home:{self.download_path}",
+                            "--paths",
+                            f"temp:{self.context.download_path_temp}",
+                        ]
+                    )
 
                     # Add cookies if enabled
                     cookies_cmd = self.settings.get_cookies_cmd()
@@ -431,7 +511,7 @@ class DownloadService:
                     # Add platform-specific window hiding
                     if IS_WINDOWS:
                         process_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
-                        
+
                         # Optional: Additional window hiding for extra reliability
                         startupinfo = subprocess.STARTUPINFO()
                         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -444,6 +524,7 @@ class DownloadService:
                     self.context.current_process = process
 
                     import inspect
+
                     for line in process.stdout:
                         # Check for stop condition - check more frequently
                         if self.context.is_stopped:
@@ -469,11 +550,17 @@ class DownloadService:
                                 "DownloadedFile:", 1
                             )[1].strip()
                         else:
+                            audio_extensions = "|m4a|mp3|opus|flac|wav|aac|ogg|wma"
                             match = re.search(
-                                r"(.*\.(?:mp4|mkv|webm|avi|mov|flv|m4v|wmv))",
+                                rf"(.*\.(?:mp4|mkv|webm|avi|mov|flv|m4v|wmv{audio_extensions}))",
                                 line.strip().strip('"').strip("'"),
                                 re.IGNORECASE,
                             )
+                            # match = re.search(
+                            #     r"(.*\.(?:mp4|mkv|webm|avi|mov|flv|m4v|wmv))",
+                            #     line.strip().strip('"').strip("'"),
+                            #     re.IGNORECASE,
+                            # )
                             if match:
                                 full_path = match.group(1)
                                 self.context.final_filename_check = os.path.basename(
@@ -509,12 +596,17 @@ class DownloadService:
                                     parts = line.split("Destination:", 1)
                                     if len(parts) > 1:
                                         filename = parts[1].strip()
-                                        self.context.safe_title = os.path.basename(filename)
+                                        self.context.safe_title = os.path.basename(
+                                            filename
+                                        )
                                 elif "Extracting URL:" in line:
                                     # Try to extract title from URL extraction line
                                     if ":" in line:
                                         potential_title = line.split(":")[-1].strip()
-                                        if potential_title and len(potential_title) < 100:
+                                        if (
+                                            potential_title
+                                            and len(potential_title) < 100
+                                        ):
                                             self.context.safe_title = potential_title
                                 break
 
@@ -531,24 +623,51 @@ class DownloadService:
                                     and self.context.video_index
                                     and self.context.total_videos
                                 ):
-                                    self.status_text = f"{self.style_manager.get_emoji('loading')} Video {self.context.video_index}/{self.context.total_videos}: {display_title}"
+                                    self.status_text = f"{self.style_manager.get_emoji('loading')} {download_type} {self.context.video_index}/{self.context.total_videos}: {display_title}"
                                 else:
                                     self.status_text = f"{self.style_manager.get_emoji('loading')} Resuming: {display_title}"
                             else:
+                                line_lower = line.lower()
                                 if (
-                                    self.context.is_playlist
-                                    and self.context.video_index
-                                    and self.context.total_videos
+                                    any(
+                                        x in line.lower()
+                                        for x in [
+                                            "[movefiles]",  # With temp folder
+                                            "100.0%",  # Download finished
+                                            "downloading item",  # New playlist item
+                                        ]
+                                    )
+                                    and embed_thumnail_flag
+                                    and download_type == "audio"
+                                    and format_setting == "bestaudio"
                                 ):
-                                    self.status_text = f"{self.style_manager.get_emoji('loading')} Video {self.context.video_index}/{self.context.total_videos}: {display_title}"
+                                    self._try_embed_thumbnail_if_supported()
+                                elif any(
+                                    x in line_lower
+                                    for x in [
+                                        "[extractaudio]",
+                                        "[embedthumbnail]",
+                                        "[movefiles]",
+                                        "[thumbnailsconvertor]",
+                                    ]
+                                ):
+                                    self.status_text = f"{self.style_manager.get_emoji('loading')} Processing audio: {display_title}"
                                 else:
-                                    self.status_text = f"{self.style_manager.get_emoji('loading')} Preparing to download...: {display_title}"
+                                    if (
+                                        self.context.is_playlist
+                                        and self.context.video_index
+                                        and self.context.total_videos
+                                    ):
+                                        self.status_text = f"{self.style_manager.get_emoji('loading')} {download_type} {self.context.video_index}/{self.context.total_videos}: {display_title}"
+                                    else:
+                                        self.status_text = f"{self.style_manager.get_emoji('loading')} Preparing to download...: {display_title}"
 
                             if self.context.is_resumed:
                                 self.root.after(
                                     0,
                                     lambda: self.context.update_status(
-                                        self.status_text, fg=self.context.status_label_fg
+                                        self.status_text,
+                                        fg=self.context.status_label_fg,
                                     ),
                                 )
                             else:
@@ -572,10 +691,43 @@ class DownloadService:
                         for skip_indicator in skip_indicators:
                             if skip_indicator in line:
                                 self.files_skipped_current += 1
+                                expected_filename = (
+                                    self.extract_filename_from_skip_line(line)
+                                )
+                                if expected_filename:
+                                    # Check if thumbnial file in home folder
+                                    skipped_file_thumbnail = self._find_thumbnail_file(
+                                        expected_filename
+                                    )
+                                    if skipped_file_thumbnail and os.path.exists(
+                                        skipped_file_thumbnail
+                                    ):
+                                        os.remove(skipped_file_thumbnail)
+
+                                    # Check if thumbnial file in temp folder
+                                    expected_file_basename = os.path.basename(
+                                        expected_filename
+                                    )
+                                    skipped_file_thumbnail_in_temp_folder = (
+                                        self._find_thumbnail_file(
+                                            os.path.join(
+                                                self.context.download_path_temp,
+                                                expected_file_basename,
+                                            )
+                                        )
+                                    )
+                                    if (
+                                        skipped_file_thumbnail_in_temp_folder
+                                        and os.path.exists(
+                                            skipped_file_thumbnail_in_temp_folder
+                                        )
+                                    ):
+                                        os.remove(skipped_file_thumbnail_in_temp_folder)
+
                                 display_title = (
                                     self.context.safe_title[:65]
                                     if self.context.safe_title
-                                    else "Previously Downloaded Video"
+                                    else f"Previously Downloaded {download_type}"
                                 )
                                 queue_count = self.queue_manager.get_queue_count()
 
@@ -584,7 +736,7 @@ class DownloadService:
                                     and self.context.video_index
                                     and self.context.total_videos
                                 ):
-                                    self.status_text = f"↷ Video {self.context.video_index}/{self.context.total_videos}: Skipped - {display_title}"
+                                    self.status_text = f"↷ {download_type} {self.context.video_index}/{self.context.total_videos}: Skipped - {display_title}"
                                 else:
                                     self.status_text = f"↷ Skipped: {display_title} (check if already exists in downloads folder)"
 
@@ -597,13 +749,22 @@ class DownloadService:
                                         fg=self.context.status_label_fg,
                                     ),
                                 )
-                                # Skipped files - Clean up incomplete files
-                                if hasattr(self.context, 'safe_title') and self.context.safe_title:
-                                    self.context.final_filename_check = self.context.safe_title
-                                    # base_name = self.context.safe_title.split(".")[0].strip()
-                                    base_name = self.get_base_name_from_ytdlp_file(self.context.safe_title)
-                                    self.cleanup_video_leftovers(base_name, self.context.download_path_temp)
 
+                                # Skipped files - Clean up incomplete files
+                                if (
+                                    hasattr(self.context, "safe_title")
+                                    and self.context.safe_title
+                                ):
+                                    self.context.final_filename_check = (
+                                        self.context.safe_title
+                                    )
+                                    # base_name = self.context.safe_title.split(".")[0].strip()
+                                    base_name = self.get_base_name_from_ytdlp_file(
+                                        self.context.safe_title
+                                    )
+                                    self.cleanup_video_leftovers(
+                                        base_name, self.context.download_path_temp
+                                    )
                                 break
 
                         # Detect progress
@@ -615,8 +776,13 @@ class DownloadService:
 
                                     if self.context.is_resumed:
                                         self.context.is_resumed = False
-                                    if self.percent_value > self.context.progress_bar.value:
-                                        self.context.progress_bar.value = self.percent_value
+                                    if (
+                                        self.percent_value
+                                        > self.context.progress_bar.value
+                                    ):
+                                        self.context.progress_bar.value = (
+                                            self.percent_value
+                                        )
                                     display_title = (
                                         self.context.safe_title[:65]
                                         if self.context.safe_title
@@ -629,7 +795,7 @@ class DownloadService:
                                         and self.context.video_index
                                         and self.context.total_videos
                                     ):
-                                        self.status_text = f"↓ Video {self.context.video_index}/{self.context.total_videos}: {display_title} - {self.percent_value}%"
+                                        self.status_text = f"↓ {download_type} {self.context.video_index}/{self.context.total_videos}: {display_title} - {self.percent_value}%"
                                     else:
                                         self.status_text = (
                                             f"↓ {display_title} - {self.percent_value}%"
@@ -648,7 +814,10 @@ class DownloadService:
                                 pass
 
                         # Count successful downloads
-                        if "[download] 100%" in line or "Deleting original file" in line:
+                        if (
+                            "[download] 100%" in line
+                            or "Deleting original file" in line
+                        ):
                             self.context.files_downloaded += 1
 
                     # Wait for completion and handle exit codes properly
@@ -672,46 +841,64 @@ class DownloadService:
                         self.context.current_download_url = None
                         self.context.paused_url = None
                         return
-                    
-                    if return_code == 0: 
-                        break                    
 
-                    if return_code not in [0] and is_last_iteration:
+                    if (
+                        return_code == 0
+                        and self.context.final_filename_check
+                        and format_setting == "bestaudio"
+                        and embed_thumnail_flag
+                    ):
+                        self._try_embed_thumbnail_if_supported()
+                        break
+                    elif return_code == 0:
+                        break
+                    elif return_code not in [0] and is_last_iteration:
                         error_msg = f"Download failed (code {return_code})"
-                        self.queue_manager.add_failed_url(url, error_msg)
+                        self.queue_manager.add_failed_url(url, download_type, error_msg)
                         raise Exception(error_msg)
 
                 finally:
+                    # except Exception as e:
                     # Ensure process is cleaned up
                     if process and process.poll() is None:
                         try:
                             process.terminate()
-                        except:
+                        except Exception:
                             pass
+
+                    self.context.pause_resume_disable(False)
 
                     if return_code == 0 or is_last_iteration:
                         if self.context.is_playlist:
                             if self.context.is_stopped:
                                 self.status_text = f"{self.style_manager.get_emoji('stop')} Download stopped: {self.context.recent_url}"
-                                self.context.is_stopped = False                        
+                                self.context.is_stopped = False
                             elif self.context.is_paused:
                                 self.status_text = f"{self.style_manager.get_emoji('pause')} Download paused: {self.context.recent_url} - {self.percent_value}%"
                             elif self.context.is_after_stopped:
                                 self.status_text = f"{self.style_manager.get_emoji('stop')} Download stopped: {self.context.recent_url}"
                                 self.context.is_after_stopped = False
                             else:
-                                self.status_text = f"✓ Playlist complete: Downloaded {self.context.total_videos-self.files_skipped_current} videos"
+                                self.status_text = f"✓ Playlist complete: Downloaded {self.context.total_videos-self.files_skipped_current} {download_type}"
                                 self.queue_manager.remove_url()
                         else:
                             if self.files_skipped_current > self.files_skipped_prev:
-                                self.status_text = "Skipped. Check if already downloaded"
+                                self.status_text = (
+                                    "Skipped. Check if already downloaded"
+                                )
                                 self.queue_manager.remove_url()
                                 self.files_skipped_prev = self.files_skipped_current
-                                if self.check_files_exist_by_base(f"{self.context.final_filename_check.rsplit('.', 1)[0]}", self.download_path):
+                                if self.check_files_exist_by_base(
+                                    f"{self.context.final_filename_check.rsplit('.', 1)[0]}",
+                                    self.download_path,
+                                ):
                                     # base_name = self.context.final_filename_check.rsplit('.', 1)[0]
-                                    base_name = self.get_base_name_from_ytdlp_file(self.context.final_filename_check)
-                                    self.context.add_to_delete_list(base_name, self.context.download_path_temp)
-
+                                    base_name = self.get_base_name_from_ytdlp_file(
+                                        self.context.final_filename_check
+                                    )
+                                    self.context.add_to_delete_list(
+                                        base_name, self.context.download_path_temp
+                                    )
                             else:
                                 if self.context.is_stopped:
                                     self.status_text = f"{self.style_manager.get_emoji('stop')} Download stopped: {self.context.recent_url}"
@@ -723,10 +910,17 @@ class DownloadService:
                                     self.context.is_after_stopped = False
                                 else:
                                     self.status_text = "✓ Download complete"
-                                    if self.check_files_exist_by_base(f"{self.context.final_filename_check.rsplit('.', 1)[0]}", self.download_path):
+                                    if self.check_files_exist_by_base(
+                                        f"{self.context.final_filename_check.rsplit('.', 1)[0]}",
+                                        self.download_path,
+                                    ):
                                         # base_name = self.context.final_filename_check.rsplit('.', 1)[0]
-                                        base_name = self.get_base_name_from_ytdlp_file(self.context.final_filename_check)
-                                        self.context.add_to_delete_list(base_name, self.context.download_path_temp)
+                                        base_name = self.get_base_name_from_ytdlp_file(
+                                            self.context.final_filename_check
+                                        )
+                                        self.context.add_to_delete_list(
+                                            base_name, self.context.download_path_temp
+                                        )
 
                                     self.queue_manager.remove_url()
 
@@ -746,12 +940,13 @@ class DownloadService:
 
         except Exception as e:
             error_msg = f"Download failed: {str(e)}"
-            self.queue_manager.add_failed_url(url, str(e))
+            self.queue_manager.add_failed_url(url, download_type, str(e))
             self.root.after(
                 0, lambda: self.context.update_status(error_msg, error=True)
             )
 
         finally:
+
             # Clean up process reference
             if self.context.current_process:
                 try:
@@ -762,10 +957,11 @@ class DownloadService:
                         self.context.current_process.wait(
                             timeout=5
                         )  # Wait for termination
-                except:
+                except Exception:
                     pass
                 self.context.current_process = None
             self.context.is_downloading = False
+
             # Update queue display immediately
             self.root.after(
                 0,
@@ -775,6 +971,205 @@ class DownloadService:
         self.rename_fully_downloaded_part_files(self.download_path)
         self.rename_fully_downloaded_part_files(self.context.download_path_temp)
         self.context.safe_title = ""
+
+    def extract_filename_from_skip_line(self, line):
+        """Extract filename from yt-dlp's skip messages"""
+        # Pattern 1: "[download] filename.ext has already been downloaded"
+        match = re.search(r"\[download\]\s+([^\s]+\.\w+)\s+has already", line)
+        if match:
+            return match.group(1)
+
+        # Pattern 2: "File 'filename.ext' is already present"
+        match = re.search(r"File\s+'([^']+)'\s+is already present", line)
+        if match:
+            return match.group(1)
+
+        # Pattern 3: "Skipping filename.ext"
+        match = re.search(r"Skipping\s+([^\s]+\.\w+)", line)
+        if match:
+            return match.group(1)
+
+        return None
+
+    def _try_embed_thumbnail_if_supported(self):
+        """Try to embed thumbnail after download if format supports it"""
+        if not self.context.final_filename_check:
+            return
+
+        ffmpeg = ""
+        if not self.context.ffmpeg_status["is_ffmpeg_suite_available"]:
+            print("ffmpeg not available for thumbnail embedding")
+            return
+        elif self.context.ffmpeg_status["is_ffmpeg_suite_installed"]:
+            ffmpeg = "ffmpeg"
+        elif self.context.ffmpeg_status["is_ffmpeg_suite_downloaded"]:
+            ffmpeg = os.path.join(os.path.dirname(self.context.ffmpeg_path), "ffmpeg")
+        else:
+            return
+
+        # audio_folder = os.path.join(self.download_path, "Audio")
+        # os.makedirs(audio_folder, exist_ok=True)
+
+        audio_file = os.path.join(self.download_path, self.context.final_filename_check)
+        thumbnail_file = self._find_thumbnail_file(audio_file)
+
+        if not (
+            thumbnail_file
+            and os.path.exists(thumbnail_file)
+            and os.path.exists(audio_file)
+        ):
+            return
+
+        # Step 1: Convert thumbnail to PNG first
+        png_thumbnail = thumbnail_file.rsplit(".", 1)[0] + ".png"
+
+        if not self.png_thumbnail_exists(thumbnail_file.rsplit(".", 1)[0]):
+            convert_cmd = [
+                ffmpeg,
+                "-i",
+                thumbnail_file,
+                "-frames:v",
+                "1",  # Handle animated WebP/GIF
+                png_thumbnail,
+            ]
+            subprocess.run(convert_cmd, capture_output=True, check=True)
+
+        embed_cmd = ""
+        try:
+            # Use ffmpeg to embed thumbnail
+            if audio_file.lower().endswith(
+                (".mp3", ".m4a", ".mp4", ".aac", ".flac", ".mkv", ".mka")
+            ):
+                audio_file_temp = (
+                    audio_file.rsplit(".", 1)[0]
+                    + "_temp."
+                    + audio_file.rsplit(".", 1)[1]
+                )
+                embed_cmd = [
+                    ffmpeg,
+                    "-i",
+                    audio_file,
+                    "-i",
+                    png_thumbnail,
+                    "-c",
+                    "copy",
+                    "-map",
+                    "0",
+                    "-map",
+                    "1",
+                    "-disposition:v",
+                    "attached_pic",
+                    audio_file_temp,
+                ]
+            elif audio_file.lower().endswith((".webm", ".ogg", ".opus")):
+                audio_file_temp = audio_file.rsplit(".", 1)[0] + "_temp.mp4"
+                embed_cmd = [
+                    ffmpeg,
+                    "-i",
+                    audio_file,
+                    "-i",
+                    png_thumbnail,
+                    "-map",
+                    "0:a",
+                    "-map",
+                    "1",
+                    "-c:a",
+                    "copy",
+                    "-c:v",
+                    "png",
+                    "-disposition:v",
+                    "attached_pic",
+                    "-y",
+                    audio_file_temp,
+                ]
+            else:
+                audio_file_temp = audio_file.rsplit(".", 1)[0] + "_temp.mp4"
+                embed_cmd = [
+                    ffmpeg,
+                    "-i",
+                    audio_file,
+                    "-i",
+                    png_thumbnail,
+                    "-map",
+                    "0:a",
+                    "-map",
+                    "1",
+                    "-c:a",
+                    "copy",
+                    "-c:v",
+                    "png",
+                    "-disposition:v",
+                    "attached_pic",
+                    "-y",
+                    audio_file_temp,
+                ]
+            subprocess.run(embed_cmd, capture_output=True, text=True, check=True)
+            os.replace(audio_file_temp, audio_file)
+            self.delete_thumbnail_images(thumbnail_file)
+            print("✓ Thumbnail embedded successfully")
+        except Exception as e:
+            print(f"Thumbnail embedding failed, keeping separate file: {e}")
+
+    def png_thumbnail_exists(self, base_name):
+        possible_names = [
+            base_name + ".png",
+            base_name + ".PNG",
+            base_name + ".Png",
+            # Add other case variations if needed
+        ]
+        return any(os.path.exists(name) for name in possible_names)
+
+    def _find_thumbnail_file(self, audio_file):
+        """Find thumbnail file with any common image extension"""
+        base_name = audio_file.rsplit(".", 1)[0]
+        image_extensions = [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif"]
+
+        for ext in image_extensions:
+            thumbnail_file = base_name + ext
+            if os.path.exists(thumbnail_file):
+                return thumbnail_file
+
+        return None
+
+    def delete_thumbnail_images(self, thumbnail_file):
+        """Delete thumbnail file and any common image format variants"""
+        import os
+
+        if not thumbnail_file or not os.path.exists(thumbnail_file):
+            print(f"File not found: {thumbnail_file}")
+            return
+
+        # Get base name without extension
+        base_name = thumbnail_file.rsplit(".", 1)[0]
+
+        # Common image extensions to check
+        image_extensions = [
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".webp",
+            ".bmp",
+            ".gif",
+            ".tiff",
+            ".tif",
+            ".ico",
+            ".svg",
+        ]
+
+        # Delete the original file
+        try:
+            os.remove(thumbnail_file)
+        except OSError as e:
+            print(f"❌ Could not delete {thumbnail_file}: {e}")
+
+        # Delete any other image format variants
+        for ext in image_extensions:
+            other_thumbnail_file = base_name + ext
+            if os.path.exists(other_thumbnail_file):
+                try:
+                    os.remove(other_thumbnail_file)
+                except OSError as e:
+                    print(f"❌ Could not delete {other_thumbnail_file}: {e}")
 
     def check_files_exist_by_base(self, base_name, folder_path):
         """Check if any files exist with this base name"""
@@ -787,15 +1182,16 @@ class DownloadService:
         """Clean up incomplete files for a specific video that was skipped or failed"""
         import os
         import glob
+
         # import re
-        
+
         # Find all files that start with this base name
         all_related_files = glob.glob(os.path.join(download_path, f"{base_name}*"))
         # Check if this download has incomplete indicators
         has_incomplete_indicators = False
         incomplete_patterns = [
             f"{base_name}.temp.mkv",
-            f"{base_name}.temp.mp4", 
+            f"{base_name}.temp.mp4",
             f"{base_name}.f*.mp4",
             f"{base_name}.f*.webm",
             f"{base_name}.part",
@@ -803,28 +1199,31 @@ class DownloadService:
             f"{base_name}*.webp",
             f"{base_name}*.ytdl",
         ]
-        
+
         # Check if any incomplete files exist
         for pattern in incomplete_patterns:
             if glob.glob(os.path.join(download_path, pattern)):
                 has_incomplete_indicators = True
                 break
-        
+
         if not has_incomplete_indicators:
             return
-        
+
         # Files to delete (only definitive temporary files)
         files_to_delete = []
         for file_path in all_related_files:
             file_name = os.path.basename(file_path)
-            
+
             # Delete only these specific temporary file types
-            if (file_name.endswith(('.temp.mkv', '.temp.mp4', '.part', '.ytdl')) or
-                re.search(r'\.f\d+\..+', file_name) or  # Fragment files like .f401.mp4
-                file_name in [f"{base_name}.webp", f"{base_name}.jpg", f"{base_name}.png"]):
-                
+            if (
+                file_name.endswith((".temp.mkv", ".temp.mp4", ".part", ".ytdl"))
+                or re.search(r"\.f\d+\..+", file_name)  # Fragment files like .f401.mp4
+                or file_name
+                in [f"{base_name}.webp", f"{base_name}.jpg", f"{base_name}.png"]
+            ):
+
                 files_to_delete.append(file_path)
-        
+
         # Delete the files
         cleaned_count = 0
         for file_to_delete in files_to_delete:
@@ -835,7 +1234,7 @@ class DownloadService:
             except OSError as e:
                 # print(f"  Failed to delete {file_to_delete}: {e}")
                 pass
-        
+
         # print(f"Cleaned up {cleaned_count} incomplete files for: {base_name}")
 
     def rename_fully_downloaded_part_files(self, download_path):
@@ -843,25 +1242,27 @@ class DownloadService:
         import os
         import glob
         import shutil
-        
+
         try:
             # Normalize and validate paths
             download_path = os.path.abspath(os.path.normpath(download_path))
             main_download_path = os.path.abspath(os.path.normpath(self.download_path))
-            
+
             # Ensure directories exist
             os.makedirs(main_download_path, exist_ok=True)
-            
+
             pattern = os.path.join(download_path, "*.part")
-            
+
             for part_file in glob.glob(pattern):
                 try:
                     if self.is_video_complete(part_file):
-                        self._process_completed_part_file(part_file, download_path, main_download_path)
+                        self._process_completed_part_file(
+                            part_file, download_path, main_download_path
+                        )
                 except Exception as e:
                     print(f"Error processing {part_file}: {e}")
                     continue
-                    
+
         except Exception as e:
             print(f"Error in cleanup process: {e}")
 
@@ -869,23 +1270,23 @@ class DownloadService:
         """Process a single completed part file"""
         import os
         import shutil
-        
-        filename = os.path.basename(part_file).replace('.part', '')
+
+        filename = os.path.basename(part_file).replace(".part", "")
         final_video_path = os.path.join(dest_path, filename)
-        
+
         # Check if destination already exists
         if os.path.exists(final_video_path):
             print(f"Destination exists, removing source: {filename}")
             os.remove(part_file)
             return
-        
+
         # Cleanup thumbnails
         self.cleanup_associated_thumbnails(os.path.splitext(part_file)[0])
 
     def cleanup_associated_thumbnails(self, base_name):
         """Remove thumbnail files associated with the video"""
         # Common thumbnail extensions that yt-dlp might create
-        thumbnail_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+        thumbnail_extensions = [".jpg", ".jpeg", ".png", ".webp"]
         base_name = os.path.splitext(base_name)[0]
         for ext in thumbnail_extensions:
             thumb_path = base_name + ext
@@ -902,16 +1303,19 @@ class DownloadService:
             # Use your existing ffprobe path detection
             ffprobe_cmd = [
                 self.context.ffprobe_path,  # This should already be cross-platform
-                "-v", "error",
-                "-show_entries", "format=duration",
-                "-of", "csv=p=0",
-                file_path
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "csv=p=0",
+                file_path,
             ]
-            
+
             process_kwargs = {}
             if IS_WINDOWS:
                 process_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
-                
+
                 # Optional: Additional window hiding for extra reliability
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -923,14 +1327,16 @@ class DownloadService:
                 capture_output=True,
                 text=True,
                 timeout=10,
-                **process_kwargs  # Your cross-platform subprocess settings
+                **process_kwargs,  # Your cross-platform subprocess settings
             )
-            
+
             # Check if we got a valid duration
-            return (result.returncode == 0 and 
-                    result.stdout.strip() and 
-                    float(result.stdout.strip()) > 0)
-                    
+            return (
+                result.returncode == 0
+                and result.stdout.strip()
+                and float(result.stdout.strip()) > 0
+            )
+
         except (subprocess.TimeoutExpired, ValueError, OSError):
             return False
 
@@ -944,7 +1350,7 @@ class DownloadService:
         ):
             try:
                 self.stop_download("pause")
-                
+
             except Exception as e:
                 print(f"Error pausing download: {e}")
                 self.custom_msg_box.custom_showerror(
@@ -1044,7 +1450,7 @@ class DownloadService:
             )
 
     def stop_download(self, stop_condition="stop"):
-        """Stop the current download process"""
+        """Stop the current download process, pause_download() also calls this"""
         if not self._should_stop_download():
             self.custom_msg_box.custom_showinfo(
                 self.root,
@@ -1055,6 +1461,8 @@ class DownloadService:
             return
 
         current_url = self.context.current_download_url
+        if self.context.download_type == "audio" and current_url:
+            current_url = "audio:" + current_url
 
         if self.context.is_paused and stop_condition == "stop":
             self.context.is_after_stopped = True
@@ -1065,11 +1473,13 @@ class DownloadService:
                 percent=0,
                 fg=self.context.status_label_fg,
             )
-            if hasattr(self.context, 'safe_title') and self.context.safe_title:
+            if hasattr(self.context, "safe_title") and self.context.safe_title:
                 # base_name = self.context.safe_title.split(".")[0].strip()
                 base_name = self.get_base_name_from_ytdlp_file(self.context.safe_title)
                 self.cleanup_video_leftovers(base_name, self.context.download_path_temp)
-                self.context.add_to_delete_list(base_name, self.context.download_path_temp)
+                self.context.add_to_delete_list(
+                    base_name, self.context.download_path_temp
+                )
             self.context.start_queue_processing()
             return
 
@@ -1100,23 +1510,25 @@ class DownloadService:
                 percent=self.context.progress_bar.value,
                 fg=self.context.status_label_fg,
             )
-            print("Download pause completed")
+            # print("Download pause completed")
         else:
             self.context.update_status(
                 f"{self.style_manager.get_emoji('stop')} Download stopped: {self.context.recent_url} {self.context.progress_bar.value}%",
                 percent=0,
                 fg=self.context.status_label_fg,
             )
-            print("Download stop completed")
+            # print("Download stop completed")
 
         if stop_condition == "stop":
             # self.context.is_after_stopped = True
-            if hasattr(self.context, 'safe_title') and self.context.safe_title:
+            if hasattr(self.context, "safe_title") and self.context.safe_title:
                 # base_name = self.context.safe_title.split(".")[0].strip()
                 base_name = self.get_base_name_from_ytdlp_file(self.context.safe_title)
                 self.cleanup_video_leftovers(base_name, self.context.download_path_temp)
-                self.context.add_to_delete_list(base_name, self.context.download_path_temp)
-            
+                self.context.add_to_delete_list(
+                    base_name, self.context.download_path_temp
+                )
+
             self.context.start_queue_processing()
 
     def _should_stop_download(self):
@@ -1415,17 +1827,16 @@ class DownloadService:
         except Exception as e:
             logger.error(f"Cleanup error: {e}")
 
-
     def get_base_name_from_ytdlp_file(self, filename):
         """
         Extract base filename from yt-dlp download files, handling all temporary formats.
-        
+
         Args:
             filename: Full filename or path
-            
+
         Returns:
             Base name without format codes, extensions, or temp suffixes
-            
+
         Examples:
             "video.f401.mp4" -> "video"
             "video.f251-9.webm.part" -> "video"
@@ -1434,35 +1845,35 @@ class DownloadService:
         """
         # Get just the filename without directory path
         filename = os.path.basename(filename)
-        
+
         # Remove common extensions iteratively (handles .mp4.part, etc)
         extensions_to_strip = [
-            '.part',
-            '.ytdl',
-            '.temp.mkv',
-            '.temp.mp4',
-            '.temp.webm',
-            '.mkv',
-            '.mp4',
-            '.webm',
-            '.webp',
-            '.jpg',
-            '.jpeg',
-            '.png',
+            ".part",
+            ".ytdl",
+            ".temp.mkv",
+            ".temp.mp4",
+            ".temp.webm",
+            ".mkv",
+            ".mp4",
+            ".webm",
+            ".webp",
+            ".jpg",
+            ".jpeg",
+            ".png",
         ]
-        
+
         # Keep stripping until no more matches
         changed = True
         while changed:
             changed = False
             for ext in extensions_to_strip:
                 if filename.lower().endswith(ext):
-                    filename = filename[:-len(ext)]
+                    filename = filename[: -len(ext)]
                     changed = True
                     break
-        
+
         # Remove yt-dlp format codes (e.g., .f401, .f251-9)
         # Pattern matches: .f followed by digits, optionally followed by -digits
-        filename = re.sub(r'\.[f]\d+(-\d+)?$', '', filename, flags=re.IGNORECASE)
-        
+        filename = re.sub(r"\.[f]\d+(-\d+)?$", "", filename, flags=re.IGNORECASE)
+
         return filename

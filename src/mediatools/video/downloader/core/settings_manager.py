@@ -7,6 +7,7 @@ from typing import Dict, Any, List
 import logging
 import shutil
 
+
 class SettingsManager:
     _instance = None
 
@@ -16,6 +17,8 @@ class SettingsManager:
         "download_speed": "5M",
         "enable_download_archive": False,
         "stream_and_merge_format": "bestvideo+bestaudio/best-mkv",
+        "audio_format": "m4a",
+        "embed_thumbnail_in_audio": "Yes",
         "auto_update": True,
         "gui_theme": "Default",
         "platform_specific_download_folders": False,
@@ -39,6 +42,7 @@ class SettingsManager:
         "enable_cookies_from_browser": False,
         "cookies_browser": "",
         "cookies_browser_profile": "",
+        "last_app_update_check": 0,
         # "cookies_cmd": [],
         # "cookies_from_browser_cmd": [],
         # "supported_browsers": [
@@ -56,10 +60,10 @@ class SettingsManager:
     def _initialize(self):
         """Initialize settings with portable path calculations"""
         self.format_change_callback = None
-        
+
         # Calculate dynamic paths
         self.dynamic_paths = self._calculate_dynamic_paths()
-        
+
         # Load settings first
         self.settings_file = self._get_settings_path()
         self.current_settings = self._load_settings()
@@ -79,36 +83,36 @@ class SettingsManager:
         # if not getattr(sys, 'frozen', False):
         #     return  # Skip in development mode
 
-        if not getattr(sys, 'frozen', False) or not hasattr(sys, '_MEIPASS'):
-                return  # Skip in dev mode and --onedir mode
+        if not getattr(sys, "frozen", False) or not hasattr(sys, "_MEIPASS"):
+            return  # Skip in dev mode and --onedir mode
 
         import shutil
-        
+
         # temp_base = Path(sys._MEIPASS)
         temp_base = None
         exe_dir = Path(sys.executable).parent
-        if (exe_dir / '_internal').exists():
+        if (exe_dir / "_internal").exists():
             temp_base = Path(sys.executable).parent
         else:
             temp_base = Path(sys._MEIPASS)
-                
+
         persistent_base = self.get_persistent_data_dir()
-        
+
         # Extract assets
-        temp_assets = temp_base / 'assets'
-        persistent_assets = persistent_base / 'assets'
+        temp_assets = temp_base / "assets"
+        persistent_assets = persistent_base / "assets"
         if temp_assets.exists():
             self._copy_directory_contents(temp_assets, persistent_assets)
-        
+
         # Extract utils
-        temp_utils = temp_base / 'utils'
-        persistent_utils = persistent_base / 'utils'
+        temp_utils = temp_base / "utils"
+        persistent_utils = persistent_base / "utils"
         if temp_utils.exists():
             self._copy_directory_contents(temp_utils, persistent_utils)
 
         # Extract docs
-        temp_docs = temp_base / 'docs'
-        persistent_docs = persistent_base / 'docs'
+        temp_docs = temp_base / "docs"
+        persistent_docs = persistent_base / "docs"
         if temp_docs.exists():
             self._copy_directory_contents(temp_docs, persistent_docs)
 
@@ -127,7 +131,7 @@ class SettingsManager:
         else:
             base_dir = self.get_app_root()
 
-        downloads_dir = base_dir / "videos"
+        downloads_dir = base_dir / "downloads"
         data_dir = base_dir / "data"
         utils_dir = base_dir / "utils"
         docs_dir = base_dir / "docs"
@@ -172,21 +176,19 @@ class SettingsManager:
     #     else:
     #         return Path(__file__).parent.parent
 
-
     def get_app_root(self):
         """Get the application root directory"""
         # Make sure frozen check comes first
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False):
             # PyInstaller build (onefile or onedir)
             exe_dir = Path(sys.executable).parent
-            if (exe_dir / '_internal').exists():
-                return exe_dir / '_internal'
+            if (exe_dir / "_internal").exists():
+                return exe_dir / "_internal"
             else:
                 return Path(sys._MEIPASS)
         else:
             # Development
             return Path(__file__).parent.parent
-
 
     def get_persistent_data_dir(self):
         """Get a persistent directory for app data"""
@@ -214,7 +216,14 @@ class SettingsManager:
 
     def _ensure_directories(self):
         """Ensure all necessary directories exist"""
-        paths_to_create = ["downloads_dir", "data_dir", "bin_dir", "utils_dir", "assets_dir", "docs_dir"]
+        paths_to_create = [
+            "downloads_dir",
+            "data_dir",
+            "bin_dir",
+            "utils_dir",
+            "assets_dir",
+            "docs_dir",
+        ]
         for path_key in paths_to_create:
             path = self.get(path_key)
             if path:
@@ -234,7 +243,7 @@ class SettingsManager:
             if self.settings_file.exists():
                 with open(self.settings_file, "r", encoding="utf-8") as f:
                     user_settings = json.load(f)
-                    
+
                 # Start with defaults, then apply user settings
                 merged_settings = self._default_settings.copy()
                 merged_settings.update(user_settings)
@@ -277,11 +286,11 @@ class SettingsManager:
         """Set a setting value"""
         old_value = self.current_settings.get(key)
         self.current_settings[key] = value
-        
+
         # Log path changes for debugging
         if key.endswith("_dir") or "path" in key:
             print(f"Settings: Changed {key} from '{old_value}' to '{value}'")
-        
+
         if save:
             return self.save_settings()
         return True
@@ -291,7 +300,11 @@ class SettingsManager:
         cookies_cmd = []
 
         cookies_path = self.get("cookies_path")
-        if cookies_path and os.path.exists(cookies_path) and os.path.getsize(cookies_path) > 0:
+        if (
+            cookies_path
+            and os.path.exists(cookies_path)
+            and os.path.getsize(cookies_path) > 0
+        ):
             cookies_cmd.extend(["--cookies", cookies_path])
 
         elif self.get("enable_cookies_from_browser"):
@@ -324,27 +337,27 @@ class SettingsManager:
     # def reset_to_defaults(self) -> bool:
     #     """Reset all settings to defaults"""
     #     # Keep dynamic paths, reset other settings
-    #     path_backups = {k: v for k, v in self.current_settings.items() 
+    #     path_backups = {k: v for k, v in self.current_settings.items()
     #                    if k in self.dynamic_paths.keys()}
-        
+
     #     self.current_settings = self._default_settings.copy()
     #     self.current_settings.update(self.dynamic_paths)  # Restore current dynamic paths
     #     self.current_settings.update(path_backups)  # Restore any user-customized paths
-        
+
     #     return self.save_settings()
-        
+
     def reset_to_defaults(self) -> bool:
         """Reset all settings to defaults while preserving dynamic paths"""
         # Get current dynamic paths to preserve them
         current_dynamic_paths = self._calculate_dynamic_paths()
-        
+
         # Reset to base defaults
         self.current_settings = self._default_settings.copy()
-        
+
         # Apply current dynamic paths as defaults
         self.current_settings.update(current_dynamic_paths)
-        
-        return self.save_settings()    
+
+        return self.save_settings()
 
     def get_all(self):
         """Get all current settings"""
@@ -357,7 +370,8 @@ class SettingsManager:
             and self.current_settings is not None
             and len(self.current_settings) > 0
         )
-    
+
+
 # # settings_manager.py
 # import json
 # import os

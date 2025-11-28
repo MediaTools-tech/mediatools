@@ -1,3 +1,6 @@
+__version__ = "2.0.0"  # Current version
+VERSION_URL = "https://raw.githubusercontent.com/MediaTools-tech/mediatools/main/apps/video/downloader/version.txt"
+DOWNLOAD_PAGE = "https://mediatools.tech/video/downloader.html"
 import os
 import re
 import sys
@@ -24,10 +27,15 @@ from mediatools.video.downloader.core.shortcut_creator import first_run_setup
 from mediatools.video.downloader.core.settings_manager import SettingsManager
 from mediatools.video.downloader.utils.tools import FFmpegTool, YtdlpTool
 from mediatools.video.downloader.core.queue_manager import QueueManager
-from mediatools.video.downloader.core.download_service import DownloadService, DownloadContext
+from mediatools.video.downloader.core.download_service import (
+    DownloadService,
+    DownloadContext,
+)
 from mediatools.video.downloader.gui.theme_manager import ThemeManager, GUIContext
 from mediatools.video.downloader.gui.settings_gui import SettingsGUIContext
-from mediatools.video.downloader.compat.platform_style_manager import PlatformStyleManager
+from mediatools.video.downloader.compat.platform_style_manager import (
+    PlatformStyleManager,
+)
 from mediatools.video.downloader.gui.custom_message_box import CustomMessageBox
 
 # Configure logging
@@ -105,7 +113,6 @@ class VideoDownloaderApp:
         # self.status_lable_fg = "#68cdfe"
         self.status_label_fg = "#6c757d"
 
-        self.pending_button_update = None
         self.custom_msg_box = CustomMessageBox()
 
         self.download_context = DownloadContext(
@@ -116,13 +123,11 @@ class VideoDownloaderApp:
             start_queue_processing=self.start_queue_processing,
             do_update_yt_dlp=self.do_update_yt_dlp,
             do_update_ffmpeg=self.do_update_ffmpeg,
-            update_buttons_based_on_format=self._update_buttons_based_on_format,
             check_internet_connection=self.check_internet_connection,
             add_to_delete_list=self.add_to_delete_list,
-            set_pause_resume_state=self.set_pause_resume_state,
+            pause_resume_disable=self.pause_resume_disable,
             exit_app=self.exit_app,
             download_path_temp=self.download_path_temp,
-            pending_button_update=self.pending_button_update,
             current_process=self.current_process,
             is_downloading=self.is_downloading,
             is_stopped=self.is_stopped,
@@ -144,9 +149,10 @@ class VideoDownloaderApp:
             ffmpeg_status=self.ffmpeg_status,
             success_frame=self.success_frame,
             recent_url=self.recent_url,
-            stopped_downloads_to_be_deleted = self.stopped_downloads_to_be_deleted,
+            stopped_downloads_to_be_deleted=self.stopped_downloads_to_be_deleted,
             progress_bar=None,
             status_label_fg=None,
+            download_type="video",
         )
 
         self.download_service = DownloadService(
@@ -231,53 +237,45 @@ class VideoDownloaderApp:
 
         self.warning_label = tk.Label(
             self.root,
-            text="Pause/Resume supported only for Settings option: Format - bestvideo+bestaudio/best-mkv",
+            text="Video Downloads - Pause/Resume supported only for: Format - bestvideo+bestaudio/best-mkv",
             fg="#000000",
-            font=(self.label_font[0], self.label_font[1]-1),
+            font=(self.label_font[0], self.label_font[1] - 1),
             bg=self.root.cget("bg"),
         )
-        self.settings.format_change_callback = self._update_buttons_based_on_format
+        # self.settings.format_change_callback = self._update_buttons_based_on_format
         self._setup_subprocess_kwargs()
-        self._setup_format_based_controls()
 
     def initialize_settings(self):
         """Initialize settings with robust fallback chain"""
         try:
-            from mediatools.video.downloader.core.settings_manager import SettingsManager
-
             settings = SettingsManager()
             return settings
 
         except Exception as e:
             print(f"SettingsManager failed: {e}")
 
-    def _setup_format_based_controls(self):
-        """Setup format-based button disabling"""
-        # Initial update
-        self._update_buttons_based_on_format()
+    # def _update_buttons_based_on_format(self):
+    #     """Update buttons based on current format setting"""
+    #     disable_pause_resume_flag = False
+    #     if (
+    #         self.download_context.is_downloading
+    #         and self.download_context.download_type == "video"
+    #     ):
+    #         format_setting = self.settings.get(
+    #             "stream_and_merge_format", "bestvideo+bestaudio/best-mp4"
+    #         )
+    #         disable_pause_resume_flag = (
+    #             False if format_setting == "bestvideo+bestaudio/best-mkv" else True
+    #         )
 
-    def _update_buttons_based_on_format(self):
-        """Update buttons based on current format setting"""
-        format_setting = self.settings.get(
-            "stream_and_merge_format", "bestvideo+bestaudio/best-mp4"
-        )
-        is_disable_pause_resume = (
-            True if format_setting == "bestvideo+bestaudio/best-mp4" or format_setting == "b" else False
-        )
+    #     self.pause_resume_disable(disable_pause_resume_flag)
 
-        if self.download_context.is_downloading:
-            self.download_context.pending_button_update = True
-            return
-
-        self.set_pause_resume_state(is_disable_pause_resume)
-        self.download_context.pending_button_update = False
-
-    def set_pause_resume_state(self, is_disable_pause_resume):
+    def pause_resume_disable(self, disable_pause_resume_flag):
         """Enable or disable pause/resume buttons"""
-        state = "disabled" if is_disable_pause_resume else "normal"
+        state = "disabled" if disable_pause_resume_flag else "normal"
 
         # Show/hide warning
-        if is_disable_pause_resume:
+        if disable_pause_resume_flag:
             self.warning_label.place(x=162, y=387)
             self.warning_label.tkraise()
         else:
@@ -305,7 +303,7 @@ class VideoDownloaderApp:
         except Exception as e:
             print(f"Error updating button states: {e}")
 
-    def add_url_to_queue(self):
+    def add_url_to_queue(self, download_type="video"):
         """Add URL to download queue"""
         url = self.gui_context.url_var.get().strip()
         # check if queue.txt updated externally
@@ -321,7 +319,7 @@ class VideoDownloaderApp:
             )
             return
 
-        if self.q_manager.add_url(url):
+        if self.q_manager.add_url(url, download_type):
             self.gui_context.url_var.set("")  # Clear entry field
             self.update_queue_display(self.gui_context.status_label_fg)
             self.start_queue_processing()
@@ -345,7 +343,7 @@ class VideoDownloaderApp:
             and self.q_manager.has_queued_urls()
         ):
             threading.Thread(target=self.process_queue, daemon=True).start()
-        
+
     def update_queue_display(self, fg="#1231F9"):
         """Update the status label with queue information"""
         queue_count = self.q_manager.get_queue_count()
@@ -386,9 +384,10 @@ class VideoDownloaderApp:
                 and not self.download_context.is_downloading
                 and not self.download_context.is_paused
             ):
-                url = self.q_manager.get_next_url()
+                url, download_type = self.q_manager.get_next_url()
                 if url:
-                    self.download_service.download_video(url)
+                    self.download_context.download_type = download_type
+                    self.download_service.download_video(url, download_type)
 
     def update_status(
         self,
@@ -559,7 +558,6 @@ class VideoDownloaderApp:
 
             # return True
 
-
             else:  # Linux / macOS
                 try:
                     # Universal: open with system default editor
@@ -576,7 +574,9 @@ class VideoDownloaderApp:
                             continue
                     # Last fallback: nano (only works if launched from a terminal)
                     try:
-                        subprocess.Popen(["x-terminal-emulator", "-e", "nano", file_path])
+                        subprocess.Popen(
+                            ["x-terminal-emulator", "-e", "nano", file_path]
+                        )
                         return True
                     except Exception as e:
                         print(f"Failed to open file: {e}")
@@ -612,7 +612,7 @@ class VideoDownloaderApp:
                             ).strip()
                             subprocess.Popen(["explorer.exe", windows_path])
                             return True
-                except:
+                except Exception:
                     pass
 
                 # Regular Linux - try GUI file managers
@@ -621,7 +621,7 @@ class VideoDownloaderApp:
                     try:
                         subprocess.Popen([fm, folder_path])
                         return True
-                    except:
+                    except Exception:
                         continue
 
                 # Fallback: just print the path
@@ -661,7 +661,7 @@ class VideoDownloaderApp:
             self.custom_msg_box.custom_showinfo(
                 self.root,
                 "Info",
-                "No video files found to play",
+                "No media files found to play",
                 self.messagebox_font,
             )
 
@@ -686,7 +686,7 @@ class VideoDownloaderApp:
                                     ["cmd.exe", "/c", "start", '""', windows_path]
                                 )
                                 return
-                    except:
+                    except Exception:
                         pass
 
                     # Try system default first, then fallbacks
@@ -709,7 +709,7 @@ class VideoDownloaderApp:
             self.custom_msg_box.custom_showinfo(
                 self.root,
                 "Info",
-                "No video files found to play",
+                "No media files found to play",
                 self.messagebox_font,
             )
 
@@ -733,6 +733,9 @@ class VideoDownloaderApp:
                 ".3gp",
                 ".gif",
                 ".webp",
+                ".m4a",
+                ".mp3",
+                ".aac",
             }
             video_files = []
 
@@ -770,12 +773,12 @@ class VideoDownloaderApp:
 
     # def update_tools(self):
     def update_tools(self, update_button_clicked=False):
-        """Update yt-dlp and ffmpeg"""
+        """Update yt-dlp and FFmpeg"""
         if self.download_context.is_downloading:
             self.custom_msg_box.custom_showinfo(
                 self.root,
                 "Info",
-                "Cannot update tools while a download is in progress",
+                "Cannot update while a download is in progress",
                 self.messagebox_font,
             )
             return
@@ -786,6 +789,11 @@ class VideoDownloaderApp:
 
     def do_update(self, update_button_clicked=False):
         """Perform tool updates"""
+
+        # App update check (once per week)
+        if self.should_check_app_update():
+            self.check_app_update()
+
         self.update_status(
             f"{self.style_manager.get_emoji('loading')} Wait...Checking yt-dlp status"
         )
@@ -822,12 +830,13 @@ class VideoDownloaderApp:
                     # self.root.update_idletasks()
                     self.root.update()
             else:
+
                 # Get current version
                 result = subprocess.run(
                     [self.ytdlp_path, "--version"],
                     timeout=30,
                     **self.kwargs,
-                ) 
+                )
                 if result.returncode != 0:
                     raise Exception("Failed to get current version")
 
@@ -879,33 +888,84 @@ class VideoDownloaderApp:
 
             self.update_status("Update check failed", error=True)
 
+    def should_check_app_update(self):
+        """Check app updates once per week using date format"""
+        import datetime
+
+        # Get last check date (default to 0 if never checked)
+        last_check_date = self.settings.get("last_app_update_check", 0)
+        current_date = int(datetime.datetime.now().strftime("%Y%m%d"))
+
+        try:
+            # Check if 7 days have passed
+            if current_date - last_check_date >= 7:
+                self.settings.set("last_app_update_check", current_date)
+                self.settings.save_settings()
+                return True
+        except:
+            self.settings.set("last_app_update_check", current_date)
+            self.settings.save_settings()
+            return True
+        return False
+
+    def check_app_update(self):
+        """Check for new version from GitHub version.txt"""
+        try:
+
+            if not self.root or not self.root.winfo_exists():
+                return
+
+            import requests
+
+            response = requests.get(VERSION_URL, timeout=10)
+            if response.status_code == 200:
+                latest_version = response.text.strip()
+
+                # Simple version comparison
+                current_parts = [int(x) for x in __version__.split(".")]
+                latest_parts = [int(x) for x in latest_version.split(".")]
+
+                # Pad with zeros for equal length
+                max_len = max(len(current_parts), len(latest_parts))
+                current_parts += [0] * (max_len - len(current_parts))
+                latest_parts += [0] * (max_len - len(latest_parts))
+
+                if latest_parts > current_parts:
+                    self._show_update_notification(latest_version)
+
+        except Exception as e:
+            print(f"Update check failed: {e}")
+
+    def _show_update_notification(self, new_version):
+        """Show update notification"""
+        message = f"Get new version v{new_version} with:\nBug fixes/ Improved performance/ New features/ Enhancements\nWould you like to visit the download page?"
+
+        if self.custom_msg_box.custom_askyesno(
+            self.root,
+            f"Update Available - MediaTools Video Downloader, New version v{new_version}!",
+            message,
+            self.messagebox_font,
+        ):
+            import webbrowser
+
+            webbrowser.open(DOWNLOAD_PAGE)
+
     def check_ffmpeg(self):
-        # Check ffmpeg
+        # Check FFmpeg
         self.update_status(
-            f"{self.style_manager.get_emoji('loading')} Wait...Checking Ffmpeg status",
+            f"{self.style_manager.get_emoji('loading')} Wait...Checking FFmpeg status",
             percent=0,
         )
-        # FFmpeg not required
-        if self.settings.get("stream_and_merge_format") == "b":
+        # FFmpeg missing
+        if not self.ffmpeg_status["is_ffmpeg_suite_available"]:
             self.update_status(
-                f"Ffmpeg not required with Format option-'b'.  Recommended setting 'bestvideo+bestaudio/best-mkv' for best quality video.",
-                percent=0,
-            )
-
-        # FFmpeg required but missing
-        elif (
-            not self.ffmpeg_status["is_ffmpeg_suite_available"]
-            and self.settings.get("stream_and_merge_format") != "b"
-        ):
-            self.update_status(
-                f"{self.style_manager.get_emoji('error')} Ffmpeg Missing. Download now or Videos will be downloaded with sub-optimal setting: Format - b",
+                f"{self.style_manager.get_emoji('error')} FFmpeg Missing",
                 error=True,
             )
-
             if self.custom_msg_box.custom_askyesno(
                 self.root,
-                "ffmpeg Missing",
-                "Ffmpeg required for downloading best quality video\n\nPress 'Yes' to download missing Ffmpeg\nPress 'No' to use sub-optimal setting: Format - b",
+                "FFmpeg Missing",
+                "FFmpeg is required for video and audio processing features.\n\n• Click 'Yes' to download FFmpeg automatically\n• Click 'No' to skip or install manually",
                 self.messagebox_font,
             ):
                 self.ffmpeg_update_running = True
@@ -913,7 +973,9 @@ class VideoDownloaderApp:
 
                 self.do_update_ffmpeg()
             else:
-                self.update_status("Ffmpeg Missing. Settings option set: Format - b")
+                self.update_status(
+                    "FFmpeg Missing. Settings option set: Video Format - b"
+                )
                 self.settings.set("stream_and_merge_format", "b")
                 self.settings.save_settings()
 
@@ -941,34 +1003,46 @@ class VideoDownloaderApp:
 
                         self.do_update_ffmpeg()
                     else:
-                        self.update_status("FFmpeg not updated, with outdated Fmpeg, video downloader may not work as expected", percent=0)
+                        self.update_status(
+                            "FFmpeg not updated, with outdated Fmpeg, video downloader may not work as expected",
+                            percent=0,
+                        )
                 else:
-                    self.update_status(f"FFmpeg version {version_data} is compatible with video downloader {self.style_manager.get_emoji('check')}", percent=0)
+                    self.update_status(
+                        f"FFmpeg version {version_data} is compatible with video downloader {self.style_manager.get_emoji('check')}",
+                        percent=0,
+                    )
             else:
-                self.update_status("Could not determine FFmpeg version, video downloader may not work as expected", percent=0)  
+                self.update_status(
+                    "Could not determine FFmpeg version, video downloader may not work as expected",
+                    percent=0,
+                )
 
         else:
             self.update_status("", percent=0)
             pass
-        
+
         self.root.update()
 
     def get_ffmpeg_version(self):
-        """Get ffmpeg version, handling both stable and development builds"""
+        """Get FFmpeg version, handling both stable and development builds"""
         try:
             result = subprocess.run(
                 ["ffmpeg", "-version"],
+                capture_output=True,
+                text=True,
                 timeout=10,
-                **self.kwargs,
             )
             if result.returncode == 0:
-                # Extract version information
-                match = re.search(r"ffmpeg version (.+) Copyright", result.stdout)
+                # Fixed regex - case insensitive, captures version part only
+                match = re.search(
+                    r"ffmpeg\s+version\s+([^\s]+)", result.stdout, re.IGNORECASE
+                )
                 if match:
-                    version_str = match.group(1)
+                    version_str = match.group(1)  # "8.0-full_build-www.gyan.dev"
                     return self.parse_ffmpeg_version(version_str)
             return None
-        except:
+        except Exception:
             return None
 
     def do_update_ffmpeg(self):
@@ -1059,12 +1133,12 @@ class VideoDownloaderApp:
         self.root.after(
             0,
             lambda: self.update_status(
-                f"{self.style_manager.get_emoji('check')} Ffmpeg download complete. Extracting...",
+                f"FFmpeg download complete. Extracting...",
                 percent=100,
             ),
         )
 
-        # Extract both ffmpeg and ffprobe depending on platform
+        # Extract both FFmpeg and ffprobe depending on platform
         if IS_WINDOWS:
             import zipfile
 
@@ -1164,7 +1238,7 @@ class VideoDownloaderApp:
 
     def parse_ffmpeg_version(self, version_str):
         """
-        Parse ffmpeg version string into comparable format
+        Parse FFmpeg version string into comparable format
         Returns: (version_type, version_data, build_date)
         """
         # Stable release pattern: "4.4.2" or "5.0.1"
@@ -1188,7 +1262,7 @@ class VideoDownloaderApp:
         self, version_info, min_commit=100000, min_build_date="20240101"
     ):
         """
-        Check if ffmpeg version is sufficiently recent
+        Check if FFmpeg version is sufficiently recent
         version_info: tuple from parse_ffmpeg_version()
         """
         if not version_info:
@@ -1297,7 +1371,7 @@ class VideoDownloaderApp:
                 else:
                     self.gui_context.buttons["update_btn"].config(state="normal")
                     self.gui_context.buttons["download_btn"].config(state="normal")
-                    callback(False, str(e))
+                    callback(False, "Post-update version check failed")
 
                     raise Exception("Post-update version check failed")
 
@@ -1318,7 +1392,11 @@ class VideoDownloaderApp:
                 )
 
                 # Restore backup if update failed
-                if os.path.exists(backup_path) and not os.path.exists(self.ytdlp_path):
+                if (
+                    "backup_path" in locals()
+                    and os.path.exists(backup_path)
+                    and not os.path.exists(self.ytdlp_path)
+                ):
                     os.rename(backup_path, self.ytdlp_path)
                     self.custom_msg_box.custom_showinfo(
                         self.root,
@@ -1412,22 +1490,21 @@ class VideoDownloaderApp:
         # Test multiple reliable endpoints
         test_urls = [
             "https://www.google.com",
-            "https://www.cloudflare.com", 
-            "https://1.1.1.1"
+            "https://www.cloudflare.com",
+            "https://1.1.1.1",
         ]
-        
+
         for url in test_urls:
             try:
                 request = urllib.request.Request(
-                    url,
-                    headers={"User-Agent": "VideoDownloader/1.0"}
+                    url, headers={"User-Agent": "VideoDownloader/1.0"}
                 )
                 with urllib.request.urlopen(request, timeout=3) as response:
                     if response.getcode() == 200:
                         return True
             except:
                 continue
-        
+
         return False
 
     # def get_app_root(self):
@@ -1442,10 +1519,10 @@ class VideoDownloaderApp:
     def get_app_root(self):
         """Get the application root directory"""
         # Make sure frozen check comes first
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False):
             # PyInstaller build (onefile or onedir)
             exe_dir = Path(sys.executable).parent
-            if (exe_dir / '_internal').exists():
+            if (exe_dir / "_internal").exists():
                 return Path(sys.executable).parent
             else:
                 return Path(sys._MEIPASS)
@@ -1466,14 +1543,17 @@ class VideoDownloaderApp:
 
     def add_to_delete_list(self, base_name, download_dir):
         """Delete files related to download that was stopped/t"""
-        self.stopped_downloads_to_be_deleted.append(os.path.join(download_dir, base_name))
+        self.stopped_downloads_to_be_deleted.append(
+            os.path.join(download_dir, base_name)
+        )
 
     def exit_app(self):
         """Handle application shutdown"""
         try:
-            self.download_context.is_paused = True    
+            self.cancel_all_background_tasks()
+            self.download_context.is_paused = True
             status_text = f"{self.style_manager.get_emoji('loading')} Exiting....."
-            self.update_status(status_text, 0, "")            
+            self.update_status(status_text, 0, "")
             self.root.update()
             time.sleep(1)
             if self.download_context.current_process:
@@ -1497,15 +1577,42 @@ class VideoDownloaderApp:
             self.root.quit()
             self.root.destroy()
 
-            if self.settings.get("stream_and_merge_format") == "bestvideo+bestaudio/best-mp4" or not self.settings.get("multisession_queue_download_support"):
-                if hasattr(self.download_context, 'safe_title') and self.download_context.safe_title:
+            if self.settings.get(
+                "stream_and_merge_format"
+            ) == "bestvideo+bestaudio/best-mp4" or not self.settings.get(
+                "multisession_queue_download_support"
+            ):
+                if (
+                    hasattr(self.download_context, "safe_title")
+                    and self.download_context.safe_title
+                ):
                     # base_name = self.download_context.safe_title.split(".")[0].strip()
-                    base_name = self.download_service.get_base_name_from_ytdlp_file(self.download_context.safe_title)   
+                    base_name = self.download_service.get_base_name_from_ytdlp_file(
+                        self.download_context.safe_title
+                    )
                     if base_name:
-                        self.download_service.cleanup_video_leftovers(base_name, self.download_context.download_path_temp)
-                        self.add_to_delete_list(base_name, self.download_context.download_path_temp)
+                        self.download_service.cleanup_video_leftovers(
+                            base_name, self.download_context.download_path_temp
+                        )
+                        self.add_to_delete_list(
+                            base_name, self.download_context.download_path_temp
+                        )
 
             self.cleanup_on_exit()
+
+    def cancel_all_background_tasks(self):
+        """Cancel ALL pending after() tasks"""
+        if hasattr(self, "root") and self.root:
+            try:
+                # Get all pending job IDs and cancel them
+                job_ids = self.root.tk.call("after", "info")
+                for job_id in job_ids:
+                    try:
+                        self.root.after_cancel(job_id)
+                    except:
+                        pass
+            except Exception as e:
+                print(f"Error cancelling tasks: {e}")
 
     # def get_resource_path(self, relative_path):
     #     """Get absolute path to resource, works for dev and for PyInstaller"""
@@ -1514,9 +1621,8 @@ class VideoDownloaderApp:
     #         base_path = sys._MEIPASS
     #     except Exception:
     #         base_path = os.path.dirname(os.path.dirname((os.path.dirname(os.path.abspath(__file__)))))
-        
-    #     return os.path.join(base_path, relative_path)
 
+    #     return os.path.join(base_path, relative_path)
 
     from pathlib import Path
     import subprocess, os
@@ -1535,7 +1641,7 @@ class VideoDownloaderApp:
 
         utils_dir = Path(self.settings.get("utils_dir", "utils")).resolve()
 
-        if os.name == 'nt':  # Windows
+        if os.name == "nt":  # Windows
             script_path = utils_dir / "cleanup_files.bat"
             cmd = [str(script_path)] + [str(f) for f in files_to_delete]
             subprocess.Popen(cmd, creationflags=subprocess.CREATE_NO_WINDOW)
@@ -1555,27 +1661,26 @@ class VideoDownloaderApp:
             cmd = [str(script_path)] + [str(f) for f in files_to_delete]
             subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-
     # def cleanup_on_exit(self):
     #     """Cross-platform cleanup using command line args"""
     #     import subprocess
     #     import os
     #     import sys
-        
+
     #     files_args = []
     #     for file_path in self.stopped_downloads_to_be_deleted:
     #             files_args.append(f'"{file_path}"')
-        
+
     #     if not files_args:
     #         return
-    
+
     #     utils_dir = self.settings.get("utils_dir", "utils")
-    
+
     #     # Join all file arguments
     #     files_args_str = " ".join(files_args)
     #     if files_args_str == r'"Unknown Video"':
     #         return
-        
+
     #     # Platform-specific command with hidden windows
     #     if os.name == 'nt':  # Windows
     #         script_path = (Path(utils_dir) / "cleanup_files.bat").resolve()
@@ -1588,16 +1693,26 @@ class VideoDownloaderApp:
     #         cmd = f'"{script_path}" {files_args_str}'
     #         subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+
 def main():
     """Main application entry point"""
+
     try:
+
         downloader_app = VideoDownloaderApp()
+
         downloader_app.run()
+
     except Exception as e:
+
         print(f"Fatal error: {e}")
+
         messagebox.showerror("Fatal Error", f"Application failed to start:\n{str(e)}")
+
     finally:
+
         pass
+
 
 if __name__ == "__main__":
     main()

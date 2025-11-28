@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
-from mediatools.video.downloader.compat.platform_style_manager import PlatformStyleManager
+from mediatools.video.downloader.compat.platform_style_manager import (
+    PlatformStyleManager,
+)
 
 
 class CustomMessageBoxCore:
@@ -18,7 +20,7 @@ class CustomMessageBoxCore:
         self.result = None
         self.dialog = tk.Toplevel(parent)
         self.dialog.title(title)
-        self.dialog.geometry("400x160")
+        self.dialog.geometry("400x180")
         self.dialog.resizable(False, False)
         self.dialog.transient(parent)
         self.dialog.grab_set()
