@@ -1,684 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaTools.tech - Powerful Video Downloader v2.0.0</title>
+
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-SFNJY5WTLB"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
+        function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
         gtag('config', 'G-SFNJY5WTLB');
-    </script>    
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediaTools.tech - Powerful Video Downloader</title>
-    
-    <meta name="description" content="MediaTools.tech - Free, powerful video downloader for 1000+ sites. Download videos from YouTube, Facebook, Instagram and more.">
-    <meta name="keywords" content="video downloader, youtube downloader, free downloader, media tools, download videos">
-    <meta name="author" content="MediaTools.tech">
-    <meta property="og:title" content="MediaTools.tech - Powerful Video Downloader">
-    <meta property="og:description" content="Free video downloader for 1000+ sites. No ads, no tracking, completely free.">
-    <meta property="og:type" content="website">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
+    </script>
+
+    <meta name="description"
+        content="MediaTools.tech v2.0.0 - Free, powerful video & audio downloader for 1000+ sites. Download videos and audio from YouTube, Facebook, Instagram and more.">
+    <meta name="keywords"
+        content="video downloader, audio downloader, youtube downloader, free downloader, media tools, download videos">
+    <meta property="og:title" content="MediaTools.tech - Powerful Video Downloader v2.0.0">
+    <meta property="og:description"
+        content="Free video & audio downloader for 1000+ sites. No ads, no tracking, completely free.">
+
+    <link rel="stylesheet" href="../css/redesign.css">
+    <link rel="stylesheet" href="../css/downloader.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/styles.css">
-    <style>
-        :root {
-            --primary: #000000;
-            --primary-dark: #2980b9;
-            --primary-blue: #012464;
-            --secondary: #1e293b;
-            --accent: #f59e0b;
-            --light: #f8fafc;
-            --dark: #0f172a;
-            --success: #10b981;
-            --gradient-start: #6366f1;
-            --gradient-end: #8b5cf6;
-            --gray: #64748b;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        
-        html {
-            scroll-behavior: smooth;
-        }
-        
-
-        #scroll-progress {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 3px;
-            /* background: linear-gradient(90deg, var(--primary-blue), var(--accent)); */
-            /* background: linear-gradient(90deg, #7fa85a, #7fa85a);             */
-            width: 0%;
-            z-index: 1000;
-            transition: width 0.3s ease;
-        }
-        
-        .downloader-icon {
-            height: 1em;
-            width: auto;
-            border-radius: 4px;
-        }
-        
-        .downloader-icon {
-            margin-bottom: -5px;
-        }
-
-        .tagline {
-            font-size: clamp(1rem, 3vw, 1.2rem);
-            margin-bottom: 25px;
-            opacity: 0.9;
-            color: #000000;
-        }
-
-        .app-title-font {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            font-size: clamp(2rem, 6vw, 2.6rem);
-            font-weight: 700;
-            background: #353535;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-                
-        .slideshow-container {
-            max-width: min(1150px, 95vw);
-            margin: 0 auto;
-            padding: max(60px, 5vw) 0;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-            background: #ffffff;
-            /* height: clamp(380px, 75vw, 620px); */
-            position: relative; /* Ensure child elements are positioned relative to this */
-        }
-        
-        .slideshow {
-            display: flex;
-            height: 100%;
-        }
-        
-        .slide {
-            min-width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .slide h3, .slide p, .slide-content {
-            display: none !important;
-        }
-
-        .app-screenshot {
-            width: 100%;
-            max-width: 45vw;
-            height: auto;
-            border-radius: 0px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            object-fit: contain;
-            object-position: center; 
-        }
-
-        .slide-controls {
-            display: flex;
-            justify-content: center;
-            position: absolute;
-            bottom: 10px; /* Position dots closer to the bottom */
-            left: 50%;
-            transform: translateX(-50%); /* Center horizontally */
-            gap: 8px;
-            z-index: 10;
-        }
-        
-        .slide-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background-color: rgba(0, 0, 0, 0.5);
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-        }
-        
-        .slide-dot.active {
-            background-color: var(--primary-blue);
-            transform: scale(1.2);
-        }
-        
-        .slide-nav {
-                    position: absolute;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    background-color: rgba(0, 0, 0, 0.2);
-                    color: white;
-                    border: none;
-                    width: clamp(30px, 8vw, 45px);
-                    height: clamp(30px, 8vw, 45px);
-                    border-radius: 50%;
-                    font-size: clamp(1rem, 3vw, 1.4rem);
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: background-color 0.3s ease;
-                    z-index: 10;
-                }
-        
-        .slide-nav:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-        }
-        
-        .prev {
-            left: 15px;
-        }
-        
-        .next {
-            right: 15px;
-        }
-
-        section {
-            padding: 0 0 clamp(50px, 10vw, 100px) 0;
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .feature-card, .download-card, .privacy-card {
-            animation: fadeInUp 0.6s ease-out;
-            animation-play-state: paused;
-        }
-        
-        .feature-card:nth-child(1), .privacy-card:nth-child(1) { animation-delay: 0.1s; }
-        .feature-card:nth-child(2), .privacy-card:nth-child(2) { animation-delay: 0.2s; }
-        .feature-card:nth-child(3), .privacy-card:nth-child(3) { animation-delay: 0.3s; }
-        
-        .features-grid, .privacy-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
-            gap: clamp(25px, 5vw, 35px);
-        }
-        
-        @media (min-width: 768px) {
-            .features-grid, .privacy-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        
-        .feature-card, .privacy-card {
-            background: #f7f9fb;
-            padding: clamp(25px, 5vw, 35px);
-            border-radius: 16px;
-            text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #d1d5db;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .feature-card::before, .privacy-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            /* background: linear-gradient(90deg, var(--primary-blue), var(--accent)); */
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-        
-        .feature-card:hover, .privacy-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-        }
-        
-        .feature-card:hover::before, .privacy-card:hover::before {
-            transform: scaleX(1);
-        }
-        
-        .feature-icon, .privacy-icon {
-            font-size: clamp(2.5rem, 7vw, 3rem);
-            margin-bottom: 25px;
-            transition: all 0.3s ease;
-            position: relative;
-            display: inline-block;
-            color: var(--primary-blue);
-        }
-        
-        .feature-icon::before, .privacy-icon::before {
-            content: '';
-            position: absolute;
-            width: 80px;
-            height: 80px;
-            background: var(--primary-blue);
-            opacity: 0.1;
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            transition: transform 0.3s ease;
-        }
-        
-        .feature-card:hover .feature-icon::before, .privacy-card:hover .privacy-icon::before {
-            transform: translate(-50%, -50%) scale(1);
-        }
-        
-        .feature-card:hover .feature-icon, .privacy-card:hover .privacy-icon {
-            transform: scale(1.1);
-            color: var(--primary-dark);
-        }
-        
-        .feature-card h3, .privacy-card h3 {
-            margin-bottom: 20px;
-            color: var(--secondary);
-            font-size: clamp(1.3rem, 3.5vw, 1.5rem);
-            font-weight: 600;
-        }
-        
-        .feature-card p, .privacy-card p {
-            color: var(--gray);
-            line-height: 1.7;
-        }
-        
-        .privacy-card ul {
-            list-style: none;
-            padding-left: 0;
-            margin-top: 20px;
-            text-align: left;
-        }
-        
-        .privacy-card li {
-            margin-bottom: 10px;
-            padding-left: 2em; /* Space for tick mark */
-            font-size: 1rem;
-            color: var(--gray);
-            display: block;
-            line-height: 1.5; /* Ensure proper line spacing */
-        }
-        
-        .privacy-card li::before {
-            content: '✓';
-            color: var(--success);
-            font-weight: bold;
-            min-width: 1.5em;
-            display: inline-block;
-            margin-right: 0.5em; /* Space between tick and text */
-        }
-        
-        .privacy-card li span {
-            display: inline; /* Ensure text stays inline */
-        }
-        
-        .description {
-            background-color: transparent;
-        }
-        
-        .description-content {
-            max-width: 90%;
-            margin: 0 auto;
-        }
-        
-        .description-content p {
-            margin-bottom: 25px;
-            font-size: clamp(1.1rem, 3vw, 1.2rem);
-            line-height: 1.8;
-            color: var(--secondary);
-        }
-        
-        .highlight {
-            background: rgba(1, 36, 100, 0.08);
-            padding: clamp(25px, 5vw, 35px);
-            border-left: 6px solid var(--primary-blue);
-            margin: clamp(25px, 5vw, 35px) 0;
-            border-radius: 12px;
-            border: 1px solid rgba(1, 36, 100, 0.1);
-        }
-        
-        .highlight h3 {
-            color: var(--primary-blue);
-            margin-bottom: 15px;
-            font-size: 1.4rem;
-            font-weight: 600;
-        }
-        
-        .downloads {
-            background: transparent;
-        }
-        
-        .download-options {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: clamp(25px, 5vw, 35px);
-            margin-top: clamp(30px, 6vw, 40px);
-        }
-        
-        .download-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            width: min(100%, 320px);
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #e2e8f0;
-        }
-        
-        .download-card:hover {
-            transform: translateY(-10px) scale(1.03);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
-        }
-        
-        .os-header {
-            padding: 30px 20px;
-            text-align: center;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .os-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
-        }
-        
-        .windows .os-header {
-            background: linear-gradient(135deg, #0078d7, #106ebe);
-        }
-        
-        .mac .os-header {
-            background: linear-gradient(135deg, #000000, #333333);
-        }
-        
-        .linux .os-header {
-            background: linear-gradient(135deg, #f1502f, #c13c1e);
-        }
-        
-        .os-icon {
-            font-size: clamp(3rem, 9vw, 4rem);
-            margin-bottom: 15px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .os-header h3 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .download-btn {
-            display: block;
-            width: 100%;
-            padding: 16px;
-            margin-bottom: 12px;
-            text-align: center;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-        }
-
-        .download-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .download-btn:hover::before {
-            left: 100%;
-        }
-        
-        .download-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
-        }
-
-        .download-btn:focus {
-            outline: 2px solid var(--accent);
-            outline-offset: 2px;
-        }
-        
-        .download-btn i {
-            margin-right: 10px;
-        }
-        
-        .btn-hover-options {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        
-        .download-btn:hover .btn-hover-options {
-            opacity: 1;
-        }
-        
-        .btn-option {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--primary-dark);
-            transition: all 0.3s ease;
-            font-size: 0.85rem;
-            padding: 0 8px;
-            text-align: center;
-        }
-        
-        .btn-option:hover {
-            background: var(--secondary);
-        }
-        
-        .btn-option:first-child {
-            border-right: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .github-info {
-            background: transparent;
-            color: #333333;
-            text-align: center;
-        }
-        
-        .github-stats {
-            display: flex;
-            justify-content: center;
-            gap: clamp(25px, 5vw, 35px);
-            margin: clamp(40px, 8vw, 60px) 0;
-            flex-wrap: wrap;
-        }
-        
-        .stat {
-            background: #f7f9fb;
-            padding: clamp(20px, 4vw, 30px);
-            border-radius: 16px;
-            min-width: 140px;
-            border: 1px solid #d1d5db;
-            transition: transform 0.3s ease;
-        }
-        
-        .stat:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-        }
-        
-        .stat-number {
-            font-size: clamp(1.8rem, 5vw, 2.5rem);
-            font-weight: 700;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, var(--primary-blue), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .stat-label {
-            font-size: 1rem;
-            opacity: 0.9;
-            font-weight: 500;
-            color: #333333;
-        }
-        
-        .github-info p {
-            max-width: 90%;
-            margin: 0 auto 30px;
-            font-size: 1.1rem;
-            line-height: 1.8;
-            color: var(--secondary);
-        }
-        
-        .github-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 16px 35px;
-            background: var(--primary-blue);
-            color: white;
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin-top: 20px;
-            border: 2px solid transparent;
-            font-size: 1.1rem;
-            box-shadow: 0 5px 15px rgba(1, 36, 100, 0.3);
-        }
-        
-        .github-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(1, 36, 100, 0.4);
-        }
-        
-        @media (prefers-color-scheme: dark) {
-            .stat-label {
-                color: #e2e8f0 !important;
-            }
-            
-            .feature-card, .privacy-card, .download-card, .stat {
-                background: #334155;
-                color: #e2e8f0;
-                border: 1px solid #475569;
-            }
-            
-            .feature-card p, .privacy-card p, .privacy-card li {
-                color: #cbd5e1;
-            }
-            
-            .download-card {
-                background: #334155;
-            }
-
-            .btn-hover-options {
-                background: #1e293b;
-                border: 1px solid #475569;
-            }
-
-            .btn-option {
-                color: #e2e8f0;
-                border-bottom: 1px solid #475569;
-            }
-
-            .btn-option:hover {
-                background-color: #334155;
-                color: #93c5fd;
-            }
-        }
-    </style>
+    <link rel="icon" href="../assets/mt_logo.png" type="image/png">
 </head>
 
 <body>
-    <div class="top-nav">
-        <a href="../index.html" class="nav-logo">
-            <img src="../assets/mt_logo.png" alt="MediaTools Logo" class="nav-logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/30x30/012464/ffffff?text=MT';" title="Logo Placeholder">
-            <span class="nav-logo-text">MediaTools</span>
+
+    <header class="site-header">
+        <a href="../index.html" class="logo">
+            <img src="../assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon">
+            <span>MediaTools.tech</span>
         </a>
-    </div>
-
-    <div id="scroll-progress"></div>
-
-    <header>
-        <div class="container_local">
-            <div class="content-card-title">
-                <div class="logo"> 
-                    <img src="../assets/video_downloader_icon.png" alt="Video Downloader Icon" class="downloader-icon">
-                    <span class="app-title-font">Mediatools Video Downloader</span>
-                </div>
-                <p class="tagline">Powerful, user-friendly video downloader for 1000+ sites</p>
-                <div class="center-image"> 
-                    <img src="../assets/rgb_h2px.png">
-                </div>
-            </div>
-        </div>
+        <nav class="main-nav">
+            <a href="../downloads.html">Downloads</a>
+            <a href="../documentation.html">Docs</a>
+            <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
+            <a href="../contact.html">Contact</a>
+            <button id="theme-switcher" class="theme-btn"><i class="fas fa-sun"></i></button>
+        </nav>
     </header>
 
-    <section id="slideshow-section">
-        <div class="container_local">
-            <div class="content-card">
-                <div class="section-title">
-                    <h2 style="margin-bottom: 0;">App Preview</h2>
-                    <p style="margin-bottom: 20px;">Video downloader GUI across different themes</p>
-                </div>
+    <main>
+        <div class="container">
+            <section class="hero-downloader">
+                <h1>
+                    <img src="../assets/video_downloader_icon.png" alt="Video Downloader Icon" class="downloader-icon">
+                    Mediatools Video Downloader v2.0.0
+                </h1>
+                <p>Powerful, user-friendly video & audio downloader for 1000+ sites</p>
+
+            </section>
+
+            <section id="slideshow-section" class="page-section">
+
                 <div class="slideshow-container">
-                    <div class="slideshow">
-                        <div class="slide">
-                            <img src="../assets/theme_default.png" class="app-screenshot" alt="App Theme">
-                        </div>                        
-                        <div class="slide">
-                            <img src="../assets/theme_dark.png" class="app-screenshot" alt="App Theme">
-                        </div>                        
-                        <div class="slide">
-                            <img src="../assets/theme_unicolor.png" class="app-screenshot" alt="App Theme">
-                        </div>                        
-                        <div class="slide">
-                            <img src="../assets/theme_minimalist.png" class="app-screenshot" alt="App Theme">
-                        </div>                        
-                        <div class="slide">
-                            <img src="../assets/theme_default.png" class="app-screenshot" alt="App Theme">
-                        </div>                        
+                    <div class="slideshow-wrapper">
+                        <div class="slideshow">
+                            <div class="slide"><img src="../assets/theme_default.png" class="app-screenshot"
+                                    alt="App Theme Default"></div>
+                            <div class="slide"><img src="../assets/theme_dark.png" class="app-screenshot"
+                                    alt="App Theme Dark"></div>
+                            <div class="slide"><img src="../assets/theme_unicolor.png" class="app-screenshot"
+                                    alt="App Theme Unicolor"></div>
+                            <div class="slide"><img src="../assets/theme_minimalist.png" class="app-screenshot"
+                                    alt="App Theme Minimalist"></div>
+                        </div>
+                        <button class="slide-nav prev" aria-label="Previous slide"><i
+                                class="fas fa-chevron-left"></i></button>
+                        <button class="slide-nav next" aria-label="Next slide"><i
+                                class="fas fa-chevron-right"></i></button>
                     </div>
-                    <button class="slide-nav prev" aria-label="Previous slide"><i class="fas fa-chevron-left"></i></button>
-                    <button class="slide-nav next" aria-label="Next slide"><i class="fas fa-chevron-right"></i></button>
                     <div class="slide-controls">
                         <div class="slide-dot active" aria-label="Slide 1"></div>
                         <div class="slide-dot" aria-label="Slide 2"></div>
@@ -686,136 +82,145 @@
                         <div class="slide-dot" aria-label="Slide 4"></div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
+            </section>
 
-    <section class="features">
-        <div class="container_local">
-            <div class="content-card">
+            <section class="features page-section">
                 <div class="section-title">
                     <h2>Key Features</h2>
-                    <p>Everything you need to download videos from your favorite platforms</p>
+                    <p>Everything you need to download videos and audio from your favorite platforms</p>
                 </div>
                 <div class="features-grid">
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-gift"></i></div>
                         <h3>100% Free Application</h3>
-                        <p>The application is completely free to use, forever. No hidden costs, ads, or pro subscriptions.</p>
+                        <p>The application is completely free to use, forever. No hidden costs, ads, or pro
+                            subscriptions.</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-box-open"></i></div>
-                        <h3>Portable & Installable Options</h3>
-                        <p>Choose your preference: use the installer for a permanent setup, or the portable version for use on any drive without installation.</p>
+                        <h3>Portable & Installable</h3>
+                        <p>Choose your preference: use the installer for a permanent setup, or the portable version for
+                            on-the-go use.</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-globe"></i></div>
                         <h3>1000+ Sites Supported</h3>
-                        <p>Download videos from a list of over 1,000 platforms/sites supported by yt-dlp.</p>
+                        <p>Download videos and audio from a list of over 1,000 platforms/sites supported by yt-dlp.</p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-video"></i></div>
-                        <h3>Format Flexibility (MKV/MP4)</h3>
-                        <p>Easily choose between MKV for the highest quality video preservation or MP4 for maximum device compatibility.</p>
+                        <div class="feature-icon"><i class="fas fa-file-video"></i></div>
+                        <h3>Video & Audio Download</h3>
+                        <p>Download videos in MKV/MP4 formats or extract audio in M4A, MP3 formats. Choose the quality
+                            and format that suits your needs.</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-folder-open"></i></div>
-                        <h3>Custom Download Location</h3>
-                        <p>Choose exactly where you want to save your downloaded videos for better organization and easy access.</p>
+                        <h3>Custom Location</h3>
+                        <p>Choose exactly where you want to save your downloaded videos and audio files for better
+                            organization.</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-tasks"></i></div>
                         <h3>Queue Management</h3>
-                        <p>Add multiple videos to the download queue and manage them efficiently with pause/resume functionality.</p>
+                        <p>Add multiple videos to the download queue and manage them efficiently with pause/resume
+                            functionality.</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-tachometer-alt"></i></div>
                         <h3>Download Speed Control</h3>
-                        <p>Limit the application's download bandwidth to ensure your browsing and streaming activities are not affected.</p>
+                        <p>Limit the application's download bandwidth to ensure your browsing and streaming activities
+                            are not affected.</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-cogs"></i></div>
                         <h3>Advanced Options</h3>
-                        <p>Some video downloads may require cookies. This app provides a feature to use cookies from either your browser or a cookies file.</p>
+                        <p>Some video downloads may require cookies. This app provides a feature to use cookies from
+                            either your browser or a cookies file.</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-sync-alt"></i></div>
                         <h3>Regular Updates</h3>
-                        <p>Since yt-dlp is frequently updated, with the auto-update feature on, you will get a notification to download the latest version.</p>
+                        <p>Since yt-dlp is frequently updated, with the auto-update feature on, you will get a
+                            notification to download the latest version.</p>
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
+            </section>
 
-    <section class="description">
-        <div class="container_local">
-            <div class="content-card">
+            <section class="description page-section">
                 <div class="section-title">
-                    <h2>About MediaTools Video Downloader</h2>
-                    <p>A comprehensive solution for all your video downloading needs</p>
+                    <h2>About MediaTools Video Downloader v2.0.0</h2>
+                    <p>A comprehensive solution for all your video and audio downloading needs</p>
                 </div>
                 <div class="description-content">
-                    <p>MediaTools Video Downloader is a powerful desktop application built around the renowned yt-dlp engine, providing you with the ability to download videos from over 1000 websites. Whether you're looking to save educational content, memorable moments, or entertainment for offline viewing, our application makes the process simple and efficient.</p>
+                    <p>MediaTools Video Downloader v2.0.0 is a powerful desktop application built around the renowned
+                        yt-dlp engine, providing you with the ability to download videos and audio from over 1000
+                        websites. Whether you're looking to save educational content, memorable moments, music, or
+                        entertainment for offline viewing, our application makes the process simple and efficient.</p>
                     <div class="highlight">
-                        <h3>Built on yt-dlp</h3>
-                        <p>Our application leverages the powerful yt-dlp project, an open-source YouTube-dl fork with additional features and improvements. This ensures maximum compatibility with video platforms and regular updates to handle changes in website structures.</p>
+                        <h3>Built on yt-dlp. Enhanced Format Support in v2.0.0</h3>
+                        <p>Now with expanded audio extraction capabilities! Download videos in multiple formats (MKV for
+                            quality preservation, MP4 for compatibility) or extract audio in popular formats like M4A
+                            and MP3. Perfect for creating music libraries or saving podcast episodes.</p>
                     </div>
-                    <p>The application features an intuitive user interface that makes video downloading accessible to everyone, regardless of technical expertise. Simply paste the video URL, choose your preferred quality and format, and let the application handle the rest.</p>
-                    <p>All downloads are performed with respect to platform terms of service, and we encourage users to only download content they have the right to access offline.</p>
+                    <p>The application features an intuitive user interface that makes video and audio downloading
+                        accessible to everyone, regardless of technical expertise. Simply paste the video URL, choose
+                        your preferred quality and format (video or audio), and let the application handle the rest.</p>
                 </div>
-            </div>
-        </div>
-    </section>
+            </section>
 
-    <section id="privacy-legal">
-        <div class="container_local">
-            <div class="content-card">
-                <div class="section-title">
-                    <h2>Privacy & Legal Information</h2>
-                    <p>We are committed to user privacy and ethical open-source practices.</p>
+            <section id="privacy-legal" class="page-section">
+                <div class="content-card">
+                    <div class="section-title">
+                        <h2>Privacy & Legal Information</h2>
+                        <p>We are committed to user privacy and ethical open-source practices.</p>
+                    </div>
+                    <div class="privacy-grid">
+                        <div class="privacy-card">
+                            <div class="privacy-icon"><i class="fas fa-lock"></i></div>
+                            <h3>Data Privacy Assurances</h3>
+                            <p>We prioritize your privacy with the following commitments:</p>
+                            <ul>
+                                <li><span>Does <strong>NOT</strong> collect personal information.</span></li>
+                                <li><span>Does <strong>NOT</strong> send usage statistics.</span></li>
+                                <li><span>Does <strong>NOT</strong> require account creation.</span></li>
+                                <li><span>Does <strong>NOT</strong> connect to external servers (except to video
+                                        platforms for downloading content).</span></li>
+                            </ul>
+                        </div>
+                        <div class="privacy-card">
+                            <div class="privacy-icon"><i class="fas fa-gavel"></i></div>
+                            <h3>Legal Disclaimer & License</h3>
+                            <p>Our application adheres to open-source principles and legal standards:</p>
+                            <ul>
+                                <li><span><strong>License:</strong> Software is provided under the <strong>MIT
+                                            License</strong>.</span></li>
+                                <li><span><strong>Disclaimer:</strong> MediaTools is a <strong>GUI tool</strong> for the
+                                        independent <strong>yt-dlp</strong> engine.</span></li>
+                                <li><span><strong>Responsibility:</strong> User is <strong>solely responsible</strong>
+                                        for compliance with all laws and copyright when downloading content.</span></li>
+                                <li><span><strong>No Warranty:</strong> Provided "AS IS" without warranty.</span></li>
+                            </ul>
+                        </div>
+                        <div class="privacy-card">
+                            <div class="privacy-icon"><i class="fas fa-shield-alt"></i></div>
+                            <h3>Security & Cookie Usage</h3>
+                            <p>We ensure secure usage with clear policies:</p>
+                            <ul>
+                                <li><span><strong>Cookie Security:</strong> Cookies are stored <strong>locally
+                                            only</strong> and <strong>never transmitted</strong> to third
+                                        parties.</span></li>
+                                <li><span><strong>Safe Use:</strong> Always <strong>respect copyright</strong> and use
+                                        <strong>antivirus</strong> on downloaded files if concerned.</span></li>
+                                <li><span><strong>Intended Use:</strong> Designed for downloading <strong>publicly
+                                            accessible content</strong> you have you have the legal right to
+                                        access.</span></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-                <div class="privacy-grid">
-                    <div class="privacy-card">
-                        <div class="privacy-icon"><i class="fas fa-lock"></i></div>
-                        <h3>Data Privacy Assurances</h3>
-                        <p>We prioritize your privacy with the following commitments:</p>
-                        <ul>
-                            <li><span>Does <strong>NOT</strong> collect personal information.</span></li>
-                            <li><span>Does <strong>NOT</strong> send usage statistics.</span></li>
-                            <li><span>Does <strong>NOT</strong> require account creation.</span></li>
-                            <li><span>Does <strong>NOT</strong> connect to external servers (except to video platforms for downloading content).</span></li>
-                        </ul>
-                    </div>
-                    <div class="privacy-card">
-                        <div class="privacy-icon"><i class="fas fa-gavel"></i></div>
-                        <h3>Legal Disclaimer & License</h3>
-                        <p>Our application adheres to open-source principles and legal standards:</p>
-                        <ul>
-                            <li><span><strong>License:</strong> Software is provided under the <strong>MIT License</strong>.</span></li>
-                            <li><span><strong>Disclaimer:</strong> MediaTools is a <strong>GUI tool</strong> for the independent <strong>yt-dlp</strong> engine.</span></li>
-                            <li><span><strong>Responsibility:</strong> User is <strong>solely responsible</strong> for compliance with all laws and copyright when downloading content.</span></li>
-                            <li><span><strong>No Warranty:</strong> Provided "AS IS" without warranty.</span></li>
-                        </ul>
-                    </div>
-                    <div class="privacy-card">
-                        <div class="privacy-icon"><i class="fas fa-shield-alt"></i></div>
-                        <h3>Security & Cookie Usage</h3>
-                        <p>We ensure secure usage with clear policies:</p>
-                        <ul>
-                            <li><span><strong>Cookie Security:</strong> Cookies are stored <strong>locally only</strong> and <strong>never transmitted</strong> to third parties.</span></li>
-                            <li><span><strong>Safe Use:</strong> Always <strong>respect copyright</strong> and use <strong>antivirus</strong> on downloaded files if concerned.</span></li>
-                            <li><span><strong>Intended Use:</strong> Designed for downloading <strong>publicly accessible content</strong> you have the legal right to access.</span></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+            </section>
 
-    <section class="downloads">
-        <div class="container_local">
-            <div class="content-card">
+            <section class="downloads page-section">
                 <div class="section-title">
                     <h2>Download Now</h2>
                     <p>Available for all major operating systems</p>
@@ -827,21 +232,10 @@
                             <h3>Windows</h3>
                         </div>
                         <div class="download-buttons">
-                            <div href="#" class="download-btn">
-                                <i class="fas fa-download"></i> Download for Windows
-                                <div class="btn-hover-options">
-                                    <div class="btn-option">
-                                        <a href="https://github.com/MediaTools-tech/mediatools/releases/download/latest/mt-vdl-Windows.exe" download>
-                                            Installer (.exe)
-                                        </a>
-                                    </div>
-                                    <div class="btn-option">
-                                        <a href="https://github.com/MediaTools-tech/mediatools/releases/download/latest/mt-vdl-Windows-Portable.zip" download>
-                                            Portable (.zip)
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+                            <a href="https://github.com/MediaTools-tech/mediatools/releases/download/latest/mt-vdl-Windows.exe"
+                                class="download-btn"><i class="fas fa-download"></i> Installer (.exe)</a>
+                            <a href="https://github.com/MediaTools-tech/mediatools/releases/download/latest/mt-vdl-Windows-Portable.zip"
+                                class="download-btn"><i class="fas fa-file-archive"></i> Portable (.zip)</a>
                         </div>
                     </div>
                     <div class="download-card mac">
@@ -850,15 +244,8 @@
                             <h3>macOS</h3>
                         </div>
                         <div class="download-buttons">
-                            <a href="#" class="download-btn">
-                                <i></i> Coming soon ...
-                                <div class="btn-hover-options">
-                                    <!-- <div class="btn-option">Installer (.exe)</div>
-                                    <div class="btn-option">Portable (.zip)</div> -->
-                                </div>
-                            </a>
+                            <a href="#" class="download-btn coming-soon-btn">Coming Soon</a>
                         </div>
-
                     </div>
                     <div class="download-card linux">
                         <div class="os-header">
@@ -866,34 +253,23 @@
                             <h3>Linux</h3>
                         </div>
                         <div class="download-buttons">
-                            <div href="#" class="download-btn">
-                                <i class="fas fa-download"></i> Download for Linux
-                                <div class="btn-hover-options">
-                                    <div class="btn-option">
-                                        <a href="https://github.com/MediaTools-tech/mediatools/releases/download/latest/mt-vdl-Linux" download>
-                                            AppImage
-                                        </a>
-                                    </div>
-                                    <div class="btn-option">
-                                        <a href="https://github.com/MediaTools-tech/mediatools/releases/download/latest/mt-vdl-Linux-Portable.zip" download>
-                                            Portable (.tar.gz)
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+                            <a href="https://github.com/MediaTools-tech/mediatools/releases/download/latest/mt-vdl-Linux"
+                                class="download-btn"><i class="fas fa-download"></i> AppImage</a>
+                            <a href="https://github.com/MediaTools-tech/mediatools/releases/download/latest/mt-vdl-Linux-Portable.zip"
+                                class="download-btn"><i class="fas fa-file-archive"></i> Portable (.tar.gz)</a>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
+            </section>
 
-    <section class="github-info">
-        <div class="container_local">
-            <div class="content-card">
+            <section class="github-info page-section">
                 <div class="section-title">
                     <h2>Open Source Project</h2>
                     <p>MediaTools Video Downloader is completely open source and community-driven</p>
+                </div>
+                <div class="description-content">
+                    <p>The complete source code is available on GitHub. We welcome bug reports, feature requests, and
+                        contributions from the community.</p>
                 </div>
                 <div class="github-stats">
                     <div class="stat">
@@ -909,172 +285,88 @@
                         <div class="stat-label">Powered</div>
                     </div>
                 </div>
-                <p>The complete source code for MediaTools Video Downloader is available on GitHub. We welcome bug reports and feature requests from the community.<br>The project is built with modern technologies and follows best practices for desktop application development.</p>
-                <a href="https://github.com/MediaTools-tech/mediatools" target="_blank" class="github-btn">
-                    <i class="fab fa-github"></i> View on GitHub
-                </a>
-            </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="https://github.com/MediaTools-tech/mediatools" target="_blank" class="github-btn">
+                        <i class="fab fa-github"></i> View on GitHub
+                    </a>
+                </div>
+            </section>
         </div>
-    </section>
+    </main>
 
-    <footer>
-        <div class="container_local">
-            <div class="footer-logo">
-                <a href="../index.html" class="nav-logo">
-                    <img src="../assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/30x30/012464/ffffff?text=MT';" title="Logo Placeholder">
-                    MediaTools.tech
-                </a>
-                
-            </div>
-            <div class="footer-links">
-                <a href="../index.html">Home</a>
-                <a href="../downloads.html">Downloads</a>
-                <a href="../documentation.html">Documentation</a>
-                <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
-                <a href="../contact.html">Contact</a>
-                <a href="../legal.html">Legal Info / Disclaimer</a>
-            </div>
+    <footer class="site-footer">
+        <a href="../index.html" class="logo">
+            <img src="../assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon">
             <p class="copyright">© 2025 MediaTools.tech. All rights reserved.</p>
+        </a>
+        <div class="footer-links">
+            <a href="../index.html">Home</a>
+            <a href="../downloads.html">Downloads</a>
+            <a href="../documentation.html">Documentation</a>
+            <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
+            <a href="../contact.html">Contact</a>
+            <a href="../legal.html">Legal</a>
         </div>
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const progressBar = document.getElementById('scroll-progress');
-            window.addEventListener('scroll', () => {
-                const winHeight = window.innerHeight;
-                const docHeight = document.documentElement.scrollHeight;
-                const scrollTop = window.pageYOffset;
-                const scrollPercent = (scrollTop / (docHeight - winHeight)) * 100;
-                progressBar.style.width = scrollPercent + '%';
-            });
-
+        document.addEventListener('DOMContentLoaded', function () {
             const slideshow = document.querySelector('.slideshow');
-            const slides = document.querySelectorAll('.slide');
-            const dots = document.querySelectorAll('.slide-dot');
-            const prevBtn = document.querySelector('.prev');
-            const nextBtn = document.querySelector('.next');
-            const REAL_SLIDES = dots.length;
-            const TOTAL_SLIDES = slides.length;
-            let currentSlide = 0;
-            let slideshowInterval;
-            const transitionDuration = 500;
+            if (slideshow) {
+                const slides = slideshow.querySelectorAll('.slide');
+                const dots = document.querySelectorAll('.slide-dot');
+                const prevBtn = document.querySelector('.prev');
+                const nextBtn = document.querySelector('.next');
+                let currentSlide = 0;
+                let slideshowInterval;
 
-            function updateSlideshow(smooth = true) {
-                slideshow.style.transition = smooth ? `transform ${transitionDuration}ms ease-in-out` : 'none';
-                slideshow.style.transform = `translateX(-${currentSlide * 100}%)`;
-                let realIndex = currentSlide % REAL_SLIDES;
-                dots.forEach((dot, index) => {
-                    const isActive = index === realIndex;
-                    dot.classList.toggle('active', isActive);
-                    dot.setAttribute('aria-current', isActive);
-                });
-            }
-
-            function nextSlide() {
-                if (currentSlide === REAL_SLIDES) {
-                    currentSlide = 1;
-                    updateSlideshow(true);
-                } else if (currentSlide === REAL_SLIDES - 1) {
-                    currentSlide++;
-                    updateSlideshow(true);
-                    setTimeout(() => {
-                        currentSlide = 0;
-                        updateSlideshow(false);
-                    }, transitionDuration);
-                } else {
-                    currentSlide++;
-                    updateSlideshow(true);
+                function updateSlideshow() {
+                    slideshow.style.transform = `translateX(-${currentSlide * 100}%)`;
+                    dots.forEach((dot, index) => {
+                        dot.classList.toggle('active', index === currentSlide);
+                    });
                 }
-            }
 
-            function prevSlide() {
-                if (currentSlide <= 0) {
-                    currentSlide = REAL_SLIDES;
-                    updateSlideshow(false);
-                    setTimeout(() => {
-                        currentSlide = REAL_SLIDES - 1;
-                        updateSlideshow(true);
-                    }, 50);
-                } else {
-                    currentSlide--;
-                    updateSlideshow(true);
-                }
-            }
-
-            function startSlideshow() {
-                clearInterval(slideshowInterval);
-                slideshowInterval = setInterval(nextSlide, 5000);
-            }
-
-            function pauseSlideshow() {
-                clearInterval(slideshowInterval);
-            }
-
-            nextBtn.addEventListener('click', () => {
-                pauseSlideshow();
-                nextSlide();
-                startSlideshow();
-            });
-
-            prevBtn.addEventListener('click', () => {
-                pauseSlideshow();
-                prevSlide();
-                startSlideshow();
-            });
-
-            dots.forEach((dot, index) => {
-                dot.addEventListener('click', () => {
-                    pauseSlideshow();
-                    currentSlide = index;
+                function nextSlide() {
+                    currentSlide = (currentSlide + 1) % slides.length;
                     updateSlideshow();
+                }
+
+                function prevSlide() {
+                    currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                    updateSlideshow();
+                }
+
+                function startSlideshow() {
+                    slideshowInterval = setInterval(nextSlide, 5000);
+                }
+
+                nextBtn.addEventListener('click', () => {
+                    clearInterval(slideshowInterval);
+                    nextSlide();
                     startSlideshow();
                 });
-            });
 
-            const slideshowContainer = document.querySelector('.slideshow-container');
-            slideshowContainer.addEventListener('mouseenter', pauseSlideshow);
-            slideshowContainer.addEventListener('mouseleave', startSlideshow);
-            slideshowContainer.addEventListener('focusin', pauseSlideshow);
-            slideshowContainer.addEventListener('focusout', startSlideshow);
-
-            updateSlideshow(false);
-            startSlideshow();
-
-            const downloadBtns = document.querySelectorAll('.download-btn');
-            downloadBtns.forEach(btn => {
-                btn.addEventListener('mouseenter', function() {
-                    this.querySelector('.btn-hover-options').style.opacity = '1';
+                prevBtn.addEventListener('click', () => {
+                    clearInterval(slideshowInterval);
+                    prevSlide();
+                    startSlideshow();
                 });
-                btn.addEventListener('mouseleave', function() {
-                    this.querySelector('.btn-hover-options').style.opacity = '0';
-                });
-                btn.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    const options = this.querySelector('.btn-hover-options');
-                    options.style.opacity = options.style.opacity === '1' ? '0' : '1';
-                });
-            });
 
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting && entry.target.classList.contains('content-card')) {
-                        entry.target.querySelectorAll('.feature-card, .download-card, .privacy-card').forEach(childEl => {
-                            childEl.style.animationPlayState = 'running';
-                        });
-                    }
+                dots.forEach((dot, index) => {
+                    dot.addEventListener('click', () => {
+                        clearInterval(slideshowInterval);
+                        currentSlide = index;
+                        updateSlideshow();
+                        startSlideshow();
+                    });
                 });
-            }, observerOptions);
 
-            document.querySelectorAll('.content-card').forEach(el => {
-                observer.observe(el);
-            });
+                startSlideshow();
+            }
         });
     </script>
+    <script src="../js/theme.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,427 @@
+/* Specific styles for the downloader page */
+
+.hero-downloader {
+    text-align: center;
+    padding: 10px 20px 5px;
+}
+
+.hero-downloader h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2.8rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.hero-downloader .downloader-icon {
+    height: 1.2em;
+    width: auto;
+}
+
+.hero-downloader p {
+    font-size: 1.2rem;
+    color: #8b949e;
+    max-width: 600px;
+    margin: 0 auto 10px;
+    /* Changed margin-bottom */
+}
+
+.center-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Slideshow */
+.slideshow-container {
+    max-width: 952px;
+    margin: 40px auto;
+    background: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0px 0px 20px 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* New wrapper for the slideshow mechanism */
+.slideshow-wrapper {
+    width: 100%;
+    position: relative;
+    /* For positioning nav buttons */
+    overflow: hidden;
+    /* This is key to hide other slides */
+    margin-bottom: 20px;
+}
+
+.slideshow {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+.slide {
+    min-width: 100%;
+    /* This will now be 100% of the wrapper's width */
+    box-sizing: border-box;
+}
+
+.app-screenshot {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    object-fit: contain;
+    border: 1px solid var(--border-color);
+}
+
+.slide-controls {
+    /* No absolute positioning anymore if parent is flex column */
+    position: static;
+    /* Override previous absolute */
+    bottom: unset;
+    /* Remove bottom */
+    left: unset;
+    /* Remove left */
+    transform: unset;
+    /* Remove transform */
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 0;
+    /* Clear previous margin-top */
+}
+
+.slide-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #444;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.slide-dot.active {
+    background: var(--primary-color);
+}
+
+.slide-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+    z-index: 10;
+}
+
+.slide-nav:hover {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.prev {
+    left: 15px;
+}
+
+/* Placed within the wrapper */
+.next {
+    right: 15px;
+}
+
+/* Sections */
+.page-section {
+    padding: 50px 0 90px 0;
+    /* Reverted padding */
+    border-bottom: 1px solid var(--border-color);
+}
+
+.page-section:last-of-type {
+    border-bottom: none;
+}
+
+#slideshow-section.page-section {
+    /* Specific rule for the slideshow */
+    padding-top: 5px;
+    /* Keep this one reduced */
+}
+
+.page-section:last-of-type {
+    border-bottom: none;
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.section-title h2 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+    color: var(--h2-title-color);
+
+}
+
+.section-title p {
+    color: #8b949e;
+    font-size: 1.1rem;
+}
+
+/* Features Grid */
+.features-grid,
+.privacy-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 25px;
+}
+
+@media (min-width: 768px) {
+
+    .features-grid,
+    .privacy-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.feature-card,
+.privacy-card {
+    background: var(--card-bg-color);
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.feature-card:hover,
+.privacy-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary-color);
+}
+
+.feature-icon,
+.privacy-icon {
+    font-size: 2.8rem;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    display: inline-block;
+}
+
+.feature-card h3,
+.privacy-card h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+.feature-card p,
+.privacy-card p,
+.privacy-card li {
+    color: #8b949e;
+    line-height: 1.7;
+}
+
+/* Privacy Card List */
+.privacy-card ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+    text-align: left;
+}
+
+.privacy-card li {
+    margin-bottom: 10px;
+    position: relative;
+    padding-left: 25px;
+}
+
+.privacy-card li::before {
+    content: '✓';
+    color: #28a745;
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+}
+
+/* Description Section */
+.description-content {
+    max-width: 1088px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.description-content p {
+    font-size: 1.1rem;
+    color: #adb5bd;
+    margin-bottom: 20px;
+}
+
+.highlight {
+    background: var(--card-bg-color);
+    padding: 25px;
+    border-left: 4px solid var(--primary-color);
+    margin: 30px 0;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.highlight h3 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    font-size: 1.4rem;
+}
+
+/* Download Section */
+.download-options {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 40px;
+}
+
+.download-card {
+    background: var(--card-bg-color);
+    border-radius: 15px;
+    box-shadow: none;
+    width: clamp(280px, 40%, 320px);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+
+.download-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary-color);
+}
+
+.os-header {
+    padding: 25px 20px;
+    color: white;
+}
+
+.os-icon {
+    font-size: 3.5rem;
+    margin-bottom: 10px;
+}
+
+.os-header h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.windows .os-header {
+    background: #0078d7;
+}
+
+.mac .os-header {
+    background: #333;
+}
+
+.linux .os-header {
+    background: #f1502f;
+}
+
+.download-buttons {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.download-btn {
+    display: block;
+    padding: 12px 25px;
+    background: rgba(63, 78, 103, 0.5);
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.download-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.download-btn i {
+    margin-right: 8px;
+}
+
+.coming-soon-btn {
+    background: #444;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.download-links a {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+/* GitHub Section */
+.github-stats {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin: 40px 0;
+    flex-wrap: wrap;
+}
+
+.stat {
+    background: var(--card-bg-color);
+    padding: 20px 30px;
+    border-radius: 8px;
+    min-width: 150px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: #8b949e;
+}
+
+.github-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 30px;
+    background: var(--text-color);
+    color: var(--bg-color);
+    border-radius: 5px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.github-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.github-btn i {
+    font-size: 1.2rem;
+}

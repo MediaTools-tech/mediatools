@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+    --bg-color: #ffffff;
+    --primary-color: #012464;
+    --text-color: #212529;
+    --card-bg-color: #f8f9fa;
+    --border-color: #dee2e6;
+    --header-bg: rgba(255, 255, 255, 0.8);
+    --footer-bg: #f8f9fa;
+    --h2-title-color: #012464;
+}
+
+[data-theme="dark"] {
+    --bg-color: #0D1117;
+    /* --primary-color: #7abeeb; */
+    --primary-color: #1d97e8;
+    --text-color: #e6edf3;
+    --card-bg-color: #161b22;
+    --border-color: #30363d;
+    --header-bg: rgba(13, 17, 23, 0.8);
+    --footer-bg: #161b22;
+    --h2-title-color: #e6edf3;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--primary-color);
+}
+
+.container {
+    width: 90%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+.site-header {
+    background: var(--header-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 15px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.logo-icon {
+    height: 35px;
+    width: 35px;
+}
+
+.main-nav a {
+    font-family: 'JetBrains Mono', monospace;
+    margin-left: 25px;
+    font-size: 1rem;
+}
+
+/* Main Content */
+.hero {
+    text-align: center;
+    padding: 20px 20px 60px;
+}
+
+.hero h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 3.5rem;
+    margin-bottom: 10px;
+    background: linear-gradient(45deg, #00c7ff, #a200ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero p {
+    font-size: 1.25rem;
+    color: #8b949e;
+    max-width: 650px;
+    margin: 0 auto 30px;
+}
+
+.tools-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 25px;
+    padding-bottom: 50px;
+}
+
+@media (min-width: 768px) {
+    .tools-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.tool-card {
+    background: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 25px;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    display: block;
+}
+
+.tool-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 20px rgba(0, 199, 255, 0.1);
+}
+
+.tool-card h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.5rem;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-color);
+}
+
+.tool-card .icon {
+    width: 28px;
+    height: 28px;
+    color: var(--primary-color);
+}
+
+.tool-card p {
+    color: #8b949e;
+    margin-bottom: 20px;
+}
+
+.tool-card .status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+}
+
+.status.available {
+    color: var(--primary-color);
+}
+
+.status.soon {
+    color: #ff9a00;
+}
+
+
+/* Footer */
+/* Footer */
+.site-footer {
+    background: var(--footer-bg);
+    border-top: 1px solid var(--border-color);
+    padding: 15px 15px;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.site-footer .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.footer-links {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-right: 20px;
+    margin-bottom: 10px;
+}
+
+.footer-links a,
+.copyright {
+    color: #8b949e;
+    font-size: 0.9rem;
+}
+
+.footer-links a:hover {
+    color: var(--primary-color);
+}
+
+/* Theme switcher button */
+.theme-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    cursor: pointer;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin-left: 15px;
+    font-size: 1rem;
+}
+
+.theme-btn:hover {
+    background: var(--card-bg-color);
+}

@@ -1,109 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact & Support - MediaTools.tech</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <style>
-    </style>
-</head>
-<body>
-    <div class="top-nav">
-        <a href="index.html" class="nav-logo">
-            <img src="./assets/mt_logo.png" alt="MediaTools Logo" class="nav-logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/30x30/012464/ffffff?text=MT';" title="Logo Placeholder">
-            <span class="nav-logo-text">MediaTools</span>
-        </a>
-    </div>
 
-    <header>
-        <div class="logo">
-            <img src="./assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/50x50/012464/ffffff?text=MT';" title="Logo Placeholder">
-            Contact & Support
-        </div>
+    <link rel="stylesheet" href="css/redesign.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="./assets/mt_logo.png" type="image/png">
+</head>
+
+<body>
+
+    <header class="site-header">
+        <a href="index.html" class="logo">
+            <img src="assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon">
+            <span>MediaTools.tech</span>
+        </a>
+        <nav class="main-nav">
+            <a href="downloads.html">Downloads</a>
+            <a href="documentation.html">Docs</a>
+            <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
+            <a href="contact.html">Contact</a>
+            <button id="theme-switcher" class="theme-btn"><i class="fas fa-sun"></i></button>
+        </nav>
     </header>
 
-    <main class="py-12">
-        <div class="container_local">
-            <div class="content-card">
-                <h2 class="text-2xl font-bold text-[#012464] mb-6">Get Help & Support</h2>
-                
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="text-xl font-semibold text-[#012464] mb-3">Email Support</h3>
-                        <p class="text-gray-600 mb-2">For direct assistance, bug reports, or questions:</p>
-                        <a href="mailto:bala.lv.555@gmail.com" class="text-blue-600 hover:text-blue-800 font-medium">
-                            <i class="fas fa-envelope mr-2"></i>bala.lv.555@gmail.com
-                        </a>
-                    </div>
+    <main>
+        <div class="container static-page">
+            <h1>Contact & Support</h1>
 
-                    <div>
-                        <h3 class="text-xl font-semibold text-[#012464] mb-3">GitHub Issues</h3>
-                        <p class="text-gray-600 mb-2">For bug reports, feature requests, and technical discussions:</p>
-                        <a href="https://github.com/MediaTools-tech/mediatools/issues" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium">
-                            <i class="fab fa-github mr-2"></i>GitHub Issues Page
-                        </a>
-                        <p class="text-sm text-gray-500 mt-2">Please check existing issues before creating new ones.</p>
-                    </div>
+            <div class="content-box">
+                <h2>Get in Touch</h2>
 
-                    <div>
-                        <h3 class="text-xl font-semibold text-[#012464] mb-3">Documentation</h3>
-                        <p class="text-gray-600 mb-2">Check our user guide and documentation for common questions:</p>
-                        <ul class="list-disc list-inside text-gray-600 space-y-1">
-                            <li>User Guide (in application folder)</li>
-                            <li>README.txt file</li>
-                            <li><a href="legal.html" class="text-blue-600 hover:text-blue-800">Legal Information & Disclaimer</a></li>
-                        </ul>
-                    </div>
+                <div>
+                    <h3><i class="fas fa-envelope mr-2"></i> Email Support</h3>
+                    <p>For direct assistance, bug reports, or questions, please email us.</p>
+                    <a href="mailto:bala.lv.555@gmail.com">bala.lv.555@gmail.com</a>
+                </div>
 
-                    <div>
-                        <h3 class="text-xl font-semibold text-[#012464] mb-3">Community & Updates</h3>
-                        <p class="text-gray-600 mb-2">Stay connected with the MediaTools community:</p>
-                        <a href="https://github.com/MediaTools-tech/mediatools" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium">
-                            <i class="fab fa-github mr-2"></i>GitHub Repository
-                        </a>
-                        <p class="text-sm text-gray-500 mt-2">Star the project, watch for updates, and join discussions.</p>
-                    </div>
+                <div>
+                    <h3><i class="fab fa-github mr-2"></i> GitHub Issues</h3>
+                    <p>For bug reports, feature requests, and technical discussions, the best place is our GitHub issues
+                        page. Please check existing issues before creating a new one.</p>
+                    <a href="https://github.com/MediaTools-tech/mediatools/issues" target="_blank">Open an Issue</a>
                 </div>
             </div>
 
-            <div class="content-card">
-                <h2 class="text-2xl font-bold text-[#012464] mb-4">Before Contacting Support</h2>
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p class="text-blue-800 mb-2"><strong>Quick Checklist:</strong></p>
-                    <ul class="list-disc list-inside text-blue-700 space-y-1">
-                        <li>Check if you're using the latest version</li>
-                        <li>Review the troubleshooting section in the user guide</li>
-                        <li>Search existing GitHub issues for similar problems</li>
-                        <li>Include your operating system and application version in bug reports</li>
+            <div class="content-box">
+                <h2>Self-Help Resources</h2>
+                <div>
+                    <h3><i class="fas fa-book mr-2"></i> Documentation</h3>
+                    <p>Check our user guide and documentation for common questions:</p>
+                    <ul>
+                        <li>User Guide (included in the application folder)</li>
+                        <li>README.txt file (included in the application folder)</li>
+                        <li><a href="legal.html">Legal Information & Disclaimer</a></li>
+                    </ul>
+                </div>
+                <div class="checklist">
+                    <p>Quick Checklist Before Contacting:</p>
+                    <ul>
+                        <li>Are you using the latest version of the application?</li>
+                        <li>Have you reviewed the troubleshooting section in the user guide?</li>
+                        <li>Have you searched for similar problems on the GitHub issues page?</li>
+                        <li>If reporting a bug, please include your OS and the app version.</li>
                     </ul>
                 </div>
             </div>
         </div>
     </main>
 
-    <footer>
-        <div class="container_local">
-            <div class="footer-logo">
-                <a href="index.html" class="nav-logo">
-                    <img src="./assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/30x30/012464/ffffff?text=MT';" title="Logo Placeholder">
-                    MediaTools.tech
-                </a>
-            </div>
-            
-            <div class="footer-links">
-                <a href="index.html">Home</a>
-                <a href="downloads.html">Downloads</a>
-                <a href="documentation.html">Documentation</a>
-                <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
-                <a href="contact.html">Contact</a>
-                <a href="legal.html">Legal Info / Disclaimer</a>
-            </div>
-            
+    <footer class="site-footer">
+        <a href="index.html" class="logo">
+            <img src="assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon">
             <p class="copyright">© 2025 MediaTools.tech. All rights reserved.</p>
+        </a>
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="downloads.html">Downloads</a>
+            <a href="documentation.html">Documentation</a>
+            <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
+            <a href="contact.html">Contact</a>
+            <a href="legal.html">Legal</a>
         </div>
     </footer>
+
+    <script src="js/theme.js"></script>
 </body>
+
 </html>

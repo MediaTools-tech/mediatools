@@ -1,75 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Downloads - MediaTools.tech</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <style>
-    </style>
-</head>
-<body>
-    <div class="top-nav">
-        <a href="index.html" class="nav-logo">
-            <img src="./assets/mt_logo.png" alt="MediaTools Logo" class="nav-logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/30x30/012464/ffffff?text=MT';" title="Logo Placeholder">
-            <span class="nav-logo-text">MediaTools</span>
-        </a>
-    </div>
 
-    <header>
-        <div class="logo">
-            <img src="./assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/50x50/012464/ffffff?text=MT';" title="Logo Placeholder">
-            Downloads
-        </div>
+    <link rel="stylesheet" href="css/redesign.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="./assets/mt_logo.png" type="image/png">
+</head>
+
+<body>
+
+    <header class="site-header">
+        <a href="index.html" class="logo">
+            <img src="assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon">
+            <span>MediaTools.tech</span>
+        </a>
+        <nav class="main-nav">
+            <a href="downloads.html">Downloads</a>
+            <a href="documentation.html">Docs</a>
+            <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
+            <a href="contact.html">Contact</a>
+            <button id="theme-switcher" class="theme-btn"><i class="fas fa-sun"></i></button>
+        </nav>
     </header>
 
-    <main class="py-12">
-        <div class="container_local">
-            <div class="content-card">
-                <h2 class="text-2xl font-bold text-[#012464] mb-6">To be updated soon ...</h2>
-                &nbsp
-                <br>
-                &nbsp
-                <br>
-                &nbsp
-                <br>
-                &nbsp
-                <br>
-                &nbsp
-                <br>
-                &nbsp
-                <br>
-                &nbsp
-                <br>
-                &nbsp
-                <br>
+    <main>
+        <div class="container static-page">
+            <h1>Downloads</h1>
 
+            <div class="content-box">
+                <h2>Coming Soon</h2>
+                <p>A centralized download page for all our tools is coming soon.</p>
+                <p>For now, you can find the download links for each tool on its respective page. The Video Downloader
+                    is available on the <a href="video/downloader.html">Video Downloader page</a>.</p>
             </div>
         </div>
     </main>
 
-    <footer>
-        <div class="container_local">
-            <div class="footer-logo">
-                <a href="index.html" class="nav-logo">
-                    <img src="./assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/30x30/012464/ffffff?text=MT';" title="Logo Placeholder">
-                    MediaTools.tech
-                </a>
-            </div>
-            
-            <div class="footer-links">
-                <a href="index.html">Home</a>
-                <a href="downloads.html">Downloads</a>
-                <a href="documentation.html">Documentation</a>
-                <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
-                <a href="contact.html">Contact</a>
-                <a href="legal.html">Legal Info / Disclaimer</a>
-            </div>
-            
+    <footer class="site-footer">
+        <a href="index.html" class="logo">
+            <img src="assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon">
             <p class="copyright">© 2025 MediaTools.tech. All rights reserved.</p>
+        </a>
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="downloads.html">Downloads</a>
+            <a href="documentation.html">Documentation</a>
+            <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
+            <a href="contact.html">Contact</a>
+            <a href="legal.html">Legal</a>
         </div>
     </footer>
+
+    <script src="js/theme.js"></script>
 </body>
+
 </html>

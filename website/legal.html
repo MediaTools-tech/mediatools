@@ -1,130 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Legal Information - MediaTools.tech</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <style>
-        .legal-section {
-            margin-bottom: 2.5rem;
-        }
-        .warning-box {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="top-nav">
-        <a href="index.html" class="nav-logo">
-            <img src="./assets/mt_logo.png" alt="MediaTools Logo" class="nav-logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/30x30/012464/ffffff?text=MT';" title="Logo Placeholder">
-            <span class="nav-logo-text">MediaTools</span>
-        </a>
-    </div>
 
-    <header>
-        <div class="logo">
-            <img src="./assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/50x50/012464/ffffff?text=MT';" title="Logo Placeholder">
-            Legal Information & Disclaimer
-        </div>
+    <link rel="stylesheet" href="css/redesign.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="./assets/mt_logo.png" type="image/png">
+</head>
+
+<body>
+
+    <header class="site-header">
+        <a href="index.html" class="logo">
+            <img src="assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon">
+            <span>MediaTools.tech</span>
+        </a>
+        <nav class="main-nav">
+            <a href="downloads.html">Downloads</a>
+            <a href="documentation.html">Docs</a>
+            <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
+            <a href="contact.html">Contact</a>
+            <button id="theme-switcher" class="theme-btn"><i class="fas fa-sun"></i></button>
+        </nav>
     </header>
 
-    <main class="py-12">
-        <div class="container_local">
-            <div class="content-card">
-                <div class="legal-section">
-                    <h2 class="text-2xl font-bold text-[#012464] mb-4">Privacy & Security</h2>
-                    
-                    <h3 class="text-xl font-semibold text-[#012464] mb-3">MediaTools.tech</h3>
-                    <ul class="list-disc list-inside text-gray-700 space-y-2 mb-4">
-                        <li>Does <strong>NOT</strong> collect personal information</li>
-                        <li>Does <strong>NOT</strong> send usage statistics</li>
-                        <li>Does <strong>NOT</strong> require account creation</li>
+    <main>
+        <div class="container static-page">
+            <h1>Legal & Disclaimer</h1>
+
+            <div class="content-box">
+                <div class="warning-box">
+                    <h3>Important Disclaimer</h3>
+                    <p>By using MediaTools software, you agree that you are solely responsible for:</p>
+                    <ul>
+                        <li>Compliance with all applicable laws in your jurisdiction.</li>
+                        <li>Respecting copyright, intellectual property, and DRM.</li>
+                        <li>Adherence to the terms of service of the platforms you download from.</li>
+                        <li>Any legal consequences resulting from the use of downloaded content.</li>
                     </ul>
-
-                    <h3 class="text-xl font-semibold text-[#012464] mb-3">Safe Usage Practices</h3>
-                    <ol class="list-decimal list-inside text-gray-700 space-y-2">
-                        <li><strong>Download Legal Content:</strong> Always respect copyright and the terms of service of the platforms you use</li>
-                        <li><strong>Verify URLs:</strong> Ensure download links are from trusted and legitimate sources</li>
-                        <li><strong>Scan Downloads:</strong> Use antivirus software on downloaded files if you have any concerns</li>
-                        <li><strong>Update Regularly:</strong> Keep the application and its dependencies (like yt-dlp) updated for the latest security and feature improvements</li>
-                        <li><strong>Review Permissions:</strong> Ensure the application has only the necessary file system permissions to function</li>
-                    </ol>
                 </div>
 
-                <div class="legal-section">
-                    <h2 class="text-2xl font-bold text-[#012464] mb-4">Legal Information</h2>
-                    
-                    <div class="warning-box">
-                        <h3 class="text-lg font-semibold text-red-600 mb-2">Important Disclaimer</h3>
-                        <p class="text-red-700">By using MediaTools software, you agree that you are solely responsible for:</p>
-                        <ul class="list-disc list-inside text-red-700 mt-2 space-y-1">
-                            <li>Compliance with all applicable laws and regulations in your jurisdiction</li>
-                            <li>Respecting copyright, intellectual property rights, and digital rights management (DRM)</li>
-                            <li>Adherence to the terms of service and usage policies of the platforms you download from</li>
-                            <li>Obtaining proper authorization or licensing for any content you download</li>
-                            <li>Any legal consequences resulting from the use of downloaded content</li>
-                        </ul>
-                    </div>
+                <h2>Privacy & Security</h2>
+                <h3>MediaTools.tech Commitments</h3>
+                <ul>
+                    <li>Does <strong>NOT</strong> collect personal information.</li>
+                    <li>Does <strong>NOT</strong> send usage statistics.</li>
+                    <li>Does <strong>NOT</strong> require account creation.</li>
+                </ul>
 
-                    <h3 class="text-xl font-semibold text-[#012464] mb-3">No Warranty</h3>
-                    <p class="text-gray-700 mb-4">
-                        Software/tools listed on MediaTools are provided <strong>"AS IS"</strong> without warranty of any kind, either express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement.
-                    </p>
+                <h3>Safe Usage Practices</h3>
+                <p>We recommend the following for your security:</p>
+                <ul>
+                    <li>Only download content you are legally permitted to.</li>
+                    <li>Verify URLs are from trusted sources before downloading.</li>
+                    <li>Scan downloaded files with antivirus software if you have any concerns.</li>
+                    <li>Keep the application updated for the latest security patches.</li>
+                </ul>
+            </div>
 
-                    <h3 class="text-xl font-semibold text-[#012464] mb-3">Limitation of Liability</h3>
-                    <p class="text-gray-700 mb-2">The developer and the MediaTools organization shall not be held liable for:</p>
-                    <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
-                        <li>Any misuse of this software</li>
-                        <li>Legal violations or copyright infringement by users</li>
-                        <li>Any damages arising from the use or inability to use this software</li>
-                    </ul>
+            <div class="content-box">
+                <h2>Terms of Use</h2>
+                <h3>No Warranty</h3>
+                <p>
+                    Software and tools provided by MediaTools.tech are offered <strong>"AS IS"</strong> without any
+                    warranty, express or implied. This includes, but is not limited to, warranties of merchantability,
+                    fitness for a particular purpose, or non-infringement.
+                </p>
 
-                    <h3 class="text-xl font-semibold text-[#012464] mb-3">Intended Use</h3>
-                    <p class="text-gray-700">
-                        This software is designed for downloading publicly accessible content that you have the legal right to access and download. Any use for other purposes is strictly at your own risk.
-                    </p>
-                </div>
+                <h3>Limitation of Liability</h3>
+                <p>The developers and MediaTools.tech shall not be held liable for any misuse of the software, any legal
+                    violations or copyright infringement committed by users, or any damages arising from the use or
+                    inability to use the software.</p>
 
-                <div class="legal-section">
-                    <h2 class="text-2xl font-bold text-[#012464] mb-4">Third-Party Software</h2>
-                    <p class="text-gray-700 mb-4">
-                        MediaTools applications may use third-party open-source components. These components retain their original licenses and are used in compliance with their respective license terms.
-                    </p>
-                    <p class="text-sm text-gray-500">
-                        For specific licensing information, please refer to the documentation included with each application.
-                    </p>
-                </div>
+                <h3>Intended Use</h3>
+                <p>This software is designed for downloading publicly accessible content that you have the legal right
+                    to access and download. Any use for other purposes is strictly at your own risk.</p>
+            </div>
+            <div class="content-box">
+                <h2>Third-Party Software</h2>
+                <p>MediaTools applications may use third-party open-source components. These components retain their
+                    original licenses and are used in compliance with their respective license terms. For specific
+                    licensing information, please refer to the documentation included with each application.</p>
             </div>
         </div>
     </main>
 
-    <footer>
-        <div class="container_local">
-            <div class="footer-logo">
-                <a href="index.html" class="nav-logo">
-                    <img src="./assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon" onerror="this.onerror=null;this.src='https://placehold.co/30x30/012464/ffffff?text=MT';" title="Logo Placeholder">
-                    MediaTools.tech
-                </a>
-            </div>
-            
-            <div class="footer-links">
-                <a href="index.html">Home</a>
-                <a href="downloads.html">Downloads</a>
-                <a href="documentation.html">Documentation</a>
-                <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
-                <a href="contact.html">Contact</a>
-                <a href="legal.html">Legal Info / Disclaimer</a>
-            </div>
-            
+    <footer class="site-footer">
+        <a href="index.html" class="logo">
+            <img src="assets/mt_logo.png" alt="MediaTools Logo" class="logo-icon">
             <p class="copyright">© 2025 MediaTools.tech. All rights reserved.</p>
+        </a>
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="downloads.html">Downloads</a>
+            <a href="documentation.html">Documentation</a>
+            <a href="https://github.com/MediaTools-tech/mediatools" target="_blank">GitHub</a>
+            <a href="contact.html">Contact</a>
+            <a href="legal.html">Legal</a>
         </div>
     </footer>
+
+    <script src="js/theme.js"></script>
 </body>
+
 </html>
