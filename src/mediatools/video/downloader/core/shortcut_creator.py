@@ -10,7 +10,8 @@ from pathlib import Path
 
 class ShortcutCreator:
     def __init__(self, settings_manager=None):
-        self.app_name = "MediaTools Video Downloader"
+        # self.app_name = "MediaTools Video Downloader"
+        self.app_name = f"MediaTools Video Downloader v{get_app_version()}"
         self.exe_name = "mt-vdl.exe"
         self.settings_manager = settings_manager
         self.logger = logging.getLogger(__name__)
@@ -79,13 +80,18 @@ class ShortcutCreator:
         current = Path(current_path).absolute()
 
         # Look for project root markers
+        # markers = [
+        #     "src",
+        #     "assets",
+        #     "requirements.txt",
+        #     "pyproject.toml",
+        #     ".git",
+        #     "README.md",
+        #     "setup.py",
+        # ]
+
         markers = [
             "src",
-            "assets",
-            "requirements.txt",
-            "pyproject.toml",
-            ".git",
-            "README.md",
             "setup.py",
         ]
 
@@ -121,7 +127,7 @@ class ShortcutCreator:
             project_root = self._find_project_root(exe_path)
 
             possible_asset_dirs = [
-                project_root / "src" / "video" / "downloader" / "assets",
+                project_root / "src" / "mediatools" / "video" / "downloader" / "assets",
                 project_root / "assets",
                 project_root / "src" / "assets",
                 project_root / "resources",
@@ -609,3 +615,16 @@ def remove_desktop_shortcut():
     """Standalone function to remove shortcut"""
     creator = ShortcutCreator()
     return creator.remove_desktop_shortcut()
+
+def get_app_version():
+    try:
+        # Get project root (go up 5 levels from current file)
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))))
+        version_path = os.path.join(project_root, 'apps', 'video', 'downloader', 'version.txt')
+        with open(version_path, 'r') as f:
+            return f.read().strip()
+    
+    except Exception as e:
+        print(f"Could not read version: {e}")
+        return "unknown"
+
