@@ -827,8 +827,12 @@ class VideoDownloaderApp:
             return
         else:
             threading.Thread(
-                target=self.do_update(update_button_clicked), daemon=True
+                target=self._run_update_logic, args=(update_button_clicked,), daemon=True
             ).start()
+
+    def _run_update_logic(self, update_button_clicked):
+        """Wrapper to run do_update in a separate thread."""
+        self.do_update(update_button_clicked)
 
     def _perform_startup_checks(self):
         """Perform checks for necessary tools and updates on startup."""
@@ -841,7 +845,8 @@ class VideoDownloaderApp:
         )
         
         if self.initial_tools_downloading:
-            self.do_update()
+            # self.do_update()
+            self.root.after(500, lambda: self.do_update())
 
     def should_check_app_update(self):
         """Check app updates once per week using date format"""
