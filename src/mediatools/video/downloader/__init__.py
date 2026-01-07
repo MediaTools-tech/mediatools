@@ -1,6 +1,26 @@
+import os
+import sys
+from .core.settings_manager import SettingsManager
+
+def get_version():
+    """
+    Reads the version from the version.txt file using the SettingsManager
+    to correctly resolve the data path.
+    """
+    try:
+        # SettingsManager correctly resolves the data path for both dev and prod.
+        settings = SettingsManager()
+        data_dir = settings.get("data_dir")
+        version_path = os.path.join(data_dir, 'version.txt')
+        with open(version_path, 'r', encoding='utf-8') as f:
+            return f.read().strip()
+    except Exception:
+        return "unknown"
+
+__version__ = get_version()
+
 from .core.download_service import DownloadService
 from .core.queue_manager import QueueManager
-from .core.settings_manager import SettingsManager
 
 
 class VideoDownloader:

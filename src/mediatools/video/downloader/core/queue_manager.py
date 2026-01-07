@@ -9,10 +9,11 @@ from mediatools.video.downloader.core.settings_manager import SettingsManager
 
 
 class QueueManager:
-    def __init__(self, style_manager, root):
+    def __init__(self, style_manager, open_queue_file, root):
         self.settings = SettingsManager()
         self.queue_lock = threading.Lock()
         self.style_manager = style_manager
+        self.open_queue_file = open_queue_file
         self.gui_context = None
         self.root = root
 
@@ -307,20 +308,45 @@ class QueueManager:
         message = "Previous session data found:\n\n" + "\n".join(message_parts)
         message += "\n\nWhat would you like to do?"
 
-        dialog = PreviousSessionDialog(
-            root, message, queue_urls, failed_urls, self.style_manager
-        )
-        choice = dialog.result
+        queue_temp_file = None
 
-        if choice == "delete":
-            self._clear_all_files()
-        elif choice == "ignore":
-            self._move_to_old_files()
-        elif choice == "continue":
-            # self._continue_previous_session(queue_urls, failed_urls)
-            self._continue_previous_session()
+        # Keep showing dialog until user picks something other than "show"
+        while True:
+            dialog = PreviousSessionDialog(
+                root, message, queue_urls, failed_urls, self.style_manager
+            )
+            choice = dialog.result
+            
+            if choice == "show":
+                # Show the queue content and continue loop
+                queue_temp_file = self._show_previous_session_urls()
+                # Dialog will re-open automatically (loop continues)
+                continue
+            else:
+                # Handle other choices and exit loop
+                if choice == "delete":
+                    self._clear_all_files()
+                elif choice == "ignore":
+                    self._move_to_old_files()
+                elif choice == "continue":
+                    self._continue_previous_session()
+                
+                self.previous_session_check_done = True
+                break  # Exit the loop        
+        if queue_temp_file:
+            os.remove(queue_temp_file)
 
-        self.previous_session_check_done = True
+    def _show_previous_session_urls(self):
+        queued_urls = self._read_file_lines(self.queue_file)
+        failed_urls = self._read_file_lines(self.failed_url_file)
+        previous_session_urls_temp_file = str(self.queue_file).rsplit(".", 1)[0] + "_temp.txt"
+        open(previous_session_urls_temp_file, "w").close()
+        self._append_to_file(previous_session_urls_temp_file, queued_urls)
+        self._append_to_file(previous_session_urls_temp_file, failed_urls)
+        self.open_queue_file(previous_session_urls_temp_file)
+        # os.remove(previous_session_urls_temp_file)
+        return previous_session_urls_temp_file
+
 
     def _continue_previous_session(self):
         failed_urls = self._read_file_lines(self.failed_url_file)
@@ -442,7 +468,7 @@ class PreviousSessionDialog:
         self.dialog.grab_set()
 
         # Set fixed size and center relative to parent
-        w, h = 500, 320
+        w, h = 500, 380
         parent_x = parent.winfo_rootx()
         parent_y = parent.winfo_rooty()
         parent_w = parent.winfo_width()
@@ -482,6 +508,12 @@ class PreviousSessionDialog:
                 "active_bg": "#48dbfb",
                 "fg": "black",
                 "bg": "#6ee4ff",
+                "active_fg": "black",
+            },
+            "show": {
+                "active_bg": "#a0d05d",
+                "fg": "black",
+                "bg": "#c3ff6e",
                 "active_fg": "black",
             },
         }
@@ -568,6 +600,21 @@ class PreviousSessionDialog:
         )
         self.btn3.grid(row=2, column=0, sticky="ew", pady=5)
         self._bind_hover_effects(self.btn3, "continue")
+
+        self.btn4 = tk.Button(
+            btn_frame,
+            text="Show Queue",
+            command=lambda: self._set_result("show"),
+            bg=self.button_colors["show"]["bg"],
+            fg=self.button_colors["show"]["fg"],
+            font=self.button_font,
+            width=25,
+            height=2,
+            relief=tk.RAISED,
+            borderwidth=1,
+        )
+        self.btn4.grid(row=3, column=0, sticky="ew", pady=5)
+        self._bind_hover_effects(self.btn4, "show")
 
         # Set initial keyboard focus
         self.btn1.focus_set()

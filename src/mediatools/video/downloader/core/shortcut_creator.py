@@ -7,11 +7,13 @@ import tkinter as tk
 from tkinter import messagebox
 from pathlib import Path
 
+from mediatools.video.downloader import __version__
+
 
 class ShortcutCreator:
     def __init__(self, settings_manager=None):
         # self.app_name = "MediaTools Video Downloader"
-        self.app_name = f"MediaTools Video Downloader v{get_app_version()}"
+        self.app_name = f"MediaTools Video Downloader v{__version__}"
         self.exe_name = "mt-vdl.exe"
         self.settings_manager = settings_manager
         self.logger = logging.getLogger(__name__)
@@ -616,15 +618,5 @@ def remove_desktop_shortcut():
     creator = ShortcutCreator()
     return creator.remove_desktop_shortcut()
 
-def get_app_version():
-    try:
-        # Get project root (go up 5 levels from current file)
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))))
-        version_path = os.path.join(project_root, 'apps', 'video', 'downloader', 'version.txt')
-        with open(version_path, 'r') as f:
-            return f.read().strip()
-    
-    except Exception as e:
-        print(f"Could not read version: {e}")
-        return "unknown"
+
 

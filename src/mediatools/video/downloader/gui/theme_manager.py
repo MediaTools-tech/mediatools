@@ -83,7 +83,7 @@ class ThemeManager:
 
     def setup_gui(self):
         """Setup the main application GUI"""
-        self.root.title("MediaTools Video Downloader v2.0.0")
+        self.root.title("MediaTools Video Downloader v2.1.0")
         self.root.geometry("800x420")
         self.gui_window_bg = "#f8f9fa"
         self.root.configure(bg=self.gui_window_bg)  # Light gray background
@@ -943,7 +943,7 @@ class ThemeManager:
         # Footer with version info
         self.footer = tk.Label(
             self.root,
-            text="MediaTools Video Downloader V2.0.0 • © 2025",
+            text="MediaTools Video Downloader V2.1.0 • © 2025",
             bg=self.gui_window_bg,
             fg="#6c757d",
             font=(self.label_font[0], self.label_font[1] - 3),

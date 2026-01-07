@@ -10,15 +10,19 @@ Comprehensive media processing tools for video, audio, image, and speech.
 
 ## Applications
 
-### Video Downloader
-Download videos from 1000+ websites with a simple GUI or command-line interface.
+### Video & Audio Downloader
+Download videos and audio from 1000+ websites with a simple GUI or command-line interface.
 
 - **Download:** [Latest Release](https://github.com/MediaTools-tech/mediatools/releases/latest)
 - **Documentation:** [apps/video/downloader/docs/](apps/video/downloader/docs/)
 - **Source:** [apps/video/downloader/](apps/video/downloader/)
 
-### Coming Soon
-- Audio Extractor
+#### Features
+- Download videos in MKV, MP4, and other formats.
+- Extract audio in MP3, M4A, and original quality.
+- Queue management for batch downloads.
+- Thumbnail embedding for video and audio.
+- Cross-platform support (Windows, Linux).
 
 ## For Developers
 

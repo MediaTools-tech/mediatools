@@ -4,13 +4,14 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mediatools"
-version = "0.1.0"
-description = "Comprehensive media processing tools"
+name = "mediatools-video-downloader"
+version = "2.1.0"
+description = "A cross-platform video and audio downloader application for downloading media from various platforms."
 readme = "README.md"
 requires-python = ">=3.7"
 license = {text = "MIT"}
 authors = [{name = "MediaTools Tech"}]
+keywords = ["video downloader", "audio downloader", "youtube downloader", "yt-dlp", "gui", "mediatools"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

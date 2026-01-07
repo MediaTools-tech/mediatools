@@ -225,6 +225,33 @@ M4A (AAC) is technically superior because:
 
 ---
 
+## 🎵 Spotdl (New in v2.1.0)
+
+**❓ How spotdl downloads from Spotify?**  
+URLs/tracks not downloaded directly from Spotify, spotdl extracts metadata from spotify url and then internally calls ytdlp to download corresponding track from some other source, you need to provide your Spotify API credentials (Client ID and Secret) in the application's settings. This is required to fetch metadata for tracks, albums, and playlists.
+
+**❓ Why do I need a Spotify account?**  
+A Spotify account is necessary to create an application on the Spotify Developer Dashboard, which in turn allows you to get a Client ID and Secret. These credentials are used by the application to access Spotify's metadata.
+
+**❓ How to get Spotify Client ID and Secret?**  
+
+1. Create a free user account on [Spotify](https://www.spotify.com/).
+2. Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+3. Create a new application.
+4. You will find your Client ID and Client Secret in the application's settings.
+5. For a detailed guide, you can watch any YouTube video on this topic.
+
+**❓ Why am I getting an error when downloading a private Spotify playlist?**  
+To download private or collaborative playlists, you need to enable the OAuth flow.
+
+1. Go to your application on the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+2. Click on "Edit Settings".
+3. Under "Redirect URIs", enter `http://127.0.0.1:8000/callback`.
+4. Save the settings.
+5. In the application's settings, enable the "Enable Spotify Playlist Downloads" option.
+
+---
+
 ## 🛠 Technical Questions
 
 **❓ Where are my downloads stored?**  
@@ -404,7 +431,7 @@ See "Installation & Setup" section above for complete solutions.
 
 ---
 
-This FAQ applies to Video Downloader v2.0 and above. For the latest updates, check our [GitHub page](https://github.com/MediaTools-tech/mediatools).
+This FAQ applies to Video Downloader v2.1.0 and above. For the latest updates, check our [GitHub page](https://github.com/MediaTools-tech/mediatools).
 
 If your issue isn't covered here, please check the [User Guide](docs/UserGuide.md) or open an issue on our [GitHub repository](https://github.com/MediaTools-tech/mediatools).
 

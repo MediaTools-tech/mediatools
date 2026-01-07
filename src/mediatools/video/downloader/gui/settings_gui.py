@@ -111,12 +111,14 @@ class SettingsWindow:
 
         # Auto Update
         self._create_dropdown(
-            scrollable_frame, "Auto update:", "auto_update", ["True", "False"], 0
+            scrollable_frame, "Auto update:", "auto_update", ["True", "False"], 
+            0
         )
 
         # Limit Rate
         self._create_entry(
-            scrollable_frame, "Limit rate:", "download_speed", "e.g., 10M, 5M, 2M", 1
+            scrollable_frame, "Limit rate:", "download_speed", "e.g. 5M, 2M", 
+            1
         )
 
         # Format
@@ -245,30 +247,25 @@ class SettingsWindow:
             13,
         )
 
-        # Domain names entry - CREATE IN PROPER ORDER
-        self.domain_frame = ttk.Frame(scrollable_frame)
-        # Pack it immediately after the dropdown, but hide it initially
-        self.domain_frame.pack(fill=tk.X, pady=5)
-        self.domain_frame.pack_forget()  # hide initially
-
-        ttk.Label(self.domain_frame, text="Subfolder Domains:", width=25).pack(
-            side=tk.LEFT
+        # Spotify Client ID
+        self._create_entry(
+            scrollable_frame, "Spotify Client ID:", "spotify_client_id", "e.g., a1b2c3d4e5f67890a1b2c3d4e5f67890", 
+            14
         )
-        self.domain_var = tk.StringVar()
-        domain_entry = tk.Text(
-            self.domain_frame,
-            height=4,
-            width=40,
-            wrap="word",
-            relief="solid",
-            borderwidth=1,
-        )
-        domain_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(10, 0))
-        self.widgets["subfolder_domains"] = domain_entry
 
-        # Bind dropdown to toggle domain box
-        self.widgets["platform_specific_download_folders"].trace_add(
-            "write", self._toggle_domain_entry
+        # Spotify Client ID
+        self._create_entry(
+            scrollable_frame, "Spotify Client Secret:", "spotify_client_secret", "e.g., c0ffee1234567890abcdeffedcba9876", 
+            15
+        )
+
+        # Spotify OAuth checkbox
+        self._create_checkbox(
+            scrollable_frame,
+            "Enable spotify playlist downloads(Need onetime OAuth setup - Check UserGuide):",
+            "enable_spotify_playlist",
+            "spotify_playlist",
+            16,
         )
 
         # Button frame - ALWAYS PACKED LAST
@@ -298,30 +295,30 @@ class SettingsWindow:
             takefocus=0,  # Apply to all buttons
         ).pack(side=tk.RIGHT, padx=5)
 
-    def _toggle_domain_entry(self, *args):
-        """Show/hide domain entry when subfolder option is toggled"""
-        if self.widgets["platform_specific_download_folders"].get() == "True":
-            # Show the domain frame
-            self.domain_frame.pack(
-                fill=tk.X, pady=5, before=self.domain_frame.master.winfo_children()[-1]
-            )
+    # def _toggle_domain_entry(self, *args):
+    #     """Show/hide domain entry when subfolder option is toggled"""
+    #     if self.widgets["platform_specific_download_folders"].get() == "True":
+    #         # Show the domain frame
+    #         self.domain_frame.pack(
+    #             fill=tk.X, pady=5, before=self.domain_frame.master.winfo_children()[-1]
+    #         )
 
-            domain_entry = self.widgets["subfolder_domains"]
-            current_text = domain_entry.get("1.0", tk.END).strip()
+    #         domain_entry = self.widgets["subfolder_domains"]
+    #         current_text = domain_entry.get("1.0", tk.END).strip()
 
-            # If widget is empty, try to restore last content or use defaults
-            if current_text == "":
-                if self._last_domain_content.strip():
-                    # Restore previously entered content
-                    domain_entry.insert("1.0", self._last_domain_content)
-                else:
-                    # Use defaults only if no previous content exists
-                    domain_entry.insert("1.0", "youtube.com,x.com")
-        else:
-            # Before hiding, save the current content
-            domain_entry = self.widgets["subfolder_domains"]
-            self._last_domain_content = domain_entry.get("1.0", tk.END).strip()
-            self.domain_frame.pack_forget()
+    #         # If widget is empty, try to restore last content or use defaults
+    #         if current_text == "":
+    #             if self._last_domain_content.strip():
+    #                 # Restore previously entered content
+    #                 domain_entry.insert("1.0", self._last_domain_content)
+    #             else:
+    #                 # Use defaults only if no previous content exists
+    #                 domain_entry.insert("1.0", "youtube.com,x.com")
+    #     else:
+    #         # Before hiding, save the current content
+    #         domain_entry = self.widgets["subfolder_domains"]
+    #         self._last_domain_content = domain_entry.get("1.0", tk.END).strip()
+    #         self.domain_frame.pack_forget()
 
     def _load_current_settings(self):
         """Load current settings into the UI widgets"""
@@ -332,13 +329,7 @@ class SettingsWindow:
         self.widgets["downloads_dir"].set(current.get("downloads_dir", ""))
 
         # Handle download speed - clear placeholder if it's a real value
-        speed_value = current.get("download_speed", "10M")
-        if speed_value != "10M":  # If it's not the default/placeholder
-            speed_entry = self.widgets.get("download_speed_entry")
-            if speed_entry:
-                speed_entry.delete(0, tk.END)
-                speed_entry.insert(0, speed_value)
-                speed_entry.config(foreground="black")
+        speed_value = current.get("download_speed", "5M")
         self.widgets["download_speed"].set(speed_value)
 
         self.widgets["enable_download_archive"].set(
@@ -381,29 +372,15 @@ class SettingsWindow:
         self.widgets["platform_specific_download_folders"].set(
             str(platform_folders_enabled)
         )
+        client_id = current.get("spotify_client_id", "")
+        self.widgets["spotify_client_id"].set(client_id)
+        client_secret = current.get("spotify_client_secret", "")
+        self.widgets["spotify_client_secret"].set(client_secret)
+        self.widgets["enable_spotify_playlist"].set(
+            current.get("enable_spotify_playlist", False)
+        )
 
-        # Store saved domains in our temporary storage
-        saved_domains = current.get("subfolder_domains", "")
-        self._last_domain_content = saved_domains
 
-        if platform_folders_enabled:
-            # Show the domain frame first
-            self.domain_frame.pack(
-                fill=tk.X, pady=5, before=self.domain_frame.master.winfo_children()[-1]
-            )
-
-            # Load the domain text
-            self.widgets["subfolder_domains"].delete("1.0", tk.END)
-
-            if saved_domains.strip():
-                # Insert saved domains
-                self.widgets["subfolder_domains"].insert("1.0", saved_domains)
-            else:
-                # Insert defaults if no saved domains
-                self.widgets["subfolder_domains"].insert("1.0", "youtube.com,x.com")
-        else:
-            # Make sure the domain frame is hidden
-            self.domain_frame.pack_forget()
 
     def _create_dropdown(self, parent, label_text, setting_key, options, row):
         frame = ttk.Frame(parent)
@@ -506,6 +483,27 @@ class SettingsWindow:
         self.widgets[enable_key] = enable_var
         self.widgets[browser_key] = browser_var
 
+
+    def _create_checkbox(
+        self, parent, label_text, enable_key, browser_key, row
+    ):
+        frame = ttk.Frame(parent)
+        frame.pack(fill=tk.X, pady=5)
+
+        ttk.Label(frame, text=label_text, width=75).pack(side=tk.LEFT)
+
+        enable_var = tk.BooleanVar()
+        enable_cb = tk.Checkbutton(
+            frame,
+            text="Enable",
+            variable=enable_var,
+            onvalue=True,
+            offvalue=False,
+            bg="#d3d3d3",
+        )
+        enable_cb.pack(side=tk.RIGHT, padx=(0, 10))
+        self.widgets[enable_key] = enable_var
+
     def _browse_path(self, var, setting_key=None, file_types=None):
         if setting_key == "cookies_path":
             initial_path = (
@@ -553,11 +551,11 @@ class SettingsWindow:
     def _apply_settings(self):
         try:
             # Get current domain content and save it to our temporary storage
-            if "subfolder_domains" in self.widgets:
-                current_domains = (
-                    self.widgets["subfolder_domains"].get("1.0", tk.END).strip()
-                )
-                self._last_domain_content = current_domains
+            # if "subfolder_domains" in self.widgets:
+            #     current_domains = (
+            #         self.widgets["subfolder_domains"].get("1.0", tk.END).strip()
+            #     )
+            #     self._last_domain_content = current_domains
 
             downloads_dir_cleaned = self.clean_path_field(
                 self.widgets["downloads_dir"].get()
@@ -591,20 +589,19 @@ class SettingsWindow:
                     "enable_cookies_from_browser"
                 ].get(),
                 "cookies_browser": self.widgets["cookies_browser"].get(),
-                # "cookies_browser_profile": self.widgets[
-                #     "cookies_browser_profile"
-                # ].get(),
                 "cookies_browser_profile": cookies_browser_profile_cleaned,
-                # "cookies_path": self.widgets["cookies_path"].get(),
                 "cookies_path": cookies_path_cleaned,
                 "gui_theme": self.widgets["gui_theme"].get(),
                 "platform_specific_download_folders": self.widgets[
                     "platform_specific_download_folders"
                 ].get()
                 == "True",
-                "subfolder_domains": self.widgets["subfolder_domains"]
-                .get("1.0", tk.END)
-                .strip(),
+                "spotify_client_id": self.widgets["spotify_client_id"].get(),
+                "spotify_client_secret": self.widgets["spotify_client_secret"].get(),
+                "enable_spotify_playlist": self.widgets[
+                    "enable_spotify_playlist"
+                ].get(),
+
             }
 
             if self.settings.save_settings(new_settings):

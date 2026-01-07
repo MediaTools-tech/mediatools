@@ -1,6 +1,8 @@
-# MediaTools Video Downloader — Comprehensive User Guide
+# MediaTools Video Downloader
 
-**Version:** 2.0.0  
+## Comprehensive User Guide
+
+**Version:** 2.1.0  
 **Developer:** Bala  
 **Organization:** MediaTools  
 **Email:** <bala.lv.555@gmail.com>  
@@ -29,6 +31,7 @@
    - [Audio Quality Considerations](#audio-quality-considerations)
 6. [Settings and Features](#settings-and-features)
    - [Settings Configuration](#settings-configuration)
+   - [Spotdl/Spotify Credentials Settings](#spotdl-spotify-credentials-settings)
    - [Performance Tips](#performance-tips)
    - [Updates and Maintenance](#updates-and-maintenance)
    - [Advanced Features](#advanced-features)
@@ -71,12 +74,14 @@ MediaTools Video Downloader is a powerful, cross-platform desktop application de
 
 ### Technology Stack
 
-This application leverages two industry-standard open-source tools:
+This application leverages industry-standard open-source tools:
 
 - **yt-dlp** (<https://github.com/yt-dlp/yt-dlp>) - Advanced video downloading engine
+- **spotdl** (<https://github.com/spotdl/spotdl>) - Spotify downloading engine
+- **deno** (<https://deno.com/>) - A modern runtime for JavaScript and TypeScript
 - **FFmpeg** (<https://ffmpeg.org>) - Media processing and format conversion
 
-Both dependencies are automatically managed by MediaTools Video Downloader, before download prompts user for permission to download.
+All dependencies are automatically managed by MediaTools Video Downloader, before download prompts user for permission to download.
 
 [Back to Table of Contents](#table-of-contents)
 
@@ -109,6 +114,13 @@ Both dependencies are automatically managed by MediaTools Video Downloader, befo
 - 4GB RAM
 - 500MB free disk space
 - Internet connection
+
+**Dependencies**
+
+- `yt-dlp` (automatically managed)
+- `spotdl` (automatically managed)
+- `deno` (automatically managed)
+- `FFmpeg` (automatically managed)
 
 **Recommended Requirements**
 
@@ -147,10 +159,14 @@ On first launch, MediaTools Video Downloader will:
 2. Prompts you for permission to download, if not present
 3. Configure them for optimal performance
 
+![](./images/install_dependencies.png)
+
 **Step 4: Configure Initial Settings**
 
 - Reset to Defaults as initial settings
 - Restart app
+
+![](./images/initial_settings.png)
 
 **Step 5: Configure Preferred Settings**
 
@@ -208,6 +224,8 @@ On first launch, MediaTools Video Downloader will:
 **Window Layout**
 
 The MediaTools Video Downloader interface is organized into several key areas:
+
+![](./images/window_layout.png)
 
 **1. URL Input Section**
 
@@ -272,6 +290,8 @@ The MediaTools Video Downloader interface is organized into several key areas:
 5. Watch the progress in the status area
 6. Click downloads button on App to check your downloads folder
 
+![](./images/first_download.png)
+
 [Back to Table of Contents](#table-of-contents)
 
 ---
@@ -325,6 +345,8 @@ The queue system allows you to:
 - Manage download order
 - Pause/resume entire queues*
 - Track failed downloads*
+
+![](./images/understanding_the_queue.png)
 
 **Queue File Format**
 The `Queue.txt` file uses a simple format to distinguish between video and audio downloads:
@@ -404,6 +426,8 @@ When enabled in settings, this feature allows:
 - At startup provides option to continue previous download session
 - Continue downloading queue from previous session
 - If enabled and supported, partially downloaded last video from previous session will be resumed
+
+![](./images/multi_session_queue.png)
 
 [Back to Table of Contents](#table-of-contents)
 
@@ -521,6 +545,18 @@ Access settings through: **Settings Button on App**
 - **Description:** Changes the application's visual appearance
 - **Note:** Theme selection persists across sessions
 
+**Theme:** Default
+![](./images/theme_default.png)
+
+**Theme:** Dark
+![](./images/theme_dark.png)
+
+**Theme:** Unicolor
+![](./images/theme_unicolor.png)
+
+**Theme:** Minimalist
+![](./images/theme_minimalist.png)
+
 **Download Settings**
 
 **Download Speed Limit**
@@ -624,7 +660,7 @@ Access settings through: **Settings Button on App**
 
 **Platform-Specific Download Folders**
 
-- **Default:** Disabled
+- **Default:** Enabled
 - **Description:** If enabled, creates separate sub-folders for each platform (platform names to be specified in "Subfolder Domains" for platforms/domains to group videos)
 - **When Enabled:**
   - YouTube videos → `downloads/youtube/`
@@ -683,7 +719,30 @@ Cookies allow downloading private or membership-only content.
 - Close browser before extracting cookies
 - Some platforms detect and block cookie usage
 
-### 6.2 Performance Tips
+### 6.2 Spotdl/Spotify Credentials Settings
+
+**Spotify Settings**
+
+**Spotify Client ID and Secret**
+
+- **Description:** Your Spotify API credentials, required for downloading metadata from Spotify.
+- **How to Get:**
+  1. Create a free user account on Spotify.
+  2. Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+  3. Create a new application.
+  4. You will find your Client ID and Client Secret in the application's settings.
+  5. For a detailed guide, you can watch any YouTube video on this topic.
+
+**Enable Spotify Playlist Downloads**
+
+- **Description:** Enables OAuth to download private and collaborative playlists.
+- **How to Set Up:**
+  1. Go to your application on the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+  2. Click on "Edit Settings".
+  3. Under "Redirect URIs", enter `http://127.0.0.1:8000/callback`.
+  4. Save the settings.
+
+### 6.3 Performance Tips
 
 **Optimizing Download Speed**
 
@@ -701,7 +760,7 @@ Cookies allow downloading private or membership-only content.
 1. **Prioritize Important Downloads:** Place urgent items at queue front
 2. **Use Download Archive:** Avoid re-downloading same content
 
-### 6.3 Updates and Maintenance
+### 6.4 Updates and Maintenance
 
 **Keeping yt-dlp and Application Updated:** Setting Auto-Update in settings is highly recommended
 
@@ -731,7 +790,7 @@ The update system now checks for both:
 3. Download latest version if available
 4. Install over existing version (settings preserved)
 
-### 6.4 Advanced Features
+### 6.5 Advanced Features
 
 **Thumbnail Embedding**
 
@@ -1421,6 +1480,13 @@ Stay updated and connect with us:
 
 ## 11. Version History
 
+**Version 2.1.0 (Spotify Integration)**
+
+- Added Spotify support for downloading tracks, albums, and playlists.
+- Integrated `spotdl` and `deno` for improved functionality.
+- Refactored code for better modularity.
+- Added Spotify credential settings to the GUI.
+
 **Version 2.0.0 (Audio Download Release)**
 
 - Added audio download feature with format selection (MP3, M4A, Best Audio)
@@ -1441,8 +1507,9 @@ Stay updated and connect with us:
 - Auto-update feature
 
 ---
-**Document Version:** 2.0.0  
-**Last Updated:** 23 Nov 2025  
+
+**Document Version:** 2.1.0  
+**Last Updated:** 03 Jan 2026  
 **Document Author:** Bala (MediaTools)
 
 ---

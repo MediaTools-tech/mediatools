@@ -218,4 +218,10 @@ src/mediatools/video/downloader/data/first_run.flag
 src/mediatools/video/downloader/data/queue.txt
 src/mediatools/video/downloader/data/settings.json
 apps/video/downloader/docs/UserGuide.docx
+apps/video/downloader/.spotify_cache
+apps/video/downloader/spotdl_cache
+src/mediatools/video/downloader/data/queue_old.txt
+
 clean_pycache.py
+supporting_images_for_doc
+*.json

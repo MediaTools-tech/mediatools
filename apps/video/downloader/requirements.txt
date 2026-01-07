@@ -5,9 +5,12 @@
 requests>=2.31.0
 packaging>=21.0
 psutil>=5.9.0
+spotipy>=2.23.0
+mutagen>=1.46.0
+Pillow>=10.0.0
 
 # Platform-specific dependencies
 pywin32>=303; sys_platform == 'win32'
 
-# Note: yt-dlp and FFmpeg are managed automatically by the application
+# Note: yt-dlp, spotdl, deno, and FFmpeg are managed automatically by the application
 # and downloaded on first run to ensure latest versions
