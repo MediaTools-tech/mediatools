@@ -142,14 +142,6 @@ class DownloadService:
         self.total_videos_in_playlist = 0
         self.video_index_in_playlist = 0
         
-        self.is_ffmpeg_available = self.context.ffmpeg_status["is_ffmpeg_suite_available"]
-        self.ffmpeg = None
-        self.ffprobe = None
-        
-        if self.is_ffmpeg_available:
-            self.ffmpeg = "ffmpeg" if self.context.ffmpeg_status["is_ffmpeg_suite_installed"] else self.context.ffmpeg_path
-            self.ffprobe = "ffprobe" if self.context.ffmpeg_status["is_ffmpeg_suite_installed"] else self.context.ffprobe_path
-
         try:
             font_config = self.style_manager.get_font_config("button")
             self.button_font = (font_config["family"], font_config["size"])
@@ -167,6 +159,22 @@ class DownloadService:
             self.messagebox_font = (font_config["family"], font_config["size"])
         except Exception:
             self.messagebox_font = ("Arial", 10)
+
+    @property
+    def is_ffmpeg_available(self):
+        return self.context.ffmpeg_status["is_ffmpeg_suite_available"]
+
+    @property
+    def ffmpeg(self):
+        if not self.is_ffmpeg_available:
+            return None
+        return "ffmpeg" if self.context.ffmpeg_status["is_ffmpeg_suite_installed"] else self.context.ffmpeg_path
+
+    @property
+    def ffprobe(self):
+        if not self.is_ffmpeg_available:
+            return None
+        return "ffprobe" if self.context.ffmpeg_status["is_ffmpeg_suite_installed"] else self.context.ffprobe_path
 
     def download_video(self, url, download_type="video"):
         """
