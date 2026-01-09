@@ -1068,7 +1068,7 @@ class VideoDownloaderApp:
 
             import requests
 
-            response = requests.get(VERSION_URL, timeout=10)
+            response = requests.get(VERSION_URL, timeout=30)
             if response.status_code == 200:
                 latest_version = response.text.strip()
 
@@ -1102,7 +1102,7 @@ class VideoDownloaderApp:
             if self.custom_msg_box.custom_askyesno(
                 self.root,
                 "FFmpeg Missing",
-                "FFmpeg is required for video and audio processing features.\n\n• Click 'Yes' to download FFmpeg automatically\n• Click 'No' to skip or install manually",
+                "FFmpeg is required for video and audio processing features.\n\n• Click 'Yes' to download FFmpeg",
                 self.messagebox_font,
             ):
                 self.ffmpeg_update_running = True

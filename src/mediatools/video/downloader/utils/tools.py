@@ -272,7 +272,7 @@ class YtdlpTool:
             response = requests.get(
                 self.GITHUB_API_LATEST,
                 headers=headers,
-                timeout=10
+                timeout=30
             )
             
             if response.status_code == 200:
@@ -510,7 +510,7 @@ class SpotdlTool:
 
         try:
 
-            response = requests.get(self.GITHUB_API_LATEST, timeout=10)
+            response = requests.get(self.GITHUB_API_LATEST, timeout=30)
 
             if response.status_code == 200:
 
@@ -532,7 +532,7 @@ class SpotdlTool:
 
         try:
 
-            response = requests.get(self.GITHUB_RELEASES, timeout=10)
+            response = requests.get(self.GITHUB_RELEASES, timeout=30)
 
             if response.status_code == 200:
 
@@ -839,7 +839,7 @@ class SpotdlTool:
             import requests
             response = requests.get(
                 "https://api.github.com/repos/spotDL/spotify-downloader/releases/latest",
-                timeout=10
+                timeout=30
             )
             if response.status_code == 200:
                 return response.json()["tag_name"].lstrip("v")
@@ -1061,7 +1061,7 @@ class DenoTool:
 
         try:
 
-            response = requests.get(self.GITHUB_API_LATEST, timeout=10)
+            response = requests.get(self.GITHUB_API_LATEST, timeout=30)
 
             if response.status_code == 200:
 
@@ -1137,7 +1137,7 @@ class DenoTool:
             import requests
             response = requests.get(
                 "https://api.github.com/repos/denoland/deno/releases/latest",
-                timeout=10
+                timeout=30
             )
             if response.status_code == 200:
                 return response.json()["tag_name"].lstrip("v")

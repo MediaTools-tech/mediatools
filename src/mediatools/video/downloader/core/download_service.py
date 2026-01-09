@@ -2371,7 +2371,7 @@ class DownloadService:
                 ffprobe_cmd,
                 capture_output=True,
                 text=True,
-                timeout=10,
+                timeout=30,
                 **process_kwargs,  # Your cross-platform subprocess settings
             )
 
