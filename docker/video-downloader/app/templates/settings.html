@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <section class="page-header">
+        <h1 class="page-title">
+            <span class="page-icon">⚙️</span>
+            Settings
+        </h1>
+        <p class="page-subtitle">Configure downloader parameters and paths</p>
+    </section>
+
+    <div class="card settings-card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <span class="card-icon">🛠️</span>
+                Downloader Settings
+            </h2>
+            <p class="section-hint">Check Readme for detail description of settings parameters</p>
+        </div>
+
+        <form id="settings-form" class="settings-form-v2">
+            <!-- Auto Update -->
+            <div class="setting-item">
+                <label for="auto_update">Auto update:</label>
+                <div class="setting-control">
+                    <select id="auto_update" name="auto_update">
+                        <option value="true" {% if settings.auto_update %}selected{% endif %}>True</option>
+                        <option value="false" {% if not settings.auto_update %}selected{% endif %}>False</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Limit Rate -->
+            <div class="setting-item">
+                <label for="download_speed">Limit rate:</label>
+                <div class="setting-control">
+                    <input type="text" id="download_speed" name="download_speed" value="{{ settings.download_speed }}"
+                        placeholder="e.g. 5M, 2M">
+                </div>
+            </div>
+
+            <!-- Stream Format -->
+            <div class="setting-item">
+                <label for="stream_and_merge_format">Video/Audio file format:</label>
+                <div class="setting-control">
+                    <select id="stream_and_merge_format" name="stream_and_merge_format">
+                        <option value="bestvideo+bestaudio/best-mkv" {% if
+                            settings.stream_and_merge_format=='bestvideo+bestaudio/best-mkv' %}selected{% endif %}>
+                            bestvideo+bestaudio/best-mkv</option>
+                        <option value="bestvideo+bestaudio/best-mp4" {% if
+                            settings.stream_and_merge_format=='bestvideo+bestaudio/best-mp4' %}selected{% endif %}>
+                            bestvideo+bestaudio/best-mp4</option>
+                        <option value="b" {% if settings.stream_and_merge_format=='b' %}selected{% endif %}>b</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Audio Format -->
+            <div class="setting-item">
+                <label for="audio_format">Audio only file format:</label>
+                <div class="setting-control">
+                    <select id="audio_format" name="audio_format">
+                        <option value="m4a" {% if settings.audio_format=='m4a' %}selected{% endif %}>m4a</option>
+                        <option value="mp3" {% if settings.audio_format=='mp3' %}selected{% endif %}>mp3</option>
+                        <option value="bestaudio" {% if settings.audio_format=='bestaudio' %}selected{% endif %}>
+                            bestaudio</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Embed Thumbnail -->
+            <div class="setting-item">
+                <label for="embed_thumbnail_in_audio">Embed thumbnail in audio file:</label>
+                <div class="setting-control">
+                    <select id="embed_thumbnail_in_audio" name="embed_thumbnail_in_audio">
+                        <option value="Yes" {% if settings.embed_thumbnail_in_audio=='Yes' %}selected{% endif %}>Yes
+                        </option>
+                        <option value="No" {% if settings.embed_thumbnail_in_audio=='No' %}selected{% endif %}>No
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Download Archive -->
+            <div class="setting-item">
+                <label for="enable_download_archive">Download archive:</label>
+                <div class="setting-control">
+                    <select id="enable_download_archive" name="enable_download_archive">
+                        <option value="true" {% if settings.enable_download_archive %}selected{% endif %}>True</option>
+                        <option value="false" {% if not settings.enable_download_archive %}selected{% endif %}>False
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Multisession Queue -->
+            <div class="setting-item">
+                <label for="multisession_queue_download_support">Multisession queue support:</label>
+                <div class="setting-control">
+                    <select id="multisession_queue_download_support" name="multisession_queue_download_support">
+                        <option value="true" {% if settings.multisession_queue_download_support %}selected{% endif %}>
+                            True</option>
+                        <option value="false" {% if not settings.multisession_queue_download_support %}selected{% endif
+                            %}>False</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Track Failed URL -->
+            <div class="setting-item">
+                <label for="track_failed_url">Track failed URL:</label>
+                <div class="setting-control">
+                    <select id="track_failed_url" name="track_failed_url">
+                        <option value="true" {% if settings.track_failed_url %}selected{% endif %}>True</option>
+                        <option value="false" {% if not settings.track_failed_url %}selected{% endif %}>False</option>
+                    </select>
+                </div>
+            </div>
+
+            {% if False %}
+            <!-- Cookies Browser -->
+            <div class="setting-item">
+                <label>Cookies from browser:</label>
+                <div class="setting-control dual-control">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="enable_cookies_from_browser" name="enable_cookies_from_browser" {% if
+                            settings.enable_cookies_from_browser %}checked{% endif %}>
+                        <label for="enable_cookies_from_browser">Enable</label>
+                    </div>
+                    <select id="cookies_browser" name="cookies_browser">
+                        {% for browser in ['chrome', 'firefox', 'safari', 'brave', 'edge', 'opera', 'chromium',
+                        'vivaldi', 'whale'] %}
+                        <option value="{{ browser }}" {% if settings.cookies_browser==browser %}selected{% endif %}>{{
+                            browser }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if False %}
+            <!-- Browser Profile -->
+            <div class="setting-item">
+                <label for="cookies_browser_profile">Browser profile/path:</label>
+                <div class="setting-control path-control">
+                    <input type="text" id="cookies_browser_profile" name="cookies_browser_profile"
+                        value="{{ settings.cookies_browser_profile }}" placeholder="Select browser profile file">
+                    <button type="button" class="btn btn-small btn-path-dim">Browse File</button>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if False %}
+            <!-- Cookies File Path -->
+            <div class="setting-item">
+                <label for="cookies_path">Cookies file path:</label>
+                <div class="setting-control path-control">
+                    <input type="text" id="cookies_path" name="cookies_path" value="{{ settings.cookies_path }}"
+                        placeholder="e.g. /app/data/cookies.txt">
+                    <button type="button" class="btn btn-small btn-secondary btn-path-manual"
+                        title="Manual entry required in Docker">Set Path</button>
+                </div>
+                <p class="field-info">In Docker, provide the path inside the container (e.g., mapped via volumes)</p>
+            </div>
+            {% endif %}
+
+            {% if False %}
+            <!-- GUI Theme -->
+            <div class="setting-item">
+                <label for="gui_theme">GUI Theme:</label>
+                <div class="setting-control">
+                    <select id="gui_theme" name="gui_theme">
+                        {% for theme in ['Default', 'Dark', 'Unicolor_1', 'Unicolor_2', 'Unicolor_3', 'Minimalist_1',
+                        'Minimalist_2', 'Minimalist_3'] %}
+                        <option value="{{ theme }}" {% if settings.gui_theme==theme %}selected{% endif %}>{{ theme }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if False %}
+            <!-- Download Path -->
+            <div class="setting-item">
+                <label for="downloads_dir">Download path:</label>
+                <div class="setting-control path-control">
+                    <input type="text" id="downloads_dir" name="downloads_dir" value="{{ settings.download_folder }}"
+                        placeholder="e.g. /downloads">
+                    <button type="button" class="btn btn-small btn-secondary btn-path-manual"
+                        title="Manual entry required in Docker">Set Folder</button>
+                </div>
+                <span class="field-info">Mapped from: {{ settings.download_folder }}. Ensure this folder is mounted as a
+                    Docker volume for persistence.</span>
+            </div>
+            {% endif %}
+
+            <!-- Download in subfolders -->
+            <div class="setting-item">
+                <label for="platform_specific_download_folders">Download in subfolders:</label>
+                <div class="setting-control">
+                    <select id="platform_specific_download_folders" name="platform_specific_download_folders">
+                        <option value="true" {% if settings.platform_specific_download_folders %}selected{% endif %}>
+                            True</option>
+                        <option value="false" {% if not settings.platform_specific_download_folders %}selected{% endif
+                            %}>False</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Spotify Client ID -->
+            <div class="setting-item">
+                <label for="spotify_client_id">Spotify Client ID:</label>
+                <div class="setting-control">
+                    <input type="text" id="spotify_client_id" name="spotify_client_id"
+                        value="{{ settings.spotify_client_id }}" placeholder="e.g., a1b2c3d4e5f67890...">
+                </div>
+            </div>
+
+            <!-- Spotify Client Secret -->
+            <div class="setting-item">
+                <label for="spotify_client_secret">Spotify Client Secret:</label>
+                <div class="setting-control">
+                    <input type="password" id="spotify_client_secret" name="spotify_client_secret"
+                        value="{{ settings.spotify_client_secret }}" placeholder="e.g., c0ffee1234567890...">
+                </div>
+            </div>
+
+            <!-- Spotify Playlist -->
+            <div class="setting-item">
+                <label for="enable_spotify_playlist">Enable spotify playlist downloads:</label>
+                <div class="setting-control checkbox-end">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="enable_spotify_playlist" name="enable_spotify_playlist" {% if
+                            settings.enable_spotify_playlist %}checked{% endif %}>
+                        <label for="enable_spotify_playlist">Enable</label>
+                    </div>
+                </div>
+                <p class="field-info full-width">(Need onetime OAuth setup - Check UserGuide)</p>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions-bar">
+                <button type="button" id="btn-reset" class="btn btn-secondary">Reset to Defaults</button>
+                <div class="actions-right">
+                    <button type="button" id="btn-cancel" class="btn btn-ghost">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('settings-form');
+        const resetBtn = document.getElementById('btn-reset');
+        const cancelBtn = document.getElementById('btn-cancel');
+
+        // Handle form submission
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const settings = {};
+
+            // Helper to get dropdown value as boolean
+            const getBool = (name) => form.querySelector(`#${name}`).value === 'true';
+
+            // Map fields to settings object
+            settings.auto_update = getBool('auto_update');
+            settings.download_speed = formData.get('download_speed');
+            settings.stream_and_merge_format = formData.get('stream_and_merge_format');
+            settings.audio_format = formData.get('audio_format');
+            settings.embed_thumbnail_in_audio = formData.get('embed_thumbnail_in_audio');
+            settings.enable_download_archive = getBool('enable_download_archive');
+            settings.multisession_queue_download_support = getBool('multisession_queue_download_support');
+            settings.track_failed_url = getBool('track_failed_url');
+
+            settings.platform_specific_download_folders = getBool('platform_specific_download_folders');
+            settings.spotify_client_id = formData.get('spotify_client_id');
+            settings.spotify_client_secret = formData.get('spotify_client_secret');
+            settings.enable_spotify_playlist = form.querySelector('#enable_spotify_playlist').checked;
+
+            try {
+                const response = await fetch('/api/settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ settings })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('Settings applied successfully!', 'success');
+                } else {
+                    showToast('Failed to apply settings', 'error');
+                }
+            } catch (error) {
+                showToast('Error saving settings: ' + error.message, 'error');
+            }
+        });
+
+        // Handle reset button
+        resetBtn.addEventListener('click', async function () {
+            if (!confirm('Are you sure you want to reset all settings to defaults?')) return;
+
+            try {
+                const response = await fetch('/api/settings/reset', { method: 'POST' });
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('Settings reset to defaults', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                }
+            } catch (error) {
+                showToast('Error resetting settings: ' + error.message, 'error');
+            }
+        });
+
+        // Handle cancel button
+        cancelBtn.addEventListener('click', () => {
+            window.location.href = '/';
+        });
+    });
+</script>
+{% endblock %}

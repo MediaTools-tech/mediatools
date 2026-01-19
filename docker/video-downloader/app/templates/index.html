@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+
+    <!-- URL Input Section -->
+    <section class="card url-input-card">
+        <div class="input-group">
+            <input type="text" id="url-input" class="url-input" placeholder="Paste video or playlist URL here..."
+                autocomplete="off" autofocus>
+
+            <!-- Progress & Status integrated below URL input -->
+            <div class="progress-container" id="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-info">
+                    <span class="progress-percent" id="progress-percent">0%</span>
+                    <span class="progress-speed" id="progress-speed"></span>
+                    <span class="progress-eta" id="progress-eta"></span>
+                </div>
+                <div class="progress-filename" id="progress-filename"></div>
+            </div>
+
+            <div class="status-display-inline" id="status-display">
+                <div class="status-indicator" id="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text" id="status-text">Ready</span>
+                </div>
+                <div class="status-controls">
+                    <button id="btn-cancel" class="btn btn-small btn-danger hidden">Cancel</button>
+                    <button id="btn-pause" class="btn btn-small btn-secondary hidden">Pause</button>
+                </div>
+            </div>
+
+            <div class="input-buttons">
+                <button id="btn-video" class="btn btn-primary btn-large">
+                    <span class="btn-icon">🎬</span>
+                    <span>Download Video</span>
+                </button>
+                <button id="btn-audio" class="btn btn-primary btn-large">
+                    <span class="btn-icon">🎵</span>
+                    <span>Download Audio</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    
+
+
+    <!-- Queue Section -->
+    <section class="card queue-card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <span class="card-icon">📋</span>
+                Queue
+                <span class="badge" id="queue-count">0</span>
+            </h2>
+            <button id="btn-clear-queue" class="btn btn-small btn-ghost">Clear</button>
+        </div>
+        <div class="queue-list" id="queue-list">
+            <div class="queue-empty">No items in queue</div>
+        </div>
+    </section>
+
+    <!-- Session Prompt Modal -->
+    <div id="session-modal" class="modal-backdrop hidden">
+        <div class="modal-content card">
+            <div class="modal-header">
+                <h3>Previous Session Found</h3>
+                <span class="modal-icon">📂</span>
+            </div>
+            <div class="modal-body">
+                <p>You have <span id="session-queue-count" class="text-highlight">0</span> items in queue and <span
+                        id="session-failed-count" class="text-highlight">0</span> failed downloads from your previous
+                    session.</p>
+                <p>What would you like to do?</p>
+
+                <div id="session-details" class="modal-details hidden">
+                    <div id="session-url-list" class="session-url-list"></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="session-btn-show" class="btn btn-ghost">
+                    <span class="btn-icon">👁️</span>
+                    Show Details
+                </button>
+                <div class="modal-actions-right">
+                    <button id="session-btn-delete" class="btn btn-danger">
+                        <span class="btn-icon">🗑️</span>
+                        Delete
+                    </button>
+                    <button id="session-btn-ignore" class="btn btn-secondary">
+                        Ignore
+                    </button>
+                    <button id="session-btn-continue" class="btn btn-primary">
+                        <span class="btn-icon">🚀</span>
+                        Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

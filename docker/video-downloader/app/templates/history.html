@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <section class="page-header">
+        <h1 class="page-title">
+            <span class="page-icon">📜</span>
+            Download History
+        </h1>
+        <p class="page-subtitle">View completed and failed downloads</p>
+    </section>
+
+    <!-- Failed Downloads -->
+    <section class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <span class="card-icon">❌</span>
+                Failed Downloads
+                <span class="badge badge-error" id="failed-count">{{ failed|length }}</span>
+            </h2>
+            <button id="btn-clear-failed" class="btn btn-small btn-ghost">Clear All</button>
+        </div>
+        <div class="history-list" id="failed-list">
+            {% if failed %}
+            {% for item in failed %}
+            <div class="history-item failed" data-url="{{ item.url }}">
+                <div class="history-info">
+                    <div class="history-url">{{ item.url[:80] }}{% if item.url|length > 80 %}...{% endif %}</div>
+                    <div class="history-meta">
+                        <span class="history-type">{{ item.type }}</span>
+                        <span class="history-date">{{ item.failed_at[:19] if item.failed_at else '' }}</span>
+                    </div>
+                    {% if item.error %}
+                    <div class="history-error">{{ item.error[:100] }}{% if item.error|length > 100 %}...{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="history-actions">
+                    <button class="btn btn-small btn-retry" data-url="{{ item.url }}">
+                        🔄 Retry
+                    </button>
+                    <button class="btn btn-small btn-ghost btn-remove-failed" data-url="{{ item.url }}">
+                        ✕
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">✅</span>
+                <p>No failed downloads</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Download History -->
+    <section class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <span class="card-icon">✅</span>
+                Completed Downloads
+                <span class="badge" id="history-count">{{ history|length }}</span>
+            </h2>
+            <button id="btn-clear-history" class="btn btn-small btn-ghost">Clear All</button>
+        </div>
+        <div class="history-list" id="history-list">
+            {% if history %}
+            {% for item in history %}
+            <div class="history-item {% if item.success %}success{% else %}failed{% endif %}">
+                <div class="history-info">
+                    <div class="history-filename">{{ item.filename }}</div>
+                    <div class="history-meta">
+                        <span class="history-type">{{ item.type }}</span>
+                        <span class="history-date">{{ item.timestamp[:19] if item.timestamp else '' }}</span>
+                    </div>
+                    <div class="history-url-small">{{ item.url[:60] }}{% if item.url|length > 60 %}...{% endif %}</div>
+                </div>
+                <div class="history-status">
+                    {% if item.success %}
+                    <span class="status-icon success">✅</span>
+                    {% else %}
+                    <span class="status-icon error">❌</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">📭</span>
+                <p>No download history yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Retry failed download
+        document.querySelectorAll('.btn-retry').forEach(btn => {
+            btn.addEventListener('click', async function () {
+                const url = this.dataset.url;
+
+                try {
+                    const response = await fetch(`/api/queue/retry/${encodeURIComponent(url)}`, {
+                        method: 'POST'
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showToast('Added back to queue', 'success');
+                        this.closest('.history-item').remove();
+                        updateFailedCount();
+                    }
+                } catch (error) {
+                    showToast('Error: ' + error.message, 'error');
+                }
+            });
+        });
+
+        // Remove failed item
+        document.querySelectorAll('.btn-remove-failed').forEach(btn => {
+            btn.addEventListener('click', async function () {
+                const url = this.dataset.url;
+
+                try {
+                    const response = await fetch(`/api/queue/failed/${encodeURIComponent(url)}`, {
+                        method: 'DELETE'
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.closest('.history-item').remove();
+                        updateFailedCount();
+                    }
+                } catch (error) {
+                    showToast('Error: ' + error.message, 'error');
+                }
+            });
+        });
+
+        // Clear all failed
+        document.getElementById('btn-clear-failed').addEventListener('click', async function () {
+            if (!confirm('Clear all failed downloads?')) return;
+
+            try {
+                await fetch('/api/queue/failed', { method: 'DELETE' });
+                document.getElementById('failed-list').innerHTML =
+                    '<div class="empty-state"><span class="empty-icon">✅</span><p>No failed downloads</p></div>';
+                document.getElementById('failed-count').textContent = '0';
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Clear history
+        document.getElementById('btn-clear-history').addEventListener('click', async function () {
+            if (!confirm('Clear all download history?')) return;
+
+            try {
+                await fetch('/api/queue/history', { method: 'DELETE' });
+                document.getElementById('history-list').innerHTML =
+                    '<div class="empty-state"><span class="empty-icon">📭</span><p>No download history yet</p></div>';
+                document.getElementById('history-count').textContent = '0';
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        });
+
+        function updateFailedCount() {
+            const count = document.querySelectorAll('#failed-list .history-item').length;
+            document.getElementById('failed-count').textContent = count;
+
+            if (count === 0) {
+                document.getElementById('failed-list').innerHTML =
+                    '<div class="empty-state"><span class="empty-icon">✅</span><p>No failed downloads</p></div>';
+            }
+        }
+    });
+</script>
+{% endblock %}
