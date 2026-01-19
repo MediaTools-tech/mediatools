@@ -9,8 +9,8 @@ A modern, containerized video and audio downloader with a beautiful web interfac
 
 ## ✨ Features
 
-- 🎬 **Video Downloads** - Download videos from YouTube, Vimeo, and 1000+ sites via yt-dlp
-- 🎵 **Audio Extraction** - Convert videos to MP3, M4A, OPUS, FLAC formats
+- 🎬 **Video Downloads** - Download videos from 1000+ yt-dlp supported sites
+- 🎵 **Audio Extraction** - Convert videos to MP3, M4A
 - 🎧 **Spotify Support** - Download tracks and playlists with metadata
 - 📋 **Queue Management** - Add multiple URLs and process them sequentially
 - 📊 **Real-time Progress** - WebSocket-based live progress updates
@@ -223,8 +223,7 @@ docker build -t mediatools-downloader .
 
 # Run with development mounts
 docker run -d -p 8000:8000 \
-  -v $(pwd)/storage:/storage \
-  -v $(pwd)/app:/app \
+  -v /path/to/your/storage:/storage \
   mediatools-downloader
 ```
 
@@ -294,7 +293,7 @@ Copyright (c) 2026 The Video Downloader Docker Project
 This project builds upon amazing open-source tools:
 
 - **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** - Video downloading from 1000+ sites
-- **[spotdl](https://github.com/spotDL/spotify-downloader)** - Spotify track downloading
+- **[spotdl](https://github.com/spotDL/spotify-downloader)** - Spotify track metadata downloading
 - **[FastAPI](https://fastapi.tiangolo.com/)** - Modern web framework
 - **[FFmpeg](https://ffmpeg.org/)** - Media processing and conversion
 - **[Deno](https://deno.land/)** - yt-dlp dependency (yt-dlp recommended)
