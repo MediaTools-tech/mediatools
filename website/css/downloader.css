@@ -370,10 +370,70 @@
     cursor: not-allowed;
 }
 
+
 .download-links a {
     display: block;
     margin-top: 10px;
     font-size: 0.9rem;
+}
+
+/* Docker Section Styles */
+.docker-section .content-card {
+    background: var(--card-bg-color);
+    padding: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.docker-section .content-card h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.4rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.docker-section .content-card ul {
+    list-style: none;
+    padding: 0;
+}
+
+.docker-section .content-card li {
+    margin-bottom: 10px;
+    color: #adb5bd;
+    line-height: 1.6;
+}
+
+.docker-section .content-card li strong {
+    color: var(--text-color);
+}
+
+.docker-section .content-card pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-family: 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.docker-section .content-card code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+}
+
+.docker-section .content-card a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.docker-section .content-card a:hover {
+    text-decoration: underline;
 }
 
 /* GitHub Section */

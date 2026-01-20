@@ -267,6 +267,45 @@
                 </div>
             </section>
 
+            <section class="docker-section page-section">
+                <div class="section-title">
+                    <h2>New: Try the Self-Hosted Docker Version 🐳</h2>
+                    <p>Prefer to run the downloader as a web service on your own machine or server? We now offer an
+                        official Docker image! ✨</p>
+                </div>
+                <div class="docker-advantages content-card">
+                    <h3>Key Advantages:</h3>
+                    <ul>
+                        <li><strong>Web-Based UI:</strong> Access the downloader from any device's browser on your local
+                            network—your laptop, phone, or tablet.</li>
+                        <li><strong>Always-On & Self-Hosted:</strong> Run it 24/7 on your own hardware, a home server,
+                            or NAS. Your data stays private and under your control.</li>
+                        <li><strong>Full-Featured:</strong> Contains all the core functionality of the desktop app:
+                            support for 1000+ sites, download queue, format/quality selection, and regular updates via
+                            yt-dlp.</li>
+                        <li><strong>Easy Setup:</strong> Get started with a single command. 🚀</li>
+                    </ul>
+                </div>
+                <div class="docker-quickstart content-card">
+                    <h3>Quick Start Command:</h3>
+                    <pre><code class="language-bash">docker run -d -p 8000:8000 \
+  -v /path/to/your/storage:/storage \
+  mediatoolstech/mediatools-downloader:latest</code></pre>
+                    <p>After running, open <a href="http://localhost:8000" target="_blank">http://localhost:8000</a> in
+                        your browser.</p>
+                </div>
+                <div class="docker-learn-more content-card">
+                    <h3>📚 Learn More:</h3>
+                    <ul>
+                        <li><a href="https://hub.docker.com/r/mediatoolstech/mediatools-downloader"
+                                target="_blank">Docker Hub Image: <code>mediatoolstech/mediatools-downloader</code></a>
+                        </li>
+                        <li><a href="https://github.com/MediaTools-tech/mediatools/tree/main/docker/video-downloader"
+                                target="_blank">Full Installation Guide: View on GitHub</a></li>
+                    </ul>
+                </div>
+            </section>
+
             <section class="github-info page-section">
                 <div class="section-title">
                     <h2>Open Source Project</h2>
