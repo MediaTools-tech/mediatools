@@ -1,0 +1,14 @@
+# Create these empty .gitkeep files in the respective directories
+# to ensure the directories are tracked by git but their contents are ignored
+
+# storage/uploads/.gitkeep
+# (empty file)
+
+# storage/outputs/.gitkeep
+# (empty file)
+
+# storage/temp/.gitkeep
+# (empty file)
+
+# These files allow git to track the directory structure
+# while ignoring the actual uploaded/transcoded videos
