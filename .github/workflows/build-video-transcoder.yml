@@ -92,38 +92,17 @@ jobs:
         pip install winshell pywin32
 
     - name: Build Windows Portable (--onedir)
+      shell: bash
       run: |
-        Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
-        python -m PyInstaller `
-          --onedir `
-          --windowed `
-          --noupx `
-          --name "mt-vtr" `
-          --paths="./src" `
-          --icon="src/mediatools/video/transcoder/assets/Logo_128x128.ico" `
-          --add-data="src/mediatools/video/transcoder/data/version.txt;data" `
-          --add-data="src/mediatools/video/transcoder/utils/cleanup_files.bat;utils" `
-          --add-data="src/mediatools/video/transcoder/assets;assets" `
-          --add-data="apps/video/transcoder/docs/UserGuide.pdf;docs" `
-          --add-data="apps/video/transcoder/README.md;docs" `
-          --add-data="LICENSE;docs" `
-          --hidden-import=mediatools `
-          --hidden-import=mediatools.video.transcoder `
-          --hidden-import=mediatools.video.transcoder.core `
-          --hidden-import=mediatools.video.transcoder.gui `
-          --hidden-import=mediatools.video.transcoder.utils `
-          --hidden-import=mediatools.video.transcoder.compat `
-          --hidden-import=winshell `
-          --hidden-import=win32com `
-          --hidden-import=win32com.client `
-          --clean `
-          apps/video/transcoder/launch.py
+        cd apps/video/transcoder/build
+        chmod +x build_onedir.sh
+        ./build_onedir.sh
         
     - name: Create Windows Portable ZIP
       run: |
         $mainFolder = "mt-vtr-Windows-Portable"
         New-Item -ItemType Directory -Path $mainFolder -Force
-        Copy-Item -Path "dist\mt-vtr\*" -Destination $mainFolder\ -Recurse -Force
+        Copy-Item -Path "apps\video\transcoder\build\dist\mt-vtr\*" -Destination $mainFolder\ -Recurse -Force
         Compress-Archive -Path "$mainFolder" -DestinationPath "mt-vtr-Windows-Portable.zip" -Force
         Remove-Item -Recurse -Force $mainFolder
         
@@ -156,38 +135,17 @@ jobs:
         pip install winshell pywin32
 
     - name: Build Windows Single File (--onefile)
+      shell: bash
       run: |
-        Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
-        python -m PyInstaller `
-          --onefile `
-          --windowed `
-          --noupx `
-          --name "mt-vtr" `
-          --paths="./src" `
-          --icon="src/mediatools/video/transcoder/assets/Logo_128x128.ico" `
-          --add-data="src/mediatools/video/transcoder/data/version.txt;data" `
-          --add-data="src/mediatools/video/transcoder/utils/cleanup_files.bat;utils" `
-          --add-data="src/mediatools/video/transcoder/assets;assets" `
-          --add-data="apps/video/transcoder/docs/UserGuide.pdf;docs" `
-          --add-data="apps/video/transcoder/README.md;docs" `
-          --add-data="LICENSE;docs" `
-          --hidden-import=mediatools `
-          --hidden-import=mediatools.video.transcoder `
-          --hidden-import=mediatools.video.transcoder.core `
-          --hidden-import=mediatools.video.transcoder.gui `
-          --hidden-import=mediatools.video.transcoder.utils `
-          --hidden-import=mediatools.video.transcoder.compat `
-          --hidden-import=winshell `
-          --hidden-import=win32com `
-          --hidden-import=win32com.client `
-          --clean `
-          apps/video/transcoder/launch.py
+        cd apps/video/transcoder/build
+        chmod +x build_onefile.sh
+        ./build_onefile.sh
         
     - name: Upload Windows Single File Artifact
       uses: actions/upload-artifact@v4
       with:
         name: mt-vtr-Windows.exe
-        path: dist/mt-vtr.exe
+        path: apps/video/transcoder/build/dist/mt-vtr.exe
 
   # ============================================================================
   # Job 3: Linux Builds
@@ -212,32 +170,14 @@ jobs:
         
     - name: Build Linux Portable (--onedir)
       run: |
-        rm -rf build dist
-        python -m PyInstaller \
-          --onedir \
-          --windowed \
-          --name "mt-vtr" \
-          --paths="./src" \
-          --icon="src/mediatools/video/transcoder/assets/Logo_128x128.ico" \
-          --add-data="src/mediatools/video/transcoder/data/version.txt:data" \
-          --add-data="src/mediatools/video/transcoder/utils/cleanup_files.sh:utils" \
-          --add-data="src/mediatools/video/transcoder/assets:assets" \
-          --add-data="apps/video/transcoder/docs/UserGuide.pdf:docs" \
-          --add-data="apps/video/transcoder/README.md:docs" \
-          --add-data="LICENSE:docs" \
-          --hidden-import=mediatools \
-          --hidden-import=mediatools.video.transcoder \
-          --hidden-import=mediatools.video.transcoder.core \
-          --hidden-import=mediatools.video.transcoder.gui \
-          --hidden-import=mediatools.video.transcoder.utils \
-          --hidden-import=mediatools.video.transcoder.compat \
-          --clean \
-          apps/video/transcoder/launch.py
+        cd apps/video/transcoder/build
+        chmod +x build_onedir.sh
+        ./build_onedir.sh
         
     - name: Create Linux Portable ZIP
       run: |
         mkdir -p mt-vtr-Linux-Portable
-        cp -r dist/mt-vtr/* mt-vtr-Linux-Portable/
+        cp -r apps/video/transcoder/build/dist/mt-vtr/* mt-vtr-Linux-Portable/
         zip -r mt-vtr-Linux-Portable.zip mt-vtr-Linux-Portable/
         rm -rf mt-vtr-Linux-Portable
         
@@ -267,33 +207,15 @@ jobs:
         
     - name: Build Linux Single File (--onefile)
       run: |
-        rm -rf build dist
-        python -m PyInstaller \
-          --onefile \
-          --windowed \
-          --name "mt-vtr" \
-          --paths="./src" \
-          --icon="src/mediatools/video/transcoder/assets/Logo_128x128.ico" \
-          --add-data="src/mediatools/video/transcoder/data/version.txt:data" \
-          --add-data="src/mediatools/video/transcoder/utils/cleanup_files.sh:utils" \
-          --add-data="src/mediatools/video/transcoder/assets:assets" \
-          --add-data="apps/video/transcoder/docs/UserGuide.pdf:docs" \
-          --add-data="apps/video/transcoder/README.md:docs" \
-          --add-data="LICENSE:docs" \
-          --hidden-import=mediatools \
-          --hidden-import=mediatools.video.transcoder \
-          --hidden-import=mediatools.video.transcoder.core \
-          --hidden-import=mediatools.video.transcoder.gui \
-          --hidden-import=mediatools.video.transcoder.utils \
-          --hidden-import=mediatools.video.transcoder.compat \
-          --clean \
-          apps/video/transcoder/launch.py
+        cd apps/video/transcoder/build
+        chmod +x build_onefile.sh
+        ./build_onefile.sh
         
     - name: Upload Linux Single File Artifact
       uses: actions/upload-artifact@v4
       with:
         name: mt-vtr-Linux
-        path: dist/mt-vtr
+        path: apps/video/transcoder/build/dist/mt-vtr
 
   # ============================================================================
   # Job 4: macOS Builds (COMMENTED OUT - enable when ready to test)
