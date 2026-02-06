@@ -1,18 +1,18 @@
-name: Build Video Downloader
+name: Build Video Transcoder
 
 on:
   push:
     branches: [ main, develop ]
     paths:
-      - 'apps/video/downloader/**'
-      - 'src/mediatools/video/downloader/**'
-      - 'docker/video-downloader/**'
-      - '.github/workflows/build-video-downloader.yml'
+      - 'apps/video/transcoder/**'
+      - 'src/mediatools/video/transcoder/**'
+      - 'docker/video-transcoder/**'
+      - '.github/workflows/build-video-transcoder.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'apps/video/downloader/**'
-      - 'src/mediatools/video/downloader/**'
+      - 'apps/video/transcoder/**'
+      - 'src/mediatools/video/transcoder/**'
   workflow_dispatch:
 
 permissions:
@@ -20,8 +20,8 @@ permissions:
   packages: write
 
 env:
-  APP_NAME: mt-vdl
-  DOCKER_IMAGE_NAME: video-downloader
+  APP_NAME: mt-vtr
+  DOCKER_IMAGE_NAME: video-transcoder
 
 jobs:
   # ============================================================================
@@ -45,12 +45,12 @@ jobs:
         id: version
         run: |
           # Read app version
-          APP_VERSION=$(cat src/mediatools/video/downloader/data/version.txt)
+          APP_VERSION=$(cat src/mediatools/video/transcoder/data/version.txt)
           BUILD_NUM=$(git rev-list --count HEAD)
           COMMIT_HASH=$(git rev-parse --short HEAD)
           
           FULL_VERSION="${APP_VERSION}-build.${BUILD_NUM}"
-          BUILD_TAG="vdl-v${APP_VERSION}-build.${BUILD_NUM}+${COMMIT_HASH}"
+          BUILD_TAG="vtr-v${APP_VERSION}-build.${BUILD_NUM}+${COMMIT_HASH}"
           
           echo "version=$FULL_VERSION" >> $GITHUB_OUTPUT
           echo "build_tag=$BUILD_TAG" >> $GITHUB_OUTPUT
@@ -98,42 +98,40 @@ jobs:
           --onedir `
           --windowed `
           --noupx `
-          --name "mt-vdl" `
+          --name "mt-vtr" `
           --paths="./src" `
-          --icon="src/mediatools/video/downloader/assets/icon.ico" `
-          --add-data="src/mediatools/video/downloader/data;data" `
-          --add-data="src/mediatools/video/downloader/bin;bin" `
-          --add-data="src/mediatools/video/downloader/utils/cleanup_files.bat;utils" `
-          --add-data="src/mediatools/video/downloader/assets;assets" `
-          --add-data="src/mediatools/video/downloader/assets/*.gif;assets" `
-          --add-data="apps/video/downloader/docs/UserGuide.pdf;docs" `
-          --add-data="README.md;docs" `
+          --icon="src/mediatools/video/transcoder/assets/Logo_128x128.ico" `
+          --add-data="src/mediatools/video/transcoder/data/version.txt;data" `
+          --add-data="src/mediatools/video/transcoder/utils/cleanup_files.bat;utils" `
+          --add-data="src/mediatools/video/transcoder/assets;assets" `
+          --add-data="apps/video/transcoder/docs/UserGuide.pdf;docs" `
+          --add-data="apps/video/transcoder/README.md;docs" `
           --add-data="LICENSE;docs" `
           --hidden-import=mediatools `
-          --hidden-import=mediatools.video.downloader `
-          --hidden-import=mediatools.video.downloader.core `
-          --hidden-import=mediatools.video.downloader.gui `
-          --hidden-import=mediatools.video.downloader.utils `
-          --hidden-import=mediatools.video.downloader.compat `
+          --hidden-import=mediatools.video.transcoder `
+          --hidden-import=mediatools.video.transcoder.core `
+          --hidden-import=mediatools.video.transcoder.gui `
+          --hidden-import=mediatools.video.transcoder.utils `
+          --hidden-import=mediatools.video.transcoder.compat `
           --hidden-import=winshell `
           --hidden-import=win32com `
           --hidden-import=win32com.client `
           --clean `
-          apps/video/downloader/launch.py
+          apps/video/transcoder/launch.py
         
     - name: Create Windows Portable ZIP
       run: |
-        $mainFolder = "mt-vdl-Windows-Portable"
+        $mainFolder = "mt-vtr-Windows-Portable"
         New-Item -ItemType Directory -Path $mainFolder -Force
-        Copy-Item -Path "dist\mt-vdl\*" -Destination $mainFolder\ -Recurse -Force
-        Compress-Archive -Path "$mainFolder" -DestinationPath "mt-vdl-Windows-Portable.zip" -Force
+        Copy-Item -Path "dist\mt-vtr\*" -Destination $mainFolder\ -Recurse -Force
+        Compress-Archive -Path "$mainFolder" -DestinationPath "mt-vtr-Windows-Portable.zip" -Force
         Remove-Item -Recurse -Force $mainFolder
         
     - name: Upload Windows Portable Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: mt-vdl-Windows-Portable
-        path: mt-vdl-Windows-Portable.zip
+        name: mt-vtr-Windows-Portable
+        path: mt-vtr-Windows-Portable.zip
 
   build-windows-onefile:
     runs-on: windows-latest
@@ -164,33 +162,32 @@ jobs:
           --onefile `
           --windowed `
           --noupx `
-          --name "mt-vdl" `
+          --name "mt-vtr" `
           --paths="./src" `
-          --icon="src/mediatools/video/downloader/assets/icon.ico" `
-          --add-data="src/mediatools/video/downloader/data;data" `
-          --add-data="src/mediatools/video/downloader/bin;bin" `
-          --add-data="src/mediatools/video/downloader/utils/cleanup_files.bat;utils" `
-          --add-data="src/mediatools/video/downloader/assets;assets" `
-          --add-data="apps/video/downloader/docs/UserGuide.pdf;docs" `
-          --add-data="README.md;docs" `
+          --icon="src/mediatools/video/transcoder/assets/Logo_128x128.ico" `
+          --add-data="src/mediatools/video/transcoder/data/version.txt;data" `
+          --add-data="src/mediatools/video/transcoder/utils/cleanup_files.bat;utils" `
+          --add-data="src/mediatools/video/transcoder/assets;assets" `
+          --add-data="apps/video/transcoder/docs/UserGuide.pdf;docs" `
+          --add-data="apps/video/transcoder/README.md;docs" `
           --add-data="LICENSE;docs" `
           --hidden-import=mediatools `
-          --hidden-import=mediatools.video.downloader `
-          --hidden-import=mediatools.video.downloader.core `
-          --hidden-import=mediatools.video.downloader.gui `
-          --hidden-import=mediatools.video.downloader.utils `
-          --hidden-import=mediatools.video.downloader.compat `
+          --hidden-import=mediatools.video.transcoder `
+          --hidden-import=mediatools.video.transcoder.core `
+          --hidden-import=mediatools.video.transcoder.gui `
+          --hidden-import=mediatools.video.transcoder.utils `
+          --hidden-import=mediatools.video.transcoder.compat `
           --hidden-import=winshell `
           --hidden-import=win32com `
           --hidden-import=win32com.client `
           --clean `
-          apps/video/downloader/launch.py
+          apps/video/transcoder/launch.py
         
     - name: Upload Windows Single File Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: mt-vdl-Windows.exe
-        path: dist/mt-vdl.exe
+        name: mt-vtr-Windows.exe
+        path: dist/mt-vtr.exe
 
   # ============================================================================
   # Job 3: Linux Builds
@@ -219,38 +216,36 @@ jobs:
         python -m PyInstaller \
           --onedir \
           --windowed \
-          --name "mt-vdl" \
+          --name "mt-vtr" \
           --paths="./src" \
-          --icon="src/mediatools/video/downloader/assets/icon.ico" \
-          --add-data="src/mediatools/video/downloader/data:data" \
-          --add-data="src/mediatools/video/downloader/bin:bin" \
-          --add-data="src/mediatools/video/downloader/utils/cleanup_files.sh:utils" \
-          --add-data="src/mediatools/video/downloader/assets:assets" \
-          --add-data="src/mediatools/video/downloader/assets/*.gif:assets" \
-          --add-data="apps/video/downloader/docs/UserGuide.pdf:docs" \
-          --add-data="README.md:docs" \
+          --icon="src/mediatools/video/transcoder/assets/Logo_128x128.ico" \
+          --add-data="src/mediatools/video/transcoder/data/version.txt:data" \
+          --add-data="src/mediatools/video/transcoder/utils/cleanup_files.sh:utils" \
+          --add-data="src/mediatools/video/transcoder/assets:assets" \
+          --add-data="apps/video/transcoder/docs/UserGuide.pdf:docs" \
+          --add-data="apps/video/transcoder/README.md:docs" \
           --add-data="LICENSE:docs" \
           --hidden-import=mediatools \
-          --hidden-import=mediatools.video.downloader \
-          --hidden-import=mediatools.video.downloader.core \
-          --hidden-import=mediatools.video.downloader.gui \
-          --hidden-import=mediatools.video.downloader.utils \
-          --hidden-import=mediatools.video.downloader.compat \
+          --hidden-import=mediatools.video.transcoder \
+          --hidden-import=mediatools.video.transcoder.core \
+          --hidden-import=mediatools.video.transcoder.gui \
+          --hidden-import=mediatools.video.transcoder.utils \
+          --hidden-import=mediatools.video.transcoder.compat \
           --clean \
-          apps/video/downloader/launch.py
+          apps/video/transcoder/launch.py
         
     - name: Create Linux Portable ZIP
       run: |
-        mkdir -p mt-vdl-Linux-Portable
-        cp -r dist/mt-vdl/* mt-vdl-Linux-Portable/
-        zip -r mt-vdl-Linux-Portable.zip mt-vdl-Linux-Portable/
-        rm -rf mt-vdl-Linux-Portable
+        mkdir -p mt-vtr-Linux-Portable
+        cp -r dist/mt-vtr/* mt-vtr-Linux-Portable/
+        zip -r mt-vtr-Linux-Portable.zip mt-vtr-Linux-Portable/
+        rm -rf mt-vtr-Linux-Portable
         
     - name: Upload Linux Portable Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: mt-vdl-Linux-Portable
-        path: mt-vdl-Linux-Portable.zip
+        name: mt-vtr-Linux-Portable
+        path: mt-vtr-Linux-Portable.zip
 
   build-linux-onefile:
     runs-on: ubuntu-latest
@@ -276,30 +271,29 @@ jobs:
         python -m PyInstaller \
           --onefile \
           --windowed \
-          --name "mt-vdl" \
+          --name "mt-vtr" \
           --paths="./src" \
-          --icon="src/mediatools/video/downloader/assets/icon.ico" \
-          --add-data="src/mediatools/video/downloader/data:data" \
-          --add-data="src/mediatools/video/downloader/bin:bin" \
-          --add-data="src/mediatools/video/downloader/utils/cleanup_files.sh:utils" \
-          --add-data="src/mediatools/video/downloader/assets:assets" \
-          --add-data="apps/video/downloader/docs/UserGuide.pdf:docs" \
-          --add-data="README.md:docs" \
+          --icon="src/mediatools/video/transcoder/assets/Logo_128x128.ico" \
+          --add-data="src/mediatools/video/transcoder/data/version.txt:data" \
+          --add-data="src/mediatools/video/transcoder/utils/cleanup_files.sh:utils" \
+          --add-data="src/mediatools/video/transcoder/assets:assets" \
+          --add-data="apps/video/transcoder/docs/UserGuide.pdf:docs" \
+          --add-data="apps/video/transcoder/README.md:docs" \
           --add-data="LICENSE:docs" \
           --hidden-import=mediatools \
-          --hidden-import=mediatools.video.downloader \
-          --hidden-import=mediatools.video.downloader.core \
-          --hidden-import=mediatools.video.downloader.gui \
-          --hidden-import=mediatools.video.downloader.utils \
-          --hidden-import=mediatools.video.downloader.compat \
+          --hidden-import=mediatools.video.transcoder \
+          --hidden-import=mediatools.video.transcoder.core \
+          --hidden-import=mediatools.video.transcoder.gui \
+          --hidden-import=mediatools.video.transcoder.utils \
+          --hidden-import=mediatools.video.transcoder.compat \
           --clean \
-          apps/video/downloader/launch.py
+          apps/video/transcoder/launch.py
         
     - name: Upload Linux Single File Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: mt-vdl-Linux
-        path: dist/mt-vdl
+        name: mt-vtr-Linux
+        path: dist/mt-vtr
 
   # ============================================================================
   # Job 4: macOS Builds (COMMENTED OUT - enable when ready to test)
@@ -328,37 +322,36 @@ jobs:
   #       python -m PyInstaller \
   #         --onedir \
   #         --windowed \
-  #         --name "mt-vdl" \
+  #         --name "mt-vtr" \
   #         --paths="./src" \
-  #         --icon="src/mediatools/video/downloader/assets/icon.ico" \
-  #         --add-data="src/mediatools/video/downloader/data:data" \
-  #         --add-data="src/mediatools/video/downloader/bin:bin" \
-  #         --add-data="src/mediatools/video/downloader/utils/cleanup_files.sh:utils" \
-  #         --add-data="src/mediatools/video/downloader/assets:assets" \
-  #         --add-data="apps/video/downloader/docs/UserGuide.pdf:docs" \
-  #         --add-data="README.md:docs" \
+  #         --icon="src/mediatools/video/transcoder/assets/Logo_128x128.ico" \
+  #         --add-data="src/mediatools/video/transcoder/data/version.txt:data" \
+  #         --add-data="src/mediatools/video/transcoder/utils/cleanup_files.sh:utils" \
+  #         --add-data="src/mediatools/video/transcoder/assets:assets" \
+  #         --add-data="apps/video/transcoder/docs/UserGuide.pdf:docs" \
+  #         --add-data="apps/video/transcoder/README.md:docs" \
   #         --add-data="LICENSE:docs" \
   #         --hidden-import=mediatools \
-  #         --hidden-import=mediatools.video.downloader \
-  #         --hidden-import=mediatools.video.downloader.core \
-  #         --hidden-import=mediatools.video.downloader.gui \
-  #         --hidden-import=mediatools.video.downloader.utils \
-  #         --hidden-import=mediatools.video.downloader.compat \
+  #         --hidden-import=mediatools.video.transcoder \
+  #         --hidden-import=mediatools.video.transcoder.core \
+  #         --hidden-import=mediatools.video.transcoder.gui \
+  #         --hidden-import=mediatools.video.transcoder.utils \
+  #         --hidden-import=mediatools.video.transcoder.compat \
   #         --clean \
-  #         apps/video/downloader/launch.py
+  #         apps/video/transcoder/launch.py
   #       
   #   - name: Create macOS Portable Archive
   #     run: |
-  #       mkdir -p mt-vdl-macOS-Portable
-  #       cp -r dist/mt-vdl/* mt-vdl-macOS-Portable/
-  #       tar -czf mt-vdl-macOS-Portable.tar.gz mt-vdl-macOS-Portable/
-  #       rm -rf mt-vdl-macOS-Portable
+  #       mkdir -p mt-vtr-macOS-Portable
+  #       cp -r dist/mt-vtr/* mt-vtr-macOS-Portable/
+  #       tar -czf mt-vtr-macOS-Portable.tar.gz mt-vtr-macOS-Portable/
+  #       rm -rf mt-vtr-macOS-Portable
   #       
   #   - name: Upload macOS Portable Artifact
   #     uses: actions/upload-artifact@v4
   #     with:
-  #       name: mt-vdl-macOS-Portable
-  #       path: mt-vdl-macOS-Portable.tar.gz
+  #       name: mt-vtr-macOS-Portable
+  #       path: mt-vtr-macOS-Portable.tar.gz
 
   # build-macos-onefile:
   #   runs-on: macos-latest
@@ -384,30 +377,29 @@ jobs:
   #       python -m PyInstaller \
   #         --onefile \
   #         --windowed \
-  #         --name "mt-vdl" \
+  #         --name "mt-vtr" \
   #         --paths="./src" \
-  #         --icon="src/mediatools/video/downloader/assets/icon.ico" \
-  #         --add-data="src/mediatools/video/downloader/data:data" \
-  #         --add-data="src/mediatools/video/downloader/bin:bin" \
-  #         --add-data="src/mediatools/video/downloader/utils/cleanup_files.sh:utils" \
-  #         --add-data="src/mediatools/video/downloader/assets:assets" \
-  #         --add-data="apps/video/downloader/docs/UserGuide.pdf:docs" \
-  #         --add-data="README.md:docs" \
+  #         --icon="src/mediatools/video/transcoder/assets/Logo_128x128.ico" \
+  #         --add-data="src/mediatools/video/transcoder/data/version.txt:data" \
+  #         --add-data="src/mediatools/video/transcoder/utils/cleanup_files.sh:utils" \
+  #         --add-data="src/mediatools/video/transcoder/assets:assets" \
+  #         --add-data="apps/video/transcoder/docs/UserGuide.pdf:docs" \
+  #         --add-data="apps/video/transcoder/README.md:docs" \
   #         --add-data="LICENSE:docs" \
   #         --hidden-import=mediatools \
-  #         --hidden-import=mediatools.video.downloader \
-  #         --hidden-import=mediatools.video.downloader.core \
-  #         --hidden-import=mediatools.video.downloader.gui \
-  #         --hidden-import=mediatools.video.downloader.utils \
-  #         --hidden-import=mediatools.video.downloader.compat \
+  #         --hidden-import=mediatools.video.transcoder \
+  #         --hidden-import=mediatools.video.transcoder.core \
+  #         --hidden-import=mediatools.video.transcoder.gui \
+  #         --hidden-import=mediatools.video.transcoder.utils \
+  #         --hidden-import=mediatools.video.transcoder.compat \
   #         --clean \
-  #         apps/video/downloader/launch.py
+  #         apps/video/transcoder/launch.py
   #       
   #   - name: Upload macOS Single File Artifact
   #     uses: actions/upload-artifact@v4
   #     with:
-  #       name: mt-vdl-macOS
-  #       path: dist/mt-vdl
+  #       name: mt-vtr-macOS
+  #       path: dist/mt-vtr
 
   # ============================================================================
   # Job 5: Build and Push Docker Image
@@ -454,8 +446,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./docker/video-downloader
-          file: ./docker/video-downloader/Dockerfile
+          context: ./docker/video-transcoder
+          file: ./docker/video-transcoder/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
@@ -470,8 +462,8 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}
-          readme-filepath: ./docker/video-downloader/README.md
-          short-description: "MediaTools Video Downloader - Cross-platform video downloader with yt-dlp"
+          readme-filepath: ./docker/video-transcoder/README.md
+          short-description: "MediaTools Video Transcoder - Cross-platform video transcoding with FFmpeg"
         continue-on-error: true
 
   # ============================================================================
@@ -494,24 +486,24 @@ jobs:
     - name: Prepare release files
       run: |
         # Copy and rename files
-        cp artifacts/mt-vdl-Linux-Portable/mt-vdl-Linux-Portable.zip .
-        cp artifacts/mt-vdl-Windows-Portable/mt-vdl-Windows-Portable.zip .
-        cp artifacts/mt-vdl-Windows.exe/mt-vdl.exe mt-vdl-Windows.exe
-        cp artifacts/mt-vdl-Linux/mt-vdl mt-vdl-Linux
+        cp artifacts/mt-vtr-Linux-Portable/mt-vtr-Linux-Portable.zip .
+        cp artifacts/mt-vtr-Windows-Portable/mt-vtr-Windows-Portable.zip .
+        cp artifacts/mt-vtr-Windows.exe/mt-vtr.exe mt-vtr-Windows.exe
+        cp artifacts/mt-vtr-Linux/mt-vtr mt-vtr-Linux
         
         # Make Linux executable executable
-        chmod +x mt-vdl-Linux
+        chmod +x mt-vtr-Linux
         
         echo "✅ Release files prepared:"
-        ls -la mt-vdl-Windows-Portable.zip mt-vdl-Windows.exe mt-vdl-Linux-Portable.zip mt-vdl-Linux
+        ls -la mt-vtr-Windows-Portable.zip mt-vtr-Windows.exe mt-vtr-Linux-Portable.zip mt-vtr-Linux
         
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: latest
-        name: "MediaTools Video Downloader - v${{ needs.generate-version.outputs.version }}"
+        tag_name: transcoder-latest
+        name: "MediaTools Video Transcoder - v${{ needs.generate-version.outputs.version }}"
         body: |
-          # MediaTools Video Downloader
+          # MediaTools Video Transcoder
           
           **Version:** ${{ needs.generate-version.outputs.version }}
           **Build Tag:** `${{ needs.generate-version.outputs.build_tag }}`
@@ -531,38 +523,38 @@ jobs:
           ## 📥 Available Downloads
           
           ### Windows
-          1. **mt-vdl-Windows-Portable.zip** - Portable folder (--onedir)
-            - Contains `mt-vdl.exe` + all dependencies
-            - Extract and run `mt-vdl.exe`
+          1. **mt-vtr-Windows-Portable.zip** - Portable folder (--onedir)
+            - Contains `mt-vtr.exe` + all dependencies
+            - Extract and run `mt-vtr.exe`
             
-          2. **mt-vdl-Windows.exe** - Single executable (--onefile)
+          2. **mt-vtr-Windows.exe** - Single executable (--onefile)
             - Single file, self-contained
             - Run directly
             
           ### Linux
-          3. **mt-vdl-Linux-Portable.zip** - Portable folder (--onedir)
-            - Contains `mt-vdl` binary + all dependencies
-            - Extract and run `./mt-vdl`
+          3. **mt-vtr-Linux-Portable.zip** - Portable folder (--onedir)
+            - Contains `mt-vtr` binary + all dependencies
+            - Extract and run `./mt-vtr`
             
-          4. **mt-vdl-Linux** - Single executable (--onefile)
+          4. **mt-vtr-Linux** - Single executable (--onefile)
             - Single binary file
-            - Run with `./mt-vdl`
+            - Run with `./mt-vtr`
           
           ### Docker
           ```bash
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/video-downloader:latest
-          docker pull ghcr.io/${{ github.repository_owner }}/video-downloader:latest
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/video-transcoder:latest
+          docker pull ghcr.io/${{ github.repository_owner }}/video-transcoder:latest
           ```
           
           ---
           
           ## Usage Notes
           - Windows: May trigger antivirus (false positive)
-          - Linux: Make executable with `chmod +x mt-vdl-Linux`
+          - Linux: Make executable with `chmod +x mt-vtr-Linux`
           - Portable versions are recommended for better performance
           
         files: |
-          mt-vdl-Windows-Portable.zip
-          mt-vdl-Windows.exe
-          mt-vdl-Linux-Portable.zip
-          mt-vdl-Linux
+          mt-vtr-Windows-Portable.zip
+          mt-vtr-Windows.exe
+          mt-vtr-Linux-Portable.zip
+          mt-vtr-Linux

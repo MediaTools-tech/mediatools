@@ -1,0 +1,42 @@
+name: Auto Version Tagging
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  create-build-tag:
+    name: Create Build Tag
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for commit count
+
+      - name: Generate and push build tag
+        run: |
+          # Get total commit count as build number
+          BUILD_NUM=$(git rev-list --count HEAD)
+          
+          # Get short commit hash
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          
+          # Generate build tag
+          BUILD_TAG="build.${BUILD_NUM}+${COMMIT_HASH}"
+          
+          echo "🏷️  Creating build tag: $BUILD_TAG"
+          
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create and push tag
+          git tag "$BUILD_TAG" -m "Auto-generated build tag for commit $COMMIT_HASH"
+          git push origin "$BUILD_TAG"
+          
+          echo "✅ Build tag created and pushed: $BUILD_TAG"
