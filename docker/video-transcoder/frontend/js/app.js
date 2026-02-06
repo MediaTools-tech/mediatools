@@ -1,0 +1,457 @@
+// State
+let selectedFile = null;
+let currentJobId = null;
+let pollingInterval = null;
+
+// DOM Elements
+const videoInput = document.getElementById('video-input');
+const uploadArea = document.getElementById('upload-area');
+const uploadBtn = document.getElementById('upload-btn');
+const progressSection = document.getElementById('progress-section');
+const uploadSection = document.getElementById('upload-section');
+const jobFilename = document.getElementById('job-filename');
+const jobId = document.getElementById('job-id');
+const jobStatus = document.getElementById('job-status');
+const progressFill = document.getElementById('progress-fill');
+const downloadBtn = document.getElementById('download-btn');
+const newJobBtn = document.getElementById('new-job-btn');
+const jobsList = document.getElementById('jobs-list');
+const refreshJobsBtn = document.getElementById('refresh-jobs-btn');
+
+// New DOM elements for transcoding options
+const defaultSettingsRadio = document.getElementById('default-settings');
+const customSettingsRadio = document.getElementById('custom-settings');
+const customOptionsContainer = document.getElementById('custom-options-container');
+const videoCodecSelect = document.getElementById('video-codec');
+const containerSelect = document.getElementById('container');
+const audioCodecSelect = document.getElementById('audio-codec'); // New reference
+
+// Compatibility Mappings
+const VIDEO_CODEC_MAPPING = {
+    "default": "libx264", // Default H.264
+    "h264": "libx264",
+    "h265": "libx265",
+    "av1": "libaom-av1",
+    "vp9": "libvpx-vp9"
+};
+
+const CONTAINER_COMPATIBILITY = {
+    "libx264": ["mp4", "mkv", "avi", "mov"],
+    "libx265": ["mp4", "mkv", "mov"],
+    "libaom-av1": ["mkv", "webm"],
+    "libvpx-vp9": ["mkv", "webm"]
+};
+
+const AUDIO_CODEC_COMPATIBILITY = {
+    "mp4": ["aac", "mp3", "ac3"],
+    "mkv": ["aac", "mp3", "ac3", "opus", "flac", "vorbis"],
+    "webm": ["opus", "vorbis"],
+    "mov": ["aac", "mp3", "ac3"],
+    "avi": ["mp3", "ac3"]
+};
+
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    setupEventListeners();
+    loadJobs();
+    handleTranscodingModeChange(); // Set initial state for custom options visibility
+    updateContainerOptions(); // Set initial state for container dropdown
+    updateAudioCodecOptions(); // Call initially to set correct audio codecs
+});
+
+// Event Listeners
+function setupEventListeners() {
+    // Upload area click
+    uploadArea.addEventListener('click', () => videoInput.click());
+    
+    // File selection
+    videoInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            selectedFile = files[0];
+            updateUploadUI();
+        }
+    });
+    
+    // Upload button
+    uploadBtn.addEventListener('click', uploadVideo);
+    
+    // Download button
+    downloadBtn.addEventListener('click', downloadVideo);
+    
+    // New job button
+    newJobBtn.addEventListener('click', resetUpload);
+    
+    // Refresh jobs button
+    refreshJobsBtn.addEventListener('click', loadJobs);
+
+    // Transcoding mode change
+    defaultSettingsRadio.addEventListener('change', handleTranscodingModeChange);
+    customSettingsRadio.addEventListener('change', handleTranscodingModeChange);
+
+    // Video Codec change for container compatibility
+    videoCodecSelect.addEventListener('change', updateContainerOptions);
+
+    // Container change for audio codec compatibility
+    containerSelect.addEventListener('change', updateAudioCodecOptions);
+}
+
+// Handle showing/hiding custom transcoding options
+function handleTranscodingModeChange() {
+    if (defaultSettingsRadio.checked) {
+        customOptionsContainer.style.display = 'none';
+    } else {
+        customOptionsContainer.style.display = 'block';
+    }
+}
+
+// Update Container options based on selected Video Codec
+function updateContainerOptions() {
+    const selectedFrontendVideoCodec = videoCodecSelect.value;
+    const backendVideoCodec = VIDEO_CODEC_MAPPING[selectedFrontendVideoCodec];
+    const compatibleContainers = CONTAINER_COMPATIBILITY[backendVideoCodec] || [];
+
+    const currentSelectedContainer = containerSelect.value;
+
+    // Clear existing options
+    containerSelect.innerHTML = '';
+
+    // Add default option first
+    const defaultOption = document.createElement('option');
+    defaultOption.value = 'default';
+    defaultOption.textContent = 'Default (mp4)';
+    containerSelect.appendChild(defaultOption);
+
+    // Add "mp4" explicitly if compatible and not already handled by default
+    if (compatibleContainers.includes('mp4')) {
+        const mp4Option = document.createElement('option');
+        mp4Option.value = 'mp4';
+        mp4Option.textContent = 'MP4';
+        containerSelect.appendChild(mp4Option);
+    }
+
+    // Add other unique compatible containers, avoiding "default" and "mp4" duplicates
+    ['mkv', 'avi', 'webm', 'mov'].forEach(containerType => {
+        if (compatibleContainers.includes(containerType)) {
+            const option = document.createElement('option');
+            option.value = containerType;
+            option.textContent = containerType.toUpperCase();
+            containerSelect.appendChild(option);
+        }
+    });
+
+    // Attempt to re-select the previously chosen container, or fallback to default
+    if (compatibleContainers.includes(currentSelectedContainer)) {
+        containerSelect.value = currentSelectedContainer;
+    } else {
+        containerSelect.value = 'default';
+    }
+
+    // After updating containers, update audio codecs
+    updateAudioCodecOptions();
+}
+
+// Update Audio Codec options based on selected Container
+function updateAudioCodecOptions() {
+    const selectedContainerValue = containerSelect.value;
+    const effectiveContainer = selectedContainerValue === 'default' ? 'mp4' : selectedContainerValue;
+    const compatibleAudioCodecs = AUDIO_CODEC_COMPATIBILITY[effectiveContainer] || [];
+
+    const currentSelectedAudioCodec = audioCodecSelect.value;
+
+    // Clear existing options
+    audioCodecSelect.innerHTML = '';
+
+    // Add default option first (always present, but its value might change based on container)
+    const defaultOption = document.createElement('option');
+    defaultOption.value = 'default';
+    defaultOption.textContent = 'Default (aac)';
+    audioCodecSelect.appendChild(defaultOption);
+    
+    // Add copy option
+    const copyOption = document.createElement('option');
+    copyOption.value = 'copy';
+    copyOption.textContent = 'Copy Original';
+    audioCodecSelect.appendChild(copyOption);
+
+    // Add "AAC" option specifically if compatible
+    if (compatibleAudioCodecs.includes('aac')) {
+        const aacOption = document.createElement('option');
+        aacOption.value = 'aac';
+        aacOption.textContent = 'AAC';
+        audioCodecSelect.appendChild(aacOption);
+    }
+
+    // Add other unique compatible audio codecs, avoiding "default", "copy", and "aac" duplicates
+    ['mp3', 'opus', 'ac3', 'flac', 'vorbis'].forEach(audioCodecType => {
+        if (compatibleAudioCodecs.includes(audioCodecType)) { // No need for audioCodecType !== 'default' || 'copy' as these are handled above
+            const option = document.createElement('option');
+            option.value = audioCodecType;
+            option.textContent = audioCodecType.toUpperCase();
+            audioCodecSelect.appendChild(option);
+        }
+    });
+
+    // Attempt to re-select the previously chosen audio codec, or fallback to default
+    if (compatibleAudioCodecs.includes(currentSelectedAudioCodec) || currentSelectedAudioCodec === 'copy') {
+        audioCodecSelect.value = currentSelectedAudioCodec;
+    } else {
+        audioCodecSelect.value = 'default';
+    }
+}
+
+
+// File Selection
+function handleFileSelect(e) {
+    const files = e.target.files;
+    if (files.length > 0) {
+        selectedFile = files[0];
+        updateUploadUI();
+    }
+}
+
+function updateUploadUI() {
+    if (selectedFile) {
+        uploadArea.querySelector('.upload-content').innerHTML = `
+            <span class="upload-icon">✅</span>
+            <p><strong>${selectedFile.name}</strong></p>
+            <p class="upload-hint">${formatFileSize(selectedFile.size)}</p>
+        `;
+        uploadBtn.disabled = false;
+    }
+}
+
+// Upload Video
+async function uploadVideo() {
+    if (!selectedFile) return;
+
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = 'Uploading...';
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    // Get transcoding options
+    const options = getTranscodingOptions();
+    formData.append('options', JSON.stringify(options));
+
+    try {
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Upload failed');
+        }
+
+        const job = await response.json();
+        currentJobId = job.job_id;
+
+        // Show progress section
+        uploadSection.style.display = 'none';
+        progressSection.style.display = 'block';
+
+        // Update job info
+        jobFilename.textContent = job.filename;
+        jobId.textContent = job.job_id;
+
+        // Start polling for status
+        startPolling();
+
+    } catch (error) {
+        alert('Upload failed: ' + error.message);
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Upload & Transcode';
+    }
+}
+
+// Get transcoding options from the form
+function getTranscodingOptions() {
+    if (defaultSettingsRadio.checked) {
+        return {
+            video_codec: "default",
+            resolution: "default",
+            sharpening: "none",
+            container: "default",
+            audio_codec: "default",
+            crf: 23
+        };
+    } else {
+        return {
+            video_codec: document.getElementById('video-codec').value,
+            resolution: document.getElementById('resolution').value,
+            sharpening: document.getElementById('sharpening').value,
+            container: document.getElementById('container').value,
+            audio_codec: document.getElementById('audio-codec').value,
+            crf: parseInt(document.getElementById('crf').value, 10)
+        };
+    }
+}
+
+// Polling
+function startPolling() {
+    updateJobStatus(); // Initial update
+    pollingInterval = setInterval(updateJobStatus, 2000); // Poll every 2 seconds
+}
+
+function stopPolling() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+}
+
+async function updateJobStatus() {
+    if (!currentJobId) return;
+    
+    try {
+        const response = await fetch(`/api/jobs/${currentJobId}`);
+        if (!response.ok) throw new Error('Failed to fetch job status');
+        
+        const job = await response.json();
+        
+        // Update UI
+        jobStatus.textContent = job.status;
+        jobStatus.className = `status-badge status-${job.status}`;
+        
+        progressFill.style.width = `${job.progress}%`;
+        progressFill.textContent = `${job.progress}%`;
+        
+        // Handle completion
+        if (job.status === 'completed') {
+            stopPolling();
+            downloadBtn.style.display = 'block';
+            newJobBtn.style.display = 'block';
+            loadJobs(); // Refresh jobs list
+        }
+        
+        // Handle failure
+        if (job.status === 'failed') {
+            stopPolling();
+            alert('Transcoding failed: ' + (job.error_message || 'Unknown error'));
+            newJobBtn.style.display = 'block';
+        }
+        
+    } catch (error) {
+        console.error('Error fetching job status:', error);
+    }
+}
+
+// Download Video
+function downloadVideo() {
+    if (!currentJobId) return;
+    window.location.href = `/api/jobs/${currentJobId}/download`;
+}
+
+// Reset Upload
+function resetUpload() {
+    selectedFile = null;
+    currentJobId = null;
+    stopPolling();
+    
+    uploadSection.style.display = 'block';
+    progressSection.style.display = 'none';
+    
+    downloadBtn.style.display = 'none';
+    newJobBtn.style.display = 'none';
+    
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = 'Upload & Transcode';
+    
+    uploadArea.querySelector('.upload-content').innerHTML = `
+        <span class="upload-icon">📁</span>
+        <p>Click to select or drag and drop a video file</p>
+        <p class="upload-hint">Supported: MP4, AVI, MOV, MKV</p>
+    `;
+    
+    videoInput.value = '';
+    
+    loadJobs();
+}
+
+// Load Jobs List
+async function loadJobs() {
+    try {
+        const response = await fetch('/api/jobs/?limit=10');
+        if (!response.ok) throw new Error('Failed to load jobs');
+        
+        const data = await response.json();
+        renderJobs(data.jobs);
+        
+    } catch (error) {
+        console.error('Error loading jobs:', error);
+    }
+}
+
+function renderJobs(jobs) {
+    if (jobs.length === 0) {
+        jobsList.innerHTML = '<p class="empty-state">No jobs yet. Upload a video to get started!</p>';
+        return;
+    }
+    
+    jobsList.innerHTML = jobs.map(job => `
+        <div class="job-item">
+            <div class="job-details">
+                <p><strong>${job.filename}</strong></p>
+                <p>Status: <span class="status-badge status-${job.status}">${job.status}</span></p>
+                <p>Created: ${formatDate(job.created_at)}</p>
+                ${job.file_size_mb ? `<p>Size: ${job.file_size_mb} MB</p>` : ''}
+            </div>
+            <div class="job-actions">
+                ${job.status === 'completed' ? `
+                    <button class="btn btn-small btn-success" onclick="downloadJobById('${job.job_id}')">
+                        Download
+                    </button>
+                ` : ''}
+                ${job.status === 'processing' ? `
+                    <button class="btn btn-small" onclick="viewJob('${job.job_id}')">
+                        View (${job.progress}%)
+                    </button>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Helper functions
+function downloadJobById(jobId) {
+    window.location.href = `/api/jobs/${jobId}/download`;
+}
+
+function viewJob(jobId) {
+    currentJobId = jobId;
+    // Switch to progress view
+    uploadSection.style.display = 'none';
+    progressSection.style.display = 'block';
+    startPolling();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleString();
+}
