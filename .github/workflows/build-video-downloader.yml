@@ -422,10 +422,12 @@ jobs:
         ls -la mt-vdl-Windows-Portable.zip mt-vdl-Windows.exe mt-vdl-Linux-Portable.zip mt-vdl-Linux
         
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: latest
         name: "MediaTools Video Downloader - v${{ needs.generate-version.outputs.version }}"
+        make_latest: true
+        fail_on_unmatched_files: true
         body: |
           # MediaTools Video Downloader
           
