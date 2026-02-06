@@ -102,7 +102,6 @@ jobs:
           --paths="./src" `
           --icon="src/mediatools/video/downloader/assets/icon.ico" `
           --add-data="src/mediatools/video/downloader/data;data" `
-          --add-data="src/mediatools/video/downloader/bin;bin" `
           --add-data="src/mediatools/video/downloader/utils/cleanup_files.bat;utils" `
           --add-data="src/mediatools/video/downloader/assets;assets" `
           --add-data="src/mediatools/video/downloader/assets/*.gif;assets" `
@@ -168,7 +167,6 @@ jobs:
           --paths="./src" `
           --icon="src/mediatools/video/downloader/assets/icon.ico" `
           --add-data="src/mediatools/video/downloader/data;data" `
-          --add-data="src/mediatools/video/downloader/bin;bin" `
           --add-data="src/mediatools/video/downloader/utils/cleanup_files.bat;utils" `
           --add-data="src/mediatools/video/downloader/assets;assets" `
           --add-data="apps/video/downloader/docs/UserGuide.pdf;docs" `
@@ -223,7 +221,6 @@ jobs:
           --paths="./src" \
           --icon="src/mediatools/video/downloader/assets/icon.ico" \
           --add-data="src/mediatools/video/downloader/data:data" \
-          --add-data="src/mediatools/video/downloader/bin:bin" \
           --add-data="src/mediatools/video/downloader/utils/cleanup_files.sh:utils" \
           --add-data="src/mediatools/video/downloader/assets:assets" \
           --add-data="src/mediatools/video/downloader/assets/*.gif:assets" \
@@ -280,7 +277,6 @@ jobs:
           --paths="./src" \
           --icon="src/mediatools/video/downloader/assets/icon.ico" \
           --add-data="src/mediatools/video/downloader/data:data" \
-          --add-data="src/mediatools/video/downloader/bin:bin" \
           --add-data="src/mediatools/video/downloader/utils/cleanup_files.sh:utils" \
           --add-data="src/mediatools/video/downloader/assets:assets" \
           --add-data="apps/video/downloader/docs/UserGuide.pdf:docs" \
