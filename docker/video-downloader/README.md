@@ -30,11 +30,17 @@ A modern, containerized video and audio downloader with a beautiful web interfac
 
 2. **Run the container**
 
-    docker run -d \
-      -p 8000:8000 \
-      -v /path/to/your/storage:/storage \
-      --name mediatools-downloader \
-      baladockerbytes/mediatools-downloader:latest
+    ```bash
+    E:\>mkdir test
+    E:\>mkdir test\bin
+    E:\>mkdir test\data
+    E:\>mkdir test\docs
+    E:\>mkdir test\downloads
+
+    docker run -d -p 8000:8000 \
+      -v E:/test/:/storage \
+      baladockerbytes/video-downloader:latest
+    ```
 
 ### Method 2: Build from Source and Run (Advanced)
 
@@ -76,15 +82,15 @@ A modern, containerized video and audio downloader with a beautiful web interfac
 ### Using Docker Run
 
 ```bash
-# Create storage directory (optional)
-mkdir -p storage
+E:\>mkdir test
+E:\>mkdir test\bin
+E:\>mkdir test\data
+E:\>mkdir test\docs
+E:\>mkdir test\downloads
 
-# Run the container
-docker run -d \
-  -p 8000:8000 \
-  -v /path/to/your/storage:/storage \
-  --name video-downloader \
-  baladockerbytes/mediatools-downloader:latest
+docker run -d -p 8000:8000 \
+  -v E:/test/:/storage \
+  ghcr.io/mediatools-tech/video-downloader:latest
 ```
 
 ### Customizing Download Locations

@@ -36,14 +36,15 @@ A versatile video transcoding service that converts videos to various formats us
    docker pull baladockerbytes/mediatools-transcoder:latest
    ```
 
-2. **Run the container**
-
     ```bash
-    docker run -d \
-      -p 8000:8000 \
-      -v /path/to/your/storage:/app/storage \
-      --name mediatools-transcoder \
-      baladockerbytes/mediatools-transcoder:latest
+    E:\>mkdir test
+    E:\>mkdir test\uploads
+    E:\>mkdir test\temp
+    E:\>mkdir test\outputs
+
+    docker run -d -p 8080:8080 \
+      -v E:/test/:/app/storage \
+      baladockerbytes/video-transcoder:latest
     ```
     (On Windows, use a path like "C:/path/to/your/storage" instead of "$(pwd)/storage". Note that Docker expects forward slashes and absolute paths for Windows volume mounts.)
 
@@ -79,15 +80,14 @@ A versatile video transcoding service that converts videos to various formats us
 ### Using Docker Run
 
 ```bash
-# Create storage directory (optional)
-mkdir -p storage
+E:\>mkdir test
+E:\>mkdir test\uploads
+E:\>mkdir test\temp
+E:\>mkdir test\outputs
 
-# Run the container
-docker run -d \
-  -p 8000:8000 \
-  -v /path/to/your/storage:/app/storage \
-  --name video-transcoder \
-  baladockerbytes/mediatools-transcoder:latest
+docker run -d -p 8080:8080 \
+  -v E:/test/:/app/storage \
+  ghcr.io/mediatools-tech/video-transcoder:latest
 ```
 
 ### Customizing Storage Locations
