@@ -92,39 +92,17 @@ jobs:
         pip install winshell pywin32
 
     - name: Build Windows Portable (--onedir)
+      shell: bash
       run: |
-        Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
-        python -m PyInstaller `
-          --onedir `
-          --windowed `
-          --noupx `
-          --name "mt-vdl" `
-          --paths="./src" `
-          --icon="src/mediatools/video/downloader/assets/icon.ico" `
-          --add-data="src/mediatools/video/downloader/data;data" `
-          --add-data="src/mediatools/video/downloader/utils/cleanup_files.bat;utils" `
-          --add-data="src/mediatools/video/downloader/assets;assets" `
-          --add-data="src/mediatools/video/downloader/assets/*.gif;assets" `
-          --add-data="apps/video/downloader/docs/UserGuide.pdf;docs" `
-          --add-data="README.md;docs" `
-          --add-data="LICENSE;docs" `
-          --hidden-import=mediatools `
-          --hidden-import=mediatools.video.downloader `
-          --hidden-import=mediatools.video.downloader.core `
-          --hidden-import=mediatools.video.downloader.gui `
-          --hidden-import=mediatools.video.downloader.utils `
-          --hidden-import=mediatools.video.downloader.compat `
-          --hidden-import=winshell `
-          --hidden-import=win32com `
-          --hidden-import=win32com.client `
-          --clean `
-          apps/video/downloader/launch.py
+        cd apps/video/downloader/build
+        chmod +x build_onedir.sh
+        ./build_onedir.sh
         
     - name: Create Windows Portable ZIP
       run: |
         $mainFolder = "mt-vdl-Windows-Portable"
         New-Item -ItemType Directory -Path $mainFolder -Force
-        Copy-Item -Path "dist\mt-vdl\*" -Destination $mainFolder\ -Recurse -Force
+        Copy-Item -Path "apps\video\downloader\build\dist\mt-vdl\*" -Destination $mainFolder\ -Recurse -Force
         Compress-Archive -Path "$mainFolder" -DestinationPath "mt-vdl-Windows-Portable.zip" -Force
         Remove-Item -Recurse -Force $mainFolder
         
@@ -157,38 +135,17 @@ jobs:
         pip install winshell pywin32
 
     - name: Build Windows Single File (--onefile)
+      shell: bash
       run: |
-        Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
-        python -m PyInstaller `
-          --onefile `
-          --windowed `
-          --noupx `
-          --name "mt-vdl" `
-          --paths="./src" `
-          --icon="src/mediatools/video/downloader/assets/icon.ico" `
-          --add-data="src/mediatools/video/downloader/data;data" `
-          --add-data="src/mediatools/video/downloader/utils/cleanup_files.bat;utils" `
-          --add-data="src/mediatools/video/downloader/assets;assets" `
-          --add-data="apps/video/downloader/docs/UserGuide.pdf;docs" `
-          --add-data="README.md;docs" `
-          --add-data="LICENSE;docs" `
-          --hidden-import=mediatools `
-          --hidden-import=mediatools.video.downloader `
-          --hidden-import=mediatools.video.downloader.core `
-          --hidden-import=mediatools.video.downloader.gui `
-          --hidden-import=mediatools.video.downloader.utils `
-          --hidden-import=mediatools.video.downloader.compat `
-          --hidden-import=winshell `
-          --hidden-import=win32com `
-          --hidden-import=win32com.client `
-          --clean `
-          apps/video/downloader/launch.py
+        cd apps/video/downloader/build
+        chmod +x build_onefile.sh
+        ./build_onefile.sh
         
     - name: Upload Windows Single File Artifact
       uses: actions/upload-artifact@v4
       with:
         name: mt-vdl-Windows.exe
-        path: dist/mt-vdl.exe
+        path: apps/video/downloader/build/dist/mt-vdl.exe
 
   # ============================================================================
   # Job 3: Linux Builds
@@ -213,33 +170,14 @@ jobs:
         
     - name: Build Linux Portable (--onedir)
       run: |
-        rm -rf build dist
-        python -m PyInstaller \
-          --onedir \
-          --windowed \
-          --name "mt-vdl" \
-          --paths="./src" \
-          --icon="src/mediatools/video/downloader/assets/icon.ico" \
-          --add-data="src/mediatools/video/downloader/data:data" \
-          --add-data="src/mediatools/video/downloader/utils/cleanup_files.sh:utils" \
-          --add-data="src/mediatools/video/downloader/assets:assets" \
-          --add-data="src/mediatools/video/downloader/assets/*.gif:assets" \
-          --add-data="apps/video/downloader/docs/UserGuide.pdf:docs" \
-          --add-data="README.md:docs" \
-          --add-data="LICENSE:docs" \
-          --hidden-import=mediatools \
-          --hidden-import=mediatools.video.downloader \
-          --hidden-import=mediatools.video.downloader.core \
-          --hidden-import=mediatools.video.downloader.gui \
-          --hidden-import=mediatools.video.downloader.utils \
-          --hidden-import=mediatools.video.downloader.compat \
-          --clean \
-          apps/video/downloader/launch.py
+        cd apps/video/downloader/build
+        chmod +x build_onedir.sh
+        ./build_onedir.sh
         
     - name: Create Linux Portable ZIP
       run: |
         mkdir -p mt-vdl-Linux-Portable
-        cp -r dist/mt-vdl/* mt-vdl-Linux-Portable/
+        cp -r apps/video/downloader/build/dist/mt-vdl/* mt-vdl-Linux-Portable/
         zip -r mt-vdl-Linux-Portable.zip mt-vdl-Linux-Portable/
         rm -rf mt-vdl-Linux-Portable
         
@@ -269,33 +207,15 @@ jobs:
         
     - name: Build Linux Single File (--onefile)
       run: |
-        rm -rf build dist
-        python -m PyInstaller \
-          --onefile \
-          --windowed \
-          --name "mt-vdl" \
-          --paths="./src" \
-          --icon="src/mediatools/video/downloader/assets/icon.ico" \
-          --add-data="src/mediatools/video/downloader/data:data" \
-          --add-data="src/mediatools/video/downloader/utils/cleanup_files.sh:utils" \
-          --add-data="src/mediatools/video/downloader/assets:assets" \
-          --add-data="apps/video/downloader/docs/UserGuide.pdf:docs" \
-          --add-data="README.md:docs" \
-          --add-data="LICENSE:docs" \
-          --hidden-import=mediatools \
-          --hidden-import=mediatools.video.downloader \
-          --hidden-import=mediatools.video.downloader.core \
-          --hidden-import=mediatools.video.downloader.gui \
-          --hidden-import=mediatools.video.downloader.utils \
-          --hidden-import=mediatools.video.downloader.compat \
-          --clean \
-          apps/video/downloader/launch.py
+        cd apps/video/downloader/build
+        chmod +x build_onefile.sh
+        ./build_onefile.sh
         
     - name: Upload Linux Single File Artifact
       uses: actions/upload-artifact@v4
       with:
         name: mt-vdl-Linux
-        path: dist/mt-vdl
+        path: apps/video/downloader/build/dist/mt-vdl
 
   # ============================================================================
   # Job 4: macOS Builds (COMMENTED OUT - enable when ready to test)
