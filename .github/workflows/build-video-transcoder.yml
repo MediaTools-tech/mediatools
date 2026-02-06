@@ -420,10 +420,12 @@ jobs:
         ls -la mt-vtr-Windows-Portable.zip mt-vtr-Windows.exe mt-vtr-Linux-Portable.zip mt-vtr-Linux
         
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: transcoder-latest
         name: "MediaTools Video Transcoder - v${{ needs.generate-version.outputs.version }}"
+        make_latest: true
+        fail_on_unmatched_files: true
         body: |
           # MediaTools Video Transcoder
           
