@@ -24,7 +24,7 @@ SOFTWARE.
 
 THIRD-PARTY SOFTWARE
 
-This software depends on the following third-party components:
+Software in this (Mediatools) repository may use or interface with external tools and libraries including but not limited to:
 
 1. yt-dlp
    License: Unlicense
@@ -33,15 +33,22 @@ This software depends on the following third-party components:
 2. FFmpeg
    License: LGPL 2.1 / GPL 2.0 (depending on build configuration)
    Source: https://ffmpeg.org
-   
+
+3. spotDL
+   License: MIT License
+   Source: https://github.com/spotDL/spotify-downloader
+
+4. Deno
+   License: MIT License
+   Source: https://github.com/denoland/deno
+
+5. Other third-party tools
+   This software may interface with additional command-line tools, libraries,
+   or APIs as needed for specific functionality.
+
 These components retain their original licenses and are not covered by the
 MIT License above. Please refer to their respective repositories for license
 details.
-
----
-
-IMPORTANT NOTICE: This software is a GUI tool for yt-dlp. Users are responsible 
-for ensuring their use complies with applicable laws and platform terms of service.
 
 ---
 
