@@ -49,7 +49,8 @@
         <div class="container">
             <section class="hero-downloader">
                 <h1>
-                    <img src="../assets/downloader/video_downloader_icon.png" alt="Video Downloader Icon" class="downloader-icon">
+                    <img src="../assets/downloader/video_downloader_icon.png" alt="Video Downloader Icon"
+                        class="downloader-icon">
                     Mediatools Video Downloader v2.1.0
                 </h1>
                 <p>Powerful, user-friendly video & audio downloader for 1000+ sites</p>
@@ -70,8 +71,8 @@
                                     alt="App Theme Dark"></div>
                             <div class="slide"><img src="../assets/downloader/theme_unicolor.png" class="app-screenshot"
                                     alt="App Theme Unicolor"></div>
-                            <div class="slide"><img src="../assets/downloader/theme_minimalist.png" class="app-screenshot"
-                                    alt="App Theme Minimalist"></div>
+                            <div class="slide"><img src="../assets/downloader/theme_minimalist.png"
+                                    class="app-screenshot" alt="App Theme Minimalist"></div>
                         </div>
                         <button class="slide-nav prev" aria-label="Previous slide"><i
                                 class="fas fa-chevron-left"></i></button>
@@ -288,17 +289,29 @@
                 </div>
                 <div class="docker-quickstart content-card">
                     <h3>Quick Start Command - Docker Hub:</h3>
-                    <pre><code class="language-bash">docker run -d -p 8000:8000 \
-  -v /path/to/your/storage:/storage \
-  mediatoolstech/mediatools-downloader:latest</code></pre>
+                    <pre><code class="language-bash">E:\>mkdir test
+E:\>mkdir test\bin
+E:\>mkdir test\data
+E:\>mkdir test\docs
+E:\>mkdir test\downloads
+
+docker run -d -p 8000:8000 \
+  -v E:/test/:/storage \
+  baladockerbytes/video-downloader:latest</code></pre>
                     <p>After running, open <a href="http://localhost:8000" target="_blank">http://localhost:8000</a> in
                         your browser.</p>
                 </div>
                 <div class="docker-quickstart content-card">
                     <h3>Quick Start Command - GitHub Container Registry:</h3>
-                    <pre><code class="language-bash">docker run -d -p 8000:8000 \
-  -v /path/to/your/storage:/storage \
-  ghcr.io/mediatools-tech/mediatools-downloader:latest</code></pre>
+                    <pre><code class="language-bash">E:\>mkdir test
+E:\>mkdir test\bin
+E:\>mkdir test\data
+E:\>mkdir test\docs
+E:\>mkdir test\downloads
+
+docker run -d -p 8000:8000 \
+  -v E:/test/:/storage \
+  ghcr.io/mediatools-tech/video-downloader:latest</code></pre>
                     <p>After running, open <a href="http://localhost:8000" target="_blank">http://localhost:8000</a> in
                         your browser.</p>
                 </div>
@@ -311,7 +324,8 @@
                         <li><a href="https://github.com/MediaTools-tech/mediatools/tree/main/docker/video-downloader"
                                 target="_blank">Full Installation Guide: View on GitHub</a></li>
                         <li><a href="https://github.com/orgs/MediaTools-tech/packages/container/package/mediatools-downloader"
-                                target="_blank">GitHub Container Registry Image: <code>ghcr.io/mediatools-tech/mediatools-downloader</code></a>
+                                target="_blank">GitHub Container Registry Image:
+                                <code>ghcr.io/mediatools-tech/video-downloader</code></a>
                         </li>
                     </ul>
                 </div>

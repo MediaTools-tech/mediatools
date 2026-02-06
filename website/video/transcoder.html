@@ -171,17 +171,27 @@
                 </div>
                 <div class="docker-quickstart content-card">
                     <h3>Quick Start Command - Docker Hub:</h3>
-                    <pre><code class="language-bash">docker run -d -p 8080:8080 \
-  -v /path/to/your/storage:/storage \
-  mediatoolstech/mediatools-transcoder:latest</code></pre>
+                    <pre><code class="language-bash">E:\>mkdir test
+E:\>mkdir test\uploads
+E:\>mkdir test\temp
+E:\>mkdir test\outputs
+
+docker run -d -p 8080:8080 \
+  -v E:/test/:/app/storage \
+  baladockerbytes/video-transcoder:latest</code></pre>
                     <p>After running, open <a href="http://localhost:8080" target="_blank">http://localhost:8080</a> in
                         your browser.</p>
                 </div>
                 <div class="docker-quickstart content-card">
                     <h3>Quick Start Command - GitHub Container Registry:</h3>
-                    <pre><code class="language-bash">docker run -d -p 8080:8080 \
-  -v /path/to/your/storage:/storage \
-  ghcr.io/mediatools-tech/mediatools-transcoder:latest</code></pre>
+                    <pre><code class="language-bash">E:\>mkdir test
+E:\>mkdir test\uploads
+E:\>mkdir test\temp
+E:\>mkdir test\outputs
+
+docker run -d -p 8080:8080 \
+  -v E:/test/:/app/storage \
+  ghcr.io/mediatools-tech/video-transcoder:latest</code></pre>
                     <p>After running, open <a href="http://localhost:8080" target="_blank">http://localhost:8080</a> in
                         your browser.</p>
                 </div>
@@ -194,7 +204,7 @@
                         <li><a href="https://github.com/MediaTools-tech/mediatools/tree/main/docker/video-transcoder"
                                 target="_blank">Full Installation Guide: View on GitHub</a></li>
                         <li><a href="https://github.com/orgs/MediaTools-tech/packages/container/package/mediatools-transcoder"
-                                target="_blank">GitHub Container Registry Image: <code>ghcr.io/mediatools-tech/mediatools-transcoder</code></a>
+                                target="_blank">GitHub Container Registry Image: <code>ghcr.io/mediatools-tech/video-transcoder</code></a>
                         </li>
                     </ul>
                 </div>
