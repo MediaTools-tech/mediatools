@@ -8,6 +8,14 @@ RUN apt-get update && \
 
 WORKDIR /app
 
+# Registry metadata for README synchronization
+LABEL org.opencontainers.image.source=https://github.com/MediaTools-tech/mediatools
+LABEL org.opencontainers.image.description="Video Transcoder Service"
+
+# Prevent Python from writing .pyc files and enable unbuffered logging
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 # Copy requirements first (for caching)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

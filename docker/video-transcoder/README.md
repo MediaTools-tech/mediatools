@@ -31,22 +31,28 @@ A versatile video transcoding service that converts videos to various formats us
 ### Method 1: Run Using Pre-built Image (Recommended)
 
 1. **Pull the Docker image:**
-
    ```bash
    docker pull baladockerbytes/mediatools-transcoder:latest
    ```
 
-    ```bash
-    E:\>mkdir test
-    E:\>mkdir test\uploads
-    E:\>mkdir test\temp
-    E:\>mkdir test\outputs
+2. **Prepare storage and run:**
+   ```bash
+   # Create storage directories (E:\test as an example)
+   E:\>mkdir test
+   E:\>mkdir test\uploads
+   E:\>mkdir test\temp
+   E:\>mkdir test\outputs
 
-    docker run -d -p 8080:8080 \
-      -v E:/test/:/app/storage \
-      baladockerbytes/video-transcoder:latest
-    ```
-    (On Windows, use a path like "C:/path/to/your/storage" instead of "$(pwd)/storage". Note that Docker expects forward slashes and absolute paths for Windows volume mounts.)
+   # Start the container
+   docker run -d -p 8000:8000 \
+     -v E:/test/:/app/storage \
+     baladockerbytes/video-transcoder:latest
+   ```
+
+3. **Access the application:**
+   Open your browser and navigate to [http://localhost:8000](http://localhost:8000).
+
+   *(On Windows, use a path like "C:/path/to/your/storage" instead of "$(pwd)/storage". Note that Docker expects forward slashes and absolute paths for Windows volume mounts.)*
 
 ### Method 2: Build from Source and Run (Advanced)
 
@@ -85,7 +91,7 @@ E:\>mkdir test\uploads
 E:\>mkdir test\temp
 E:\>mkdir test\outputs
 
-docker run -d -p 8080:8080 \
+docker run -d -p 8000:8000 \
   -v E:/test/:/app/storage \
   ghcr.io/mediatools-tech/video-transcoder:latest
 ```
