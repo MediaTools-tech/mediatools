@@ -39,14 +39,27 @@ CONTAINERS = {
 }
 
 AUDIO_CODECS = {
-    "default": "aac",
-    "copy": "copy",
     "aac": "aac",
     "mp3": "libmp3lame",
     "opus": "libopus",
     "vorbis": "libvorbis",
     "ac3": "ac3",
     "flac": "flac"
+}
+
+# FFmpeg decoder name → Frontend key (for DETECTION)
+# This maps what ffprobe returns to our frontend keys
+FFMPEG_TO_FRONTEND_AUDIO = {
+    "aac": "aac",
+    "mp3": "mp3",
+    "mp3float": "mp3",
+    "opus": "opus",
+    "ac3": "ac3",
+    "flac": "flac",
+    "vorbis": "vorbis",
+    "pcm_s16le": "pcm",
+    "pcm_s24le": "pcm",
+    "eac3": "ac3",
 }
 
 MULTICHANNEL_SUPPORT = {
@@ -60,23 +73,50 @@ MULTICHANNEL_SUPPORT = {
 CONTAINER_CODEC_COMPATIBILITY = {
     "mp4": {
         "video": ["libx264", "libx265"],
-        "audio": ["aac", "mp3", "ac3", "copy"]
+        "audio": ["aac", "mp3", "ac3"]  # Frontend keys
     },
     "mkv": {
         "video": ["libx264", "libx265", "libvpx-vp9", "libaom-av1"],
-        "audio": ["aac", "mp3", "ac3", "opus", "flac", "vorbis", "copy"]
+        "audio": ["aac", "mp3", "ac3", "opus", "flac", "vorbis"]  # Frontend keys
     },
     "avi": {
         "video": ["libx264"],
-        "audio": ["mp3", "ac3", "copy"]
+        "audio": ["mp3", "ac3"]  # Frontend keys
     },
     "webm": {
         "video": ["libvpx-vp9", "libaom-av1"],
-        "audio": ["opus", "vorbis", "copy"]
+        "audio": ["opus", "vorbis"]  # Frontend keys
     },
     "mov": {
         "video": ["libx264", "libx265"],
-        "audio": ["aac", "mp3", "ac3", "copy"]
+        "audio": ["aac", "mp3", "ac3"]  # Frontend keys
+    }
+}
+
+CRF_QUALITY_MATCHED = {
+    'low': {
+        'h264': 27,
+        'h265': 29,
+        'vp9': 37,
+        'av1': 39,
+    },
+    'standard': {
+                'h264': 23,
+        'h265': 25,
+        'vp9': 32,
+        'av1': 34,
+    },
+    'high': {
+        'h264': 19,
+        'h265': 21,
+        'vp9': 27,
+        'av1': 29,
+    },
+    'visually_lossless': {
+        'h264': 15,
+        'h265': 17,
+        'vp9': 23,
+        'av1': 24,
     }
 }
 
@@ -173,15 +213,43 @@ def determine_audio_settings(audio_codec: str, container: str, input_channels: i
     else: bitrate = "448k"
     return (audio_codec, output_channels, bitrate)
 
+def get_best_audio_fallback(container: str) -> str:
+    """Get the best audio codec fallback for a container."""
+    fallback_priority = {
+        "mp4": "aac",      # MP4 -> AAC (native support)
+        "mkv": "opus",     # MKV -> Opus (best quality/size)
+        "webm": "opus",    # WebM -> Opus (required)
+        "avi": "mp3",      # AVI -> MP3 (legacy compatibility)
+        "mov": "aac"       # MOV -> AAC (Apple standard)
+    }
+    return fallback_priority.get(container, "aac")
+
 def parse_ffmpeg_progress(line: str, duration: float) -> int:
     """Parse FFmpeg output to calculate progress percentage"""
-    time_match = re.search(r'time=(\d{2}):(\d{2}):(\d{2}\.\d{2})', line)
+    # Improved regex to handle out_time= and more decimal places
+    time_match = re.search(r'(?:out_)?time=(\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)', line)
     if time_match and duration > 0:
         hours, minutes, seconds = map(float, time_match.groups())
         current_time = hours * 3600 + minutes * 60 + seconds
         progress = int((current_time / duration) * 100)
         return min(progress, 99)
     return 0
+
+def handle_partial_file(output_path: Path, suffix: str):
+    """Rename partial file if it exists"""
+    if output_path.exists():
+        new_path = output_path.parent / f"{output_path.stem}{suffix}{output_path.suffix}"
+        if new_path.exists():
+            # Add counter if already exists
+            counter = 1
+            while True:
+                candidate = output_path.parent / f"{output_path.stem}{suffix}_{counter}{output_path.suffix}"
+                if not candidate.exists():
+                    new_path = candidate
+                    break
+                counter += 1
+        output_path.rename(new_path)
+        print(f"Renamed partial file to: {new_path}")
 
 # --- Main Transcoding Function ---
 
@@ -204,8 +272,8 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
         input_channels = get_audio_channels(video_info)
 
         # Resolve options
-        video_codec = VIDEO_CODECS[options.video_codec]
-        container = CONTAINERS[options.container]
+        video_codec = VIDEO_CODECS[options.video_codec.value]
+        container = CONTAINERS[options.container.value]
 
         # Handle resolution
         if options.resolution == "default":
@@ -214,48 +282,48 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
             nearest = get_nearest_standard_resolution(width, height)
             resolution_filter = get_smart_scale_filter(width, height, nearest)
         else:
-            resolution_filter = get_smart_scale_filter(width, height, options.resolution)
+            resolution_filter = get_smart_scale_filter(width, height, options.resolution.value)
+
+        # Quality (CRF) - Apply codec-aware mapping if options.crf is a standard profile (not implemented as enum yet, but we can detect common values)
+        # For now, we trust the CRF value sent from the client as it's an int.
+        # But let's check if the client sent a profile string? No, models.py says int.
+        # So client side (app.js) must handle the mapping.
+        crf_value = options.crf
 
         # Sharpening
-        sharpening_filter = SHARPENING_FILTERS.get(options.sharpening)
+        sharpening_filter = SHARPENING_FILTERS.get(options.sharpening.value)
 
         # Audio
         original_audio_codec_name = get_original_audio_codec(video_info)
-        selected_audio_codec_option = options.audio_codec # e.g., "default", "copy", "aac", "flac"
+        selected_audio_codec_option = options.audio_codec.value # e.g., "default", "copy", "aac", "flac"
         
-        # Resolve "default" audio codec to "aac"
+        # Audio Logic
         if selected_audio_codec_option == "default":
             resolved_audio_codec_key = "aac"
         else:
             resolved_audio_codec_key = selected_audio_codec_option
 
-        # Handle "copy" option intelligently
         if resolved_audio_codec_key == "copy":
             if original_audio_codec_name:
-                # Try to map FFmpeg's original audio codec name to our frontend key
-                original_codec_frontend_key = None
-                for key, value in AUDIO_CODECS.items():
-                    if value == original_audio_codec_name:
-                        original_codec_frontend_key = key
-                        break
-
-                compatible_audio_options_for_container = CONTAINER_CODEC_COMPATIBILITY.get(container, {}).get("audio", [])
-
-                if original_codec_frontend_key and original_codec_frontend_key in compatible_audio_options_for_container:
-                    # Original codec is compatible, so we can copy
-                    print(f"Original audio codec '{original_audio_codec_name}' is compatible with '{container}'. Proceeding with copy.")
+                # Step 1: Map FFmpeg codec name to our frontend key
+                original_codec_frontend_key = FFMPEG_TO_FRONTEND_AUDIO.get(
+                    original_audio_codec_name.lower()
+                )
+                
+                # Step 2: Get compatible audio codecs for target container
+                compatible_audio = CONTAINER_CODEC_COMPATIBILITY.get(container, {}).get("audio", [])
+                
+                if original_codec_frontend_key and original_codec_frontend_key in compatible_audio:
+                     print(f"Copying audio: {original_audio_codec_name}")
                 else:
-                    # Original codec not compatible, fallback to a transcode option
-                    fallback_codec_key = next(
-                        (ac for ac in compatible_audio_options_for_container if ac not in ["copy", "default"]),
-                        "aac" # Fallback to aac if no other suitable codec found
-                    )
-                    resolved_audio_codec_key = fallback_codec_key
-                    print(f"Original audio codec '{original_audio_codec_name}' not compatible with '{container}'. Falling back to '{resolved_audio_codec_key}'.")
+                    # Incompatible or unknown, choose best fallback
+                    fallback = get_best_audio_fallback(container)
+                    reason = f"Unknown codec '{original_audio_codec_name}'" if not original_codec_frontend_key else f"Incompatible codec '{original_codec_frontend_key}'"
+                    print(f"Cannot copy audio: {reason} to {container}. Falling back to {fallback}")
+                    resolved_audio_codec_key = fallback
             else:
-                # No original audio track found for copying. Fallback to default (aac).
-                resolved_audio_codec_key = "aac"
-                print(f"No original audio track found for copying. Falling back to 'aac'.")
+                 resolved_audio_codec_key = "aac"
+                 print(f"No original audio track found for copying. Falling back to 'aac'.")
 
         # Determine audio settings based on the final resolved_audio_codec_key
         # The determine_audio_settings function will handle "copy" if that's the resolved key.
@@ -278,13 +346,13 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
         cpu_count = os.cpu_count() or 4
         
         if video_codec in ["libx264", "libx265"]:
-            cmd.extend(["-crf", str(options.crf), "-preset", "medium", "-threads", str(cpu_count)])
+            cmd.extend(["-crf", str(crf_value), "-preset", "medium", "-threads", str(cpu_count)])
         elif video_codec == "libaom-av1":
             cpu_used = 6 if cpu_count >= 8 else 7
-            cmd.extend(["-crf", str(options.crf), "-b:v", "0", "-cpu-used", str(cpu_used), "-row-mt", "1", "-tiles", "2x2", "-threads", str(cpu_count)])
+            cmd.extend(["-crf", str(crf_value), "-b:v", "0", "-cpu-used", str(cpu_used), "-row-mt", "1", "-tiles", "2x2", "-threads", str(cpu_count)])
         elif video_codec == "libvpx-vp9":
             cpu_used = 2 if cpu_count >= 8 else 3
-            cmd.extend(["-crf", str(options.crf), "-b:v", "0", "-cpu-used", str(cpu_used), "-row-mt", "1", "-threads", str(cpu_count)])
+            cmd.extend(["-crf", str(crf_value), "-b:v", "0", "-cpu-used", str(cpu_used), "-row-mt", "1", "-threads", str(cpu_count)])
 
         if video_codec == "libx264":
             cmd.extend(["-profile:v", "high", "-level", "4.1"])
@@ -308,13 +376,18 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             universal_newlines=True, bufsize=1
         )
+        
+        job_manager.register_process(job_id, process)
 
-        for line in process.stdout:
-            print(line.strip()) # Log ffmpeg output
-            if duration > 0:
-                progress = parse_ffmpeg_progress(line, duration)
-                if progress > job_manager.get_job(job_id).get("progress", 0):
-                    job_manager.update_job(job_id, progress=progress)
+        try:
+            for line in process.stdout:
+                print(line.strip()) # Log ffmpeg output
+                if duration > 0:
+                    progress = parse_ffmpeg_progress(line, duration)
+                    if progress > job_manager.get_job(job_id).get("progress", 0):
+                        job_manager.update_job(job_id, progress=progress)
+        finally:
+            job_manager.unregister_process(job_id)
 
         process.wait()
 
@@ -325,10 +398,16 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
             )
             print(f"Transcoding completed for job {job_id}")
         else:
-            # Try to get error from ffmpeg output
-            error_log = "FFmpeg transcoding failed. Return code: " + str(process.returncode)
-            job_manager.fail_job(job_id, error_log)
-            print(f"Transcoding failed for job {job_id}")
+            # Check if it was cancelled
+            job = job_manager.get_job(job_id)
+            if job and job.get("status") == "cancelled":
+                handle_partial_file(output_path, "_cancelled")
+                print(f"Transcoding cancelled for job {job_id}")
+            else:
+                # Try to get error from ffmpeg output
+                error_log = "FFmpeg transcoding failed. Return code: " + str(process.returncode)
+                job_manager.fail_job(job_id, error_log)
+                print(f"Transcoding failed for job {job_id}")
 
     except Exception as e:
         job_manager.fail_job(job_id, str(e))

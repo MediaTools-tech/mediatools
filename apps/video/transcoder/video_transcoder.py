@@ -27,12 +27,7 @@ class VideoTranscoderApp:
     def __init__(self, root):
         self.root = root
         self.root.title(f"MediaTools Video Transcoder v{__version__}")
-        self.quality_options = {
-            "Standard CRF-23": 23,
-            "High CRF-20": 20,
-            "Low CRF-27": 27,
-            "Custom Value": None
-        }
+        self.quality_options = {} # Initialized dynamically in _update_quality_options
         
         # Compatibility Maps (Internal keys)
         self.VIDEO_CODEC_CONTAINERS = {
@@ -50,6 +45,33 @@ class VideoTranscoderApp:
             "mov":  ["aac", "mp3", "ac3"],
             "avi":  ["mp3", "ac3"],
             "default": ["aac", "mp3", "ac3"] # Default maps to mp4
+        }
+
+        self.CRF_QUALITY_MATCHED = {
+            'low': {
+                'h264': 27,
+                'h265': 29,
+                'vp9': 37,
+                'av1': 39,
+            },
+            'standard': {
+                'h264': 23,
+                'h265': 25,
+                'vp9': 32,
+                'av1': 34,
+            },
+            'high': {
+                'h264': 19,
+                'h265': 21,
+                'vp9': 27,
+                'av1': 29,
+            },
+            'visually_lossless': {
+                'h264': 15,
+                'h265': 17,
+                'vp9': 23,
+                'av1': 24,
+            }
         }
 
         self.settings = SettingsManager()
@@ -354,7 +376,7 @@ class VideoTranscoderApp:
         self.start_btn = ttk.Button(ctrl_frame, text="START CONVERSION", command=self.start_transcoding, padding=10)
         self.start_btn.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(0, 5))
         
-        self.pause_btn = ttk.Button(ctrl_frame, text="PAUSE", command=self.pause_transcoding, state=tk.DISABLED, padding=10)
+        self.pause_btn = ttk.Button(ctrl_frame, text="STOP", command=self.pause_transcoding, state=tk.DISABLED, padding=10)
         self.pause_btn.pack(side=tk.LEFT, padx=5)
         
         self.cancel_btn = ttk.Button(ctrl_frame, text="CANCEL", command=self.stop_transcoding, state=tk.DISABLED, padding=10)
@@ -369,7 +391,7 @@ class VideoTranscoderApp:
         self.acodec_var.set(self.settings.get("last_audio_codec", "default"))
         self.res_var.set(self.settings.get("last_resolution", "default"))
         
-        # Initial filter refresh
+        # Initial filter refresh (this also sets quality options via _on_vcodec_change)
         self._on_vcodec_change()
         # Restore actual saved values if compatible
         self.container_var.set(self.settings.get("last_container", "default"))
@@ -377,14 +399,24 @@ class VideoTranscoderApp:
         self.acodec_var.set(self.settings.get("last_audio_codec", "default"))
         
         # Determine initial quality label from saved CRF
-        
-        # Determine initial quality label from saved CRF
         saved_crf = self.settings.get("crf", 23)
-        initial_q = "Standard CRF-23"
+        initial_q = "Standard" # Default profile prefix
+        
+        # Find matching label for saved CRF or stick with Standard
+        found = False
         for label, val in self.quality_options.items():
             if val is not None and val == saved_crf:
                 initial_q = label
+                found = True
                 break
+        
+        if not found:
+            # Try to match by prefix if value changed due to codec
+            for label in self.quality_options.keys():
+                if label.startswith("Standard"):
+                    initial_q = label
+                    break
+                    
         self.crf_var.set(initial_q)
         
         self.sharp_var.set("none")
@@ -411,7 +443,14 @@ class VideoTranscoderApp:
             self._on_container_change()
             self.acodec_var.set("default")
             self.res_var.set("default")
-            self.crf_var.set("Standard CRF-23")
+            
+            # Find Standard label
+            std_label = "Standard"
+            for k in self.quality_options.keys():
+                if k.startswith("Standard"):
+                    std_label = k
+                    break
+            self.crf_var.set(std_label)
             self.sharp_var.set("none")
 
     def _on_vcodec_change(self, event=None):
@@ -429,6 +468,45 @@ class VideoTranscoderApp:
             self.container_var.set(valid_containers[0] if valid_containers else "default")
         
         self._on_container_change()
+        
+        # Update dynamic quality labels
+        self._update_quality_options(lookup_codec)
+
+    def _update_quality_options(self, codec):
+        """Update the quality dropdown labels and values based on the current codec"""
+        std = self.CRF_QUALITY_MATCHED['standard'].get(codec, 23)
+        high = self.CRF_QUALITY_MATCHED['high'].get(codec, 20)
+        low = self.CRF_QUALITY_MATCHED['low'].get(codec, 27)
+        vl = self.CRF_QUALITY_MATCHED['visually_lossless'].get(codec, 15)
+        
+        self.quality_options = {
+            f"Standard CRF-{std}": std,
+            f"High CRF-{high}": high,
+            f"Low CRF-{low}": low,
+            f"Visually Lossless CRF-{vl}": vl,
+            "Custom Value": None
+        }
+        
+        old_sel = self.crf_var.get()
+        new_sel = old_sel
+        
+        # Try to maintain the same profile (Standard/High/Low)
+        prefixes = ["Standard", "High", "Low", "Visually Lossless", "Custom Value"]
+        for prefix in prefixes:
+            if old_sel.startswith(prefix):
+                for label in self.quality_options.keys():
+                    if label.startswith(prefix):
+                        new_sel = label
+                        break
+                break
+        
+        self.cb_crf.config(values=list(self.quality_options.keys()))
+        self.crf_var.set(new_sel)
+        
+        # Update setting
+        val = self._get_crf_value()
+        if val:
+            self.settings.set("crf", val)
 
     def _on_container_change(self, event=None):
         container = self.container_var.get()
@@ -453,6 +531,19 @@ class VideoTranscoderApp:
         else:
             self.custom_crf_entry.config(state=tk.DISABLED)
             self.custom_crf_var.set("")
+        
+        # Proactively update CRF value in settings if profile changes
+        val = self._get_crf_value()
+        if val:
+            self.settings.set("crf", val)
+
+    def _get_crf_profile_key(self, label):
+        """Map GUI labels to CRF_QUALITY_MATCHED keys"""
+        if "Standard" in label: return "standard"
+        if "High" in label: return "high"
+        if "Low" in label: return "low"
+        if "Visually Lossless" in label: return "visually_lossless"
+        return None
 
     def _get_crf_value(self):
         """Get CRF value from quality options or custom input, with validation"""
@@ -473,13 +564,27 @@ class VideoTranscoderApp:
                 messagebox.showerror("Error", "Please enter a valid integer for CRF value.")
                 return None
         else:
+            profile_key = self._get_crf_profile_key(selected)
+            if profile_key:
+                vcodec = self.vcodec_var.get()
+                lookup_codec = "h264" if vcodec == "default" else vcodec
+                return self.CRF_QUALITY_MATCHED.get(profile_key, {}).get(lookup_codec, 23)
             return self.quality_options.get(selected, 23)
 
     def add_files(self):
         files = filedialog.askopenfilenames(title="Select Video Files")
+        existing_items = {self.tree.item(i)['values'][0]: i for i in self.tree.get_children()}
+        
         for f in files:
-            if f not in [self.tree.item(i)['values'][0] for i in self.tree.get_children()]:
-                self.tree.insert("", tk.END, values=(f, "Pending"))
+            if f in existing_items:
+                item_id = existing_items[f]
+                status = self.tree.item(item_id)['values'][1]
+                if status.lower() == "done":
+                    if messagebox.askyesno("File Present", f"'{Path(f).name}' is already marked as Done. Do you want to enqueue it again?"):
+                        self.tree.set(item_id, "status", "Pending")
+                continue
+            
+            self.tree.insert("", tk.END, values=(f, "Pending"))
         self._save_queue_to_file()
 
     def add_folder(self):
@@ -488,13 +593,26 @@ class VideoTranscoderApp:
         extensions = {".mp4", ".mkv", ".avi", ".mov", ".webm", ".flv", ".wmv"}
         
         count = 0
+        existing_items = {self.tree.item(i)['values'][0]: i for i in self.tree.get_children()}
+        
         for root, dirs, files in os.walk(folder):
             for f in files:
                 if Path(f).suffix.lower() in extensions:
                     path = str(Path(root) / f)
-                    if path not in [self.tree.item(i)['values'][0] for i in self.tree.get_children()]:
-                        self.tree.insert("", tk.END, values=(path, "Pending"))
-                        count += 1
+                    if path in existing_items:
+                        item_id = existing_items[path]
+                        status = self.tree.item(item_id)['values'][1]
+                        if status.lower() == "done":
+                            # For folders, maybe we don't want to prompt for EVERY file?
+                            # Let's prompt once or just skip. The user said:
+                            # "If some video is present with done status but added again, prompt user"
+                            # I'll prompt for each unique file for now as it's safer.
+                            if messagebox.askyesno("File Present", f"'{Path(path).name}' is already marked as Done. Do you want to enqueue it again?"):
+                                self.tree.set(item_id, "status", "Pending")
+                        continue
+                        
+                    self.tree.insert("", tk.END, values=(path, "Pending"))
+                    count += 1
             if not self.recursive_var.get(): break
         
         if count > 0:
@@ -514,7 +632,7 @@ class VideoTranscoderApp:
             
             # Conditionally show/hide "Enqueue Again"
             selected_items = self.tree.selection()
-            has_cancelled = any(self.tree.item(i)['values'][1].lower() == "cancelled" for i in selected_items)
+            has_redoable = any(self.tree.item(i)['values'][1].lower() in ["cancelled", "done", "error"] for i in selected_items)
             
             # Clear and rebuild menu to truly hide/show items
             self.context_menu.delete(0, tk.END)
@@ -525,7 +643,7 @@ class VideoTranscoderApp:
             self.context_menu.add_separator()
             self.context_menu.add_command(label="Remove from Queue", command=self.remove_selected)
             
-            if has_cancelled:
+            if has_redoable:
                 self.context_menu.add_command(label="Enqueue Again", command=self.enqueue_again)
                 
             self.context_menu.post(event.x_root, event.y_root)
@@ -570,7 +688,7 @@ class VideoTranscoderApp:
         last_idx = len(self.tree.get_children()) - 1
         for item in selected:
             path, status = self.tree.item(item)['values']
-            if status.lower() == "cancelled":
+            if status.lower() in ["cancelled", "done", "error"]:
                 self.tree.set(item, "status", "Pending")
                 self.tree.move(item, "", last_idx)
         
@@ -794,7 +912,7 @@ class VideoTranscoderApp:
 
     def pause_transcoding(self):
         self.service.pause()
-        self.status_var.set("Pausing...")
+        self.status_var.set("Stopping...")
 
     def stop_transcoding(self):
         self.service.stop()
@@ -804,16 +922,17 @@ class VideoTranscoderApp:
         self.start_btn.config(state=tk.NORMAL)
         self.pause_btn.config(state=tk.DISABLED)
         self.cancel_btn.config(state=tk.DISABLED)
+        self.progress_var.set(0)
         
         status_msg = "Finished"
         popup_msg = "Transcoding batch complete!"
         
-        if reason == "Paused":
-            status_msg = "Paused"
-            popup_msg = "Transcoding batch paused."
-        elif reason == "Stopped":
+        if reason == "Stopped":
             status_msg = "Stopped"
             popup_msg = "Transcoding batch stopped."
+        elif reason == "Cancelled":
+            status_msg = "Cancelled"
+            popup_msg = "Transcoding batch cancelled."
             
         self.status_var.set(status_msg)
         # messagebox.showinfo(reason, popup_msg)

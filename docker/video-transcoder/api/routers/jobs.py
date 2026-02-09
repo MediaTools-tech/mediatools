@@ -64,6 +64,14 @@ async def download_transcoded_video(job_id: str):
         filename=download_filename
     )
 
+@router.post("/{job_id}/cancel")
+async def cancel_job(job_id: str):
+    """Cancel a running transcoding job"""
+    success = job_manager.cancel_job(job_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="Could not cancel job. Job not found or not processing.")
+    return {"message": "Job cancellation initiated", "job_id": job_id}
+
 @router.delete("/{job_id}")
 async def delete_job(job_id: str):
     """Delete a job and its associated files"""

@@ -9,6 +9,21 @@ All notable changes to the MediaTools project will be documented in this file.
 - Additional media processing tools
 - Enhanced plugin system
 
+## [2.2.0] - 2026-02-10
+
+### Added
+- **MediaTools Video Transcoder** Refinements
+  - **Robust Audio Copy**: New mapping system (`FFMPEG_TO_FRONTEND_AUDIO`) and intelligent fallback (e.g., MKV defaults to Opus) for cross-container compatibility.
+  - **Docker Job Management**: New `/api/jobs/{id}/cancel` endpoint and frontend **Cancel** button with safe process termination.
+  - **Dynamic CRF Labels**: Video Quality dropdown now shows actual CRF values based on the selected codec (e.g., AV1 shows CRF-34 for Standard).
+  - **Queue Intelligence**: Added "Enqueue Again" for Done/Error items and duplicate file collision detection.
+  - **Stop & Cancel Logic**: Refined interruption handling with `_stopped` and `_cancelled` file suffixes.
+
+### Fixed
+- Resolved `NameError: ui_callback` when stopping tasks in `TranscoderService`.
+- Improved FFmpeg progress parsing in Docker service for better reliability.
+- Added detailed FFmpeg command logging for better transparency and debugging.
+
 ## [2.1.0] - 2026-01-03
 
 ### Added

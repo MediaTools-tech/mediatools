@@ -10,7 +10,30 @@ class JobManager:
     
     def __init__(self):
         self.jobs: Dict[str, dict] = {}
+        self.active_processes: Dict[str, object] = {} # Map job_id to subprocess.Popen
     
+    def register_process(self, job_id: str, process: object):
+        """Register an active subprocess for a job"""
+        self.active_processes[job_id] = process
+
+    def unregister_process(self, job_id: str):
+        """Unregister an active subprocess"""
+        self.active_processes.pop(job_id, None)
+
+    def cancel_job(self, job_id: str) -> bool:
+        """Cancel a running job"""
+        if job_id not in self.jobs:
+            return False
+        
+        job = self.jobs[job_id]
+        if job["status"] == "processing":
+            process = self.active_processes.get(job_id)
+            if process:
+                process.terminate()
+                job["status"] = "cancelled"
+                return True
+        return False
+
     def create_job(self, job_id: str, filename: str, input_path: str, options: dict) -> dict:
         """Create a new transcoding job"""
         job = {

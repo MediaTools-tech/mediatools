@@ -7,6 +7,8 @@ This is Phase 1 of the application, primarily designed for local machine usage. 
 
 -   **Standalone Local Application:** Optimized for single-user operation on a local machine.
 -   **Enhanced Transcoding Options:** Supports various video/audio codecs, resolutions, and container formats with smart compatibility handling.
+-   **Robust Audio Handling**: Intelligent "Copy Original" logic with fallback support (e.g., Opus for MKV).
+-   **Task Management**: Real-time progress tracking and **Job Cancellation** support.
 -   **Docker Image Distribution:** Designed for easy distribution and deployment via Docker Hub.
 
 ## ⏱️ 3-Minute Setup
@@ -154,7 +156,10 @@ The REST API endpoints are documented using Swagger UI and ReDoc. Once the appli
 -   [ ] Can upload a video file
 -   [ ] Transcoding settings (custom/default) behave as expected
 -   [ ] Dynamic compatibility filters for codecs/containers/audio work correctly
--   [ ] Progress bar updates in real-time
+-   [ ] **CRF Values**: Quality labels show actual CRF values based on selected codec
+-   [ ] **Audio Log**: FFmpeg output shows "Copying audio" or valid fallback codec
+-   [ ] **Cancellation**: "Cancel Job" button stops encoding and renames file to `_cancelled`
+-   [ ] Progress bar updates in real-time with improved parsing
 -   [ ] Transcoding completes successfully
 -   [ ] Can download transcoded video with correct filename
 -   [ ] Jobs list shows recent jobs

@@ -44,3 +44,9 @@ def test_upload_invalid_file_type():
 
 # Add more tests for actual video upload, status checking, etc.
 # These would require test video files and more complex setup
+
+def test_cancel_nonexistent_job():
+    """Test cancelling a job that doesn't exist"""
+    response = client.post("/api/jobs/nonexistent-id/cancel")
+    assert response.status_code == 400
+    assert "Could not cancel job" in response.json()["detail"]

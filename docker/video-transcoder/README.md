@@ -3,7 +3,7 @@
 A versatile video transcoding service that converts videos to various formats using FFmpeg, accessible via a web UI and a REST API.
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/baladockerbytes/mediatools-transcoder)
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11+-green)
 ![Docker](https://img.shields.io/badge/docker-ready-blue)
 
@@ -12,11 +12,11 @@ A versatile video transcoding service that converts videos to various formats us
 
 -   🎞️ **Versatile Video Transcoding** - Supports a wide range of video codecs (H.264, H.265, AV1, VP9), resolutions (up to 4K), sharpening filters, container formats (MP4, MKV, WebM, MOV, AVI), and audio codecs (AAC, MP3, Opus, Vorbis, AC3, FLAC).
 -   🧠 **Intelligent Compatibility Handling** - Dynamically adjusts available container and audio codec options in the UI based on selections, ensuring compatible combinations.
--   🔊 **Smart "Copy Original" Audio** - Automatically transcodes audio to a compatible format if the original audio codec is not supported by the target container, or copies it if compatible.
--   ⚙️ **Customizable Video Quality (CRF)** - Choose between Standard, Best, or Low quality presets for optimal balance.
--   🔌 **REST API** - Programmatic access to all features using FastAPI.
--   📊 **Real-time Progress** - WebSocket-based live progress updates for transcoding jobs.
--   📋 **Queue Management** - Background job processing for multiple transcoding tasks.
+-   🔊 **Robust Audio Copy (New!)** - Intelligent mapping system (`FFMPEG_TO_FRONTEND_AUDIO`) and fallback mechanism (e.g., MKV defaults to Opus) for seamless audio handling across containers.
+-   ⚙️ **Dynamic Quality Labels** - Video Quality dropdown automatically updates to show actual CRF values per codec (e.g., AV1 shows CRF-34 for Standard).
+-   🔌 **REST API & Job Control** - Programmatic access with new **Cancellation Support** (`POST /api/jobs/{id}/cancel`).
+-   📊 **Real-time Progress** - WebSocket-based live progress updates with improved parsing reliability.
+-   📋 **Queue Management** - Background job processing with a modern **Cancel Job** button in the web interface.
 -   🌙 **Modern Web UI** - Beautiful, responsive web interface with drag-and-drop functionality.
 -   🐳 **Docker Containerization** - Easy deployment and management via Docker.
 -   💾 **In-memory Job Management** - Efficient handling of current transcoding tasks.

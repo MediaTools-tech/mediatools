@@ -23,13 +23,12 @@ MediaTools Video Transcoder is a streamlined GUI for FFmpeg that simplifies comp
 
 ![](./docs/images/transcoder_screenshot.png)
 
-## What's New in v1.0.0
-
-- **First Major Release**: Complete video transcoding suite with support for H.264, H.265, AV1, and VP9.
-- **Queue Management**: Advanced right-click context menu for reordering and managing batch tasks.
-- **Auto-FFmpeg Management**: Automatically detects, downloads, and extracts the latest FFmpeg binaries.
-- **Silent Operation**: Zero command-line windows on Windows; all processing happens in the background.
-- **Graceful Shutdown**: Intelligent handling of FFmpeg processes ensuring no stray tasks are left running on app close.
+- **Enhanced Queue Management**: New right-click context menu with **"Enqueue Again"** for Done/Error items.
+- **Intelligent Logic**: Smart duplicate file detection and collision handling.
+- **Stop & Cancel Refinements**: Interrupted tasks now rename partial output files with `_stopped` or `_cancelled` suffixes for clarity.
+- **Dynamic CRF Labels**: The quality dropdown now shows actual CRF values specifically matched to each video codec (e.g., AV1 shows CRF-34).
+- **Robust Audio Copy**: Improved mapping system ensuring original audio can be copied across more container formats with smart fallbacks.
+- **Bug Fixes**: Resolved `ui_callback` errors and improved FFmpeg command transparency with console logging.
 
 ## Features
 
@@ -37,9 +36,9 @@ MediaTools Video Transcoder is a streamlined GUI for FFmpeg that simplifies comp
 
 - **Multiple Codec Support**: H.264, H.265 (HEVC), AV1 (SVT-AV1), and VP9.
 - **Universal Containers**: MP4, MKV, AVI, WebM, and MOV.
-- **Audio Pass-Through**: Option to "Copy" original audio to maintain 1:1 quality.
+- **Audio Logic**: Robust "Copy Original" mode with mapping support and intelligent fallbacks.
 - **Professional Filters**: Integrated sharpening filters (Unsharp, CAS) for enhanced visual clarity.
-- **CRF Control**: Easy-to-use quality presets or custom CRF values for bitrate balance.
+- **CRF Control**: Codec-aware dynamic labels for Standard, Best, or Low quality presets.
 
 ### Intelligent Workflow
 

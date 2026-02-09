@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Transcoder - AV1</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -36,7 +38,7 @@
                         <input type="radio" id="custom-settings" name="transcoding-mode" value="custom">
                         <label for="custom-settings">Use custom settings</label>
                     </div>
-                    
+
                     <h3 style="margin-top: 20px;">Transcoding Options</h3>
                     <div id="custom-options-container" style="display: none;">
                         <div class="options-grid">
@@ -121,8 +123,13 @@
                 <div class="progress-bar">
                     <div id="progress-fill" class="progress-fill">0%</div>
                 </div>
-                <button id="download-btn" class="btn btn-success" style="display: none;">Download Transcoded Video</button>
-                <button id="new-job-btn" class="btn btn-secondary" style="display: none;">Transcode Another Video</button>
+                <div class="action-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button id="cancel-job-btn" class="btn btn-danger">Cancel Job</button>
+                    <button id="download-btn" class="btn btn-success" style="display: none;">Download Transcoded
+                        Video</button>
+                    <button id="new-job-btn" class="btn btn-secondary" style="display: none;">Transcode Another
+                        Video</button>
+                </div>
             </section>
 
             <!-- Jobs List Section -->
@@ -144,4 +151,5 @@
 
     <script src="/js/app.js"></script>
 </body>
+
 </html>

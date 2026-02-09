@@ -45,6 +45,21 @@ AUDIO_CODECS = {
     "flac": "flac"
 }
 
+# FFmpeg decoder name → Frontend key (for DETECTION)
+# This maps what ffprobe returns to our frontend keys
+FFMPEG_TO_FRONTEND_AUDIO = {
+    "aac": "aac",
+    "mp3": "mp3",
+    "mp3float": "mp3",
+    "opus": "opus",
+    "ac3": "ac3",
+    "flac": "flac",
+    "vorbis": "vorbis",
+    "pcm_s16le": "pcm",
+    "pcm_s24le": "pcm",
+    "eac3": "ac3",
+}
+
 MULTICHANNEL_SUPPORT = {
     "mp4": {"aac": 8, "ac3": 6, "mp3": 2, "copy": None},
     "mkv": {"aac": 8, "ac3": 6, "opus": 8, "vorbis": 8, "flac": 8, "copy": None},
@@ -56,23 +71,23 @@ MULTICHANNEL_SUPPORT = {
 CONTAINER_CODEC_COMPATIBILITY = {
     "mp4": {
         "video": ["libx264", "libx265"],
-        "audio": ["aac", "mp3", "ac3", "copy"]
+        "audio": ["aac", "mp3", "ac3"]  # Frontend keys
     },
     "mkv": {
         "video": ["libx264", "libx265", "libvpx-vp9", "libaom-av1"],
-        "audio": ["aac", "mp3", "ac3", "opus", "flac", "vorbis", "copy"]
+        "audio": ["aac", "mp3", "ac3", "opus", "flac", "vorbis"]  # Frontend keys
     },
     "avi": {
         "video": ["libx264"],
-        "audio": ["mp3", "ac3", "copy"]
+        "audio": ["mp3", "ac3"]  # Frontend keys
     },
     "webm": {
         "video": ["libvpx-vp9", "libaom-av1"],
-        "audio": ["opus", "vorbis", "copy"]
+        "audio": ["opus", "vorbis"]  # Frontend keys
     },
     "mov": {
         "video": ["libx264", "libx265"],
-        "audio": ["aac", "mp3", "ac3", "copy"]
+        "audio": ["aac", "mp3", "ac3"]  # Frontend keys
     }
 }
 
@@ -193,6 +208,17 @@ class TranscoderEngine:
              # Resize based on height
              return f"scale=-2:{target_height}:flags=lanczos"
 
+    def get_best_audio_fallback(self, container: str) -> str:
+        """Get the best audio codec fallback for a container."""
+        fallback_priority = {
+            "mp4": "aac",      # MP4 -> AAC (native support)
+            "mkv": "opus",     # MKV -> Opus (best quality/size)
+            "webm": "opus",    # WebM -> Opus (required)
+            "avi": "mp3",      # AVI -> MP3 (legacy compatibility)
+            "mov": "aac"       # MOV -> AAC (Apple standard)
+        }
+        return fallback_priority.get(container, "aac")
+
     def determine_audio_settings(self, audio_codec: str, container: str, input_channels: int) -> Tuple[str, int, str]:
         if audio_codec == "copy":
             return ("copy", input_channels, None)
@@ -256,6 +282,14 @@ class TranscoderEngine:
         sharpening_key = options.get("sharpening", "none")
         crf = options.get("crf", 23)
 
+        print(f"Transcoding Options Selected:")
+        print(f"  - Video Codec: {video_codec_key}")
+        print(f"  - Container: {container_key}")
+        print(f"  - Audio Codec: {audio_codec_key}")
+        print(f"  - Resolution: {resolution_key}")
+        print(f"  - Sharpening: {sharpening_key}")
+        print(f"  - CRF Value: {crf}")
+
         # Resolve keys to their actual format names for lookups
         container = CONTAINERS.get(container_key, "mp4")
         video_codec = VIDEO_CODECS.get(video_codec_key, "libx264")
@@ -291,28 +325,21 @@ class TranscoderEngine:
             
         if resolved_audio_codec_key == "copy":
             if original_audio_codec_name:
-                # Check compatibility
-                compatible_audio = CONTAINER_CODEC_COMPATIBILITY.get(container_key, {}).get("audio", [])
+                # Step 1: Map FFmpeg codec name to our frontend key
+                original_codec_frontend_key = FFMPEG_TO_FRONTEND_AUDIO.get(
+                    original_audio_codec_name.lower()
+                )
                 
-                # Check if original codec allows copy by mapping frontend keys to ffmpeg names
-                # This is a bit tricky, doing a direct check if the name is in compatibility list 
-                # might be hard because we need to map names. 
-                # Simplified check: if container is MKV/MOV/AVI/MP4, we can usually copy common formats.
-                # Let's rely on the previous logic's rigor if possible, or simplify.
-                
-                # Logic from existing code:
-                original_codec_frontend_key = None
-                for key, value in AUDIO_CODECS.items():
-                    if value == original_audio_codec_name:
-                        original_codec_frontend_key = key
-                        break
+                # Step 2: Get compatible audio codecs for target container
+                compatible_audio = CONTAINER_CODEC_COMPATIBILITY.get(container, {}).get("audio", [])
                 
                 if original_codec_frontend_key and original_codec_frontend_key in compatible_audio:
                      print(f"Copying audio: {original_audio_codec_name}")
                 else:
-                    # Fallback
-                    fallback = "aac"
-                    print(f"Cannot copy audio {original_audio_codec_name} to {container}. Falling back to {fallback}")
+                    # Incompatible or unknown, choose best fallback
+                    fallback = self.get_best_audio_fallback(container)
+                    reason = f"Unknown codec '{original_audio_codec_name}'" if not original_codec_frontend_key else f"Incompatible codec '{original_codec_frontend_key}'"
+                    print(f"Cannot copy audio: {reason} to {container}. Falling back to {fallback}")
                     resolved_audio_codec_key = fallback
             else:
                  resolved_audio_codec_key = "aac"
@@ -360,6 +387,8 @@ class TranscoderEngine:
             elif audio_codec_real == "libmp3lame": cmd.extend(["-ar", "44100"])
 
         cmd.extend(["-progress", "pipe:1", "-y", str(output_path)])
+        
+        print(f"Executing FFmpeg command: {' '.join(cmd)}")
         
         # Execution
         process_kwargs = {

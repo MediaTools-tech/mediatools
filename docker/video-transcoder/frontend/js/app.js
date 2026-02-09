@@ -17,6 +17,7 @@ const downloadBtn = document.getElementById('download-btn');
 const newJobBtn = document.getElementById('new-job-btn');
 const jobsList = document.getElementById('jobs-list');
 const refreshJobsBtn = document.getElementById('refresh-jobs-btn');
+const cancelJobBtn = document.getElementById('cancel-job-btn');
 
 // New DOM elements for transcoding options
 const defaultSettingsRadio = document.getElementById('default-settings');
@@ -50,6 +51,27 @@ const AUDIO_CODEC_COMPATIBILITY = {
     "avi": ["mp3", "ac3"]
 };
 
+const CRF_QUALITY_MATCHED = {
+    'low': {
+        'h264': 27,
+        'h265': 29,
+        'vp9': 37,
+        'av1': 39,
+    },
+    'standard': {
+        'h264': 23,
+        'h265': 25,
+        'vp9': 32,
+        'av1': 34,
+    },
+    'best': { // Maps to "high" in backend
+        'h264': 19,
+        'h265': 21,
+        'vp9': 27,
+        'av1': 29,
+    }
+};
+
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -58,26 +80,27 @@ document.addEventListener('DOMContentLoaded', () => {
     handleTranscodingModeChange(); // Set initial state for custom options visibility
     updateContainerOptions(); // Set initial state for container dropdown
     updateAudioCodecOptions(); // Call initially to set correct audio codecs
+    updateCrfOptions(); // Call initially to set correct CRF labels
 });
 
 // Event Listeners
 function setupEventListeners() {
     // Upload area click
     uploadArea.addEventListener('click', () => videoInput.click());
-    
+
     // File selection
     videoInput.addEventListener('change', handleFileSelect);
-    
+
     // Drag and drop
     uploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
         uploadArea.classList.add('dragover');
     });
-    
+
     uploadArea.addEventListener('dragleave', () => {
         uploadArea.classList.remove('dragover');
     });
-    
+
     uploadArea.addEventListener('drop', (e) => {
         e.preventDefault();
         uploadArea.classList.remove('dragover');
@@ -87,25 +110,31 @@ function setupEventListeners() {
             updateUploadUI();
         }
     });
-    
+
     // Upload button
     uploadBtn.addEventListener('click', uploadVideo);
-    
+
     // Download button
     downloadBtn.addEventListener('click', downloadVideo);
-    
+
     // New job button
     newJobBtn.addEventListener('click', resetUpload);
-    
+
     // Refresh jobs button
     refreshJobsBtn.addEventListener('click', loadJobs);
+
+    // Cancel job button
+    cancelJobBtn.addEventListener('click', cancelJob);
 
     // Transcoding mode change
     defaultSettingsRadio.addEventListener('change', handleTranscodingModeChange);
     customSettingsRadio.addEventListener('change', handleTranscodingModeChange);
 
     // Video Codec change for container compatibility
-    videoCodecSelect.addEventListener('change', updateContainerOptions);
+    videoCodecSelect.addEventListener('change', () => {
+        updateContainerOptions();
+        updateCrfOptions();
+    });
 
     // Container change for audio codec compatibility
     containerSelect.addEventListener('change', updateAudioCodecOptions);
@@ -182,7 +211,7 @@ function updateAudioCodecOptions() {
     defaultOption.value = 'default';
     defaultOption.textContent = 'Default (aac)';
     audioCodecSelect.appendChild(defaultOption);
-    
+
     // Add copy option
     const copyOption = document.createElement('option');
     copyOption.value = 'copy';
@@ -212,6 +241,41 @@ function updateAudioCodecOptions() {
         audioCodecSelect.value = currentSelectedAudioCodec;
     } else {
         audioCodecSelect.value = 'default';
+    }
+}
+
+// Update CRF options based on selected Video Codec
+function updateCrfOptions() {
+    const crfSelect = document.getElementById('crf');
+    const selectedFrontendVideoCodec = videoCodecSelect.value;
+    const backendVideoCodec = VIDEO_CODEC_MAPPING[selectedFrontendVideoCodec] || 'libx264';
+    const lookupCodec = backendVideoCodec.replace('lib', '').replace('x264', 'h264').replace('x265', 'h265');
+
+    const currentSelectedProfile = crfSelect.value;
+
+    // Clear and rebuild
+    crfSelect.innerHTML = '';
+
+    const profiles = [
+        { id: 'standard', label: 'Standard' },
+        { id: 'best', label: 'Best Quality' },
+        { id: 'low', label: 'Low Quality' }
+    ];
+
+    profiles.forEach(p => {
+        const val = CRF_QUALITY_MATCHED[p.id][lookupCodec];
+        const option = document.createElement('option');
+        option.value = val;
+        option.dataset.profile = p.id;
+        option.textContent = `${p.label} (CRF ${val})`;
+        crfSelect.appendChild(option);
+    });
+
+    // Try to re-select same profile
+    const options = Array.from(crfSelect.options);
+    const matchingOption = options.find(o => o.dataset.profile === currentSelectedProfile || o.value === currentSelectedProfile);
+    if (matchingOption) {
+        crfSelect.value = matchingOption.value;
     }
 }
 
@@ -282,6 +346,31 @@ async function uploadVideo() {
     }
 }
 
+// Cancel Job
+async function cancelJob() {
+    if (!currentJobId) return;
+
+    if (!confirm('Are you sure you want to cancel this transcoding job?')) return;
+
+    try {
+        const response = await fetch(`/api/jobs/${currentJobId}/cancel`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Cancellation failed');
+        }
+
+        alert('Job cancellation initiated.');
+        cancelJobBtn.disabled = true;
+        cancelJobBtn.textContent = 'Cancelling...';
+
+    } catch (error) {
+        alert('Could not cancel job: ' + error.message);
+    }
+}
+
 // Get transcoding options from the form
 function getTranscodingOptions() {
     if (defaultSettingsRadio.checked) {
@@ -320,20 +409,20 @@ function stopPolling() {
 
 async function updateJobStatus() {
     if (!currentJobId) return;
-    
+
     try {
         const response = await fetch(`/api/jobs/${currentJobId}`);
         if (!response.ok) throw new Error('Failed to fetch job status');
-        
+
         const job = await response.json();
-        
+
         // Update UI
         jobStatus.textContent = job.status;
         jobStatus.className = `status-badge status-${job.status}`;
-        
+
         progressFill.style.width = `${job.progress}%`;
         progressFill.textContent = `${job.progress}%`;
-        
+
         // Handle completion
         if (job.status === 'completed') {
             stopPolling();
@@ -341,14 +430,24 @@ async function updateJobStatus() {
             newJobBtn.style.display = 'block';
             loadJobs(); // Refresh jobs list
         }
-        
+
+        // Handle cancellation
+        if (job.status === 'cancelled') {
+            stopPolling();
+            jobStatus.textContent = 'Cancelled';
+            jobStatus.className = 'status-badge status-failed';
+            cancelJobBtn.style.display = 'none';
+            newJobBtn.style.display = 'block';
+            loadJobs();
+        }
+
         // Handle failure
         if (job.status === 'failed') {
             stopPolling();
             alert('Transcoding failed: ' + (job.error_message || 'Unknown error'));
             newJobBtn.style.display = 'block';
         }
-        
+
     } catch (error) {
         console.error('Error fetching job status:', error);
     }
@@ -365,24 +464,27 @@ function resetUpload() {
     selectedFile = null;
     currentJobId = null;
     stopPolling();
-    
+
     uploadSection.style.display = 'block';
     progressSection.style.display = 'none';
-    
+
+    cancelJobBtn.style.display = 'block';
+    cancelJobBtn.disabled = false;
+    cancelJobBtn.textContent = 'Cancel Job';
     downloadBtn.style.display = 'none';
     newJobBtn.style.display = 'none';
-    
+
     uploadBtn.disabled = true;
     uploadBtn.textContent = 'Upload & Transcode';
-    
+
     uploadArea.querySelector('.upload-content').innerHTML = `
         <span class="upload-icon">📁</span>
         <p>Click to select or drag and drop a video file</p>
         <p class="upload-hint">Supported: MP4, AVI, MOV, MKV</p>
     `;
-    
+
     videoInput.value = '';
-    
+
     loadJobs();
 }
 
@@ -391,10 +493,10 @@ async function loadJobs() {
     try {
         const response = await fetch('/api/jobs/?limit=10');
         if (!response.ok) throw new Error('Failed to load jobs');
-        
+
         const data = await response.json();
         renderJobs(data.jobs);
-        
+
     } catch (error) {
         console.error('Error loading jobs:', error);
     }
@@ -405,7 +507,7 @@ function renderJobs(jobs) {
         jobsList.innerHTML = '<p class="empty-state">No jobs yet. Upload a video to get started!</p>';
         return;
     }
-    
+
     jobsList.innerHTML = jobs.map(job => `
         <div class="job-item">
             <div class="job-details">

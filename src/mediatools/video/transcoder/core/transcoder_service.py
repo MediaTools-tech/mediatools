@@ -71,51 +71,66 @@ class TranscoderService:
         ui_callback: Callable[[str, Any], None]
     ):
         total = len(input_files)
-        
-        for i, input_path in enumerate(input_files):
-            if self.stop_event.is_set():
-                break
-            
-            ui_callback("status", f"Processing {i+1}/{total}: {Path(input_path).name}")
-            ui_callback("update_list_status", (i, "Processing"))
-            
-            # Determine output filename
-            file_name = Path(input_path).stem
-            ext = CONTAINERS.get(options.get("container", "mp4"), "mp4")
-            candidate_path = Path(output_dir) / f"{file_name}.{ext}"
-            output_path = self._get_unique_path(candidate_path)
-            
-            try:
-                self.engine.transcode_video(
-                    input_path,
-                    output_path,
-                    options,
-                    progress_callback=lambda p, l: ui_callback("progress", p),
-                    stop_event=self.stop_event,
-                    pause_event=self.pause_event
-                )
-                
+        try:
+            for i, input_path in enumerate(input_files):
                 if self.stop_event.is_set():
-                    ui_callback("log", f"Stopped: {input_path}")
-                    ui_callback("update_list_status", (i, "Cancelled"))
                     break
                 
-                if self.pause_event.is_set():
-                    ui_callback("log", f"Paused: {input_path}")
-                    ui_callback("update_list_status", (i, "Paused"))
-                    break
+                ui_callback("status", f"Processing {i+1}/{total}: {Path(input_path).name}")
+                ui_callback("update_list_status", (i, "Processing"))
                 
-                ui_callback("log", f"Finished: {input_path}")
-                ui_callback("update_list_status", (i, "Done"))
-            except Exception as e:
-                ui_callback("log", f"Error processing {input_path}: {e}")
-                ui_callback("update_list_status", (i, "Error"))
+                # Determine output filename
+                file_name = Path(input_path).stem
+                ext = CONTAINERS.get(options.get("container", "mp4"), "mp4")
+                candidate_path = Path(output_dir) / f"{file_name}.{ext}"
+                output_path = self._get_unique_path(Path(candidate_path))
+                
+                try:
+                    self.engine.transcode_video(
+                        input_path,
+                        output_path,
+                        options,
+                        progress_callback=lambda p, l: ui_callback("progress", p),
+                        stop_event=self.stop_event,
+                        pause_event=self.pause_event
+                    )
+                    
+                    if self.stop_event.is_set():
+                        ui_callback("log", f"Cancelled: {input_path}")
+                        self._handle_partial_file(output_path, "_cancelled")
+                        ui_callback("update_list_status", (i, "Cancelled"))
+                        break
+                    
+                    if self.pause_event.is_set():
+                        ui_callback("log", f"Stopped: {input_path}")
+                        self._handle_partial_file(output_path, "_stopped")
+                        ui_callback("update_list_status", (i, "Stopped"))
+                        break
+                    
+                    ui_callback("log", f"Finished: {input_path}")
+                    ui_callback("update_list_status", (i, "Done"))
+                except Exception as e:
+                    ui_callback("log", f"Error processing {input_path}: {e}")
+                    ui_callback("update_list_status", (i, "Error"))
+        finally:
+            reason = "Done"
+            if self.stop_event.is_set():
+                reason = "Cancelled"
+            elif self.pause_event.is_set():
+                reason = "Stopped"
 
-        reason = "Done"
-        if self.stop_event.is_set():
-            reason = "Stopped"
-        elif self.pause_event.is_set():
-            reason = "Paused"
+            ui_callback("finished", reason)
+            self.is_active = False
 
-        ui_callback("finished", reason)
-        self.is_active = False
+    def _handle_partial_file(self, file_path: str, suffix: str):
+        """Rename partial file if it exists"""
+        try:
+            p = Path(file_path)
+            if p.exists():
+                new_path = p.parent / f"{p.stem}{suffix}{p.suffix}"
+                # Ensure unique rename if suffix already exists
+                final_path = self._get_unique_path(new_path)
+                os.rename(str(p), final_path)
+                print(f"Renamed partial file to: {final_path}")
+        except Exception as e:
+            print(f"Error renaming partial file: {e}")
