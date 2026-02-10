@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     
     # Storage
     UPLOAD_DIR: str = "./storage/uploads"
+    TEMP_DIR: str = "./storage/temp"
     OUTPUT_DIR: str = "./storage/outputs"
     MAX_FILE_SIZE: int = 500 * 1024 * 1024  # 500MB
     

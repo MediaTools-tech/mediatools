@@ -30,21 +30,23 @@
 
                 <!-- Transcoding Options -->
                 <div id="options-section">
-                    <div class="form-group-inline">
+                    <div class="form-group-inline" style="margin-bottom: 10px;">
                         <input type="radio" id="default-settings" name="transcoding-mode" value="default" checked>
                         <label for="default-settings">Use default settings</label>
                     </div>
-                    <div class="form-group-inline">
+                    <div class="form-group-inline" style="margin-bottom: 15px;">
                         <input type="radio" id="custom-settings" name="transcoding-mode" value="custom">
                         <label for="custom-settings">Use custom settings</label>
                     </div>
 
-                    <h3 style="margin-top: 20px;">Transcoding Options</h3>
-                    <div id="custom-options-container" style="display: none;">
-                        <div class="options-grid">
+                    <div id="custom-options-area">
+                        <h3
+                            style="margin-top: 10px; margin-bottom: 15px; color: #667eea; border-bottom: 2px solid #f0f2f5; padding-bottom: 8px;">
+                            Transcoding Settings</h3>
+                        <div class="options-grid" id="custom-options-grid">
                             <div class="form-group">
                                 <label for="video-codec">Video Codec</label>
-                                <select id="video-codec" class="form-control">
+                                <select id="video-codec" class="form-control" disabled>
                                     <option value="default">Default (h264)</option>
                                     <option value="h264">H.264 (libx264)</option>
                                     <option value="h265">H.265 (libx265)</option>
@@ -54,7 +56,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="resolution">Resolution</label>
-                                <select id="resolution" class="form-control">
+                                <select id="resolution" class="form-control" disabled>
                                     <option value="default">Keep Original</option>
                                     <option value="auto">Auto-select Standard</option>
                                     <option value="480p">480p</option>
@@ -66,7 +68,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="sharpening">Sharpening</label>
-                                <select id="sharpening" class="form-control">
+                                <select id="sharpening" class="form-control" disabled>
                                     <option value="none">None</option>
                                     <option value="light">Light</option>
                                     <option value="medium">Medium</option>
@@ -76,7 +78,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="container">Container</label>
-                                <select id="container" class="form-control">
+                                <select id="container" class="form-control" disabled>
                                     <option value="default">Default (mp4)</option>
                                     <option value="mp4">MP4</option>
                                     <option value="mkv">MKV</option>
@@ -87,7 +89,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="audio-codec">Audio Codec</label>
-                                <select id="audio-codec" class="form-control">
+                                <select id="audio-codec" class="form-control" disabled>
                                     <option value="default">Default (aac)</option>
                                     <option value="copy">Copy Original</option>
                                     <option value="aac">AAC</option>
@@ -99,11 +101,13 @@
                             </div>
                             <div class="form-group">
                                 <label for="crf">Video Quality</label>
-                                <select id="crf" class="form-control">
-                                    <option value="standard">Standard (CRF 23)</option>
-                                    <option value="best">Best Quality (CRF 20)</option>
-                                    <option value="low">Low Quality (CRF 27)</option>
+                                <select id="crf" class="form-control" disabled>
+                                    <!-- Populated by JS -->
                                 </select>
+                                <div id="custom-crf-container" style="display: none; margin-top: 5px;">
+                                    <input type="number" id="custom-crf" class="form-control" placeholder="CRF (0-51)"
+                                        min="0" max="51">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -123,10 +127,10 @@
                 <div class="progress-bar">
                     <div id="progress-fill" class="progress-fill">0%</div>
                 </div>
-                <div class="action-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
+                <div class="action-buttons"
+                    style="margin-top: 20px; display: flex; gap: 10px; align-items: stretch; justify-content: center;">
                     <button id="cancel-job-btn" class="btn btn-danger">Cancel Job</button>
-                    <button id="download-btn" class="btn btn-success" style="display: none;">Download Transcoded
-                        Video</button>
+                    <!-- <button id="download-btn" class="btn btn-success" style="display: none;">Download Transcoded Video</button> -->
                     <button id="new-job-btn" class="btn btn-secondary" style="display: none;">Transcode Another
                         Video</button>
                 </div>

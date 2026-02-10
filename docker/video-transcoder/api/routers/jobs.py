@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 from api.services.job_manager import job_manager
 from api.models import JobResponse, JobListResponse
 from typing import List
+from api.config import settings
 import os
 
 router = APIRouter()

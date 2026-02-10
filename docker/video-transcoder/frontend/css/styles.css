@@ -26,7 +26,7 @@ header {
 header h1 {
     font-size: 3rem;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .subtitle {
@@ -39,7 +39,7 @@ header h1 {
     border-radius: 12px;
     padding: 30px;
     margin-bottom: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .card h2 {
@@ -82,13 +82,18 @@ header h1 {
 
 /* Buttons */
 .btn {
-    padding: 12px 30px;
+    height: 48px;
+    padding: 0 30px;
     border: none;
     border-radius: 6px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
 }
 
 .btn:disabled {
@@ -110,21 +115,98 @@ header h1 {
 .btn-success {
     background: #10b981;
     color: white;
-    width: 100%;
-    margin-bottom: 10px;
 }
 
 .btn-secondary {
     background: #6b7280;
     color: white;
-    width: 100%;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
 }
 
 .btn-small {
-    padding: 8px 16px;
+    height: 36px;
+    padding: 0 16px;
     font-size: 0.9rem;
     background: #667eea;
     color: white;
+}
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background: white;
+    color: #374151;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group-inline {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 20px;
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+.form-group-inline input {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.form-group-inline label {
+    cursor: pointer;
+    font-weight: 500;
+}
+
+/* Transcoding Options Grid */
+#custom-options-area {
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 600px) {
+    .options-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Progress Section */
@@ -250,21 +332,21 @@ footer {
     header h1 {
         font-size: 2rem;
     }
-    
+
     .card {
         padding: 20px;
     }
-    
+
     .job-item {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .job-actions {
         margin-top: 10px;
         width: 100%;
     }
-    
+
     .job-actions button {
         flex: 1;
     }

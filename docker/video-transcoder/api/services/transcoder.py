@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, Tuple, Optional
 
 from api.config import settings
-from api.services.storage import get_output_path, get_file_size_mb
+from api.services.storage import get_temp_path, get_unique_output_path, move_temp_to_output, get_file_size_mb
 from api.services.job_manager import job_manager
 from api.models import TranscodingOptions
 
@@ -249,7 +249,6 @@ def handle_partial_file(output_path: Path, suffix: str):
                     break
                 counter += 1
         output_path.rename(new_path)
-        print(f"Renamed partial file to: {new_path}")
 
 # --- Main Transcoding Function ---
 
@@ -258,13 +257,17 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
     Transcode video to specified format using FFmpeg with enhanced options.
     Updates job progress in real-time.
     """
-    print(f"Starting transcoding for job {job_id} with options: {options.dict()}")
     
-    # Use job_id for the output filename, but the container from options
-    output_path = get_output_path(job_id).with_suffix(f".{CONTAINERS[options.container]}")
+    # Stage 1: Transcode to temp folder using UUID and correct extension
+    container_ext = CONTAINERS[options.container.value]
+    temp_path = get_temp_path(job_id, container_ext)
 
     try:
         job_manager.update_job(job_id, status="processing", progress=0)
+        
+        # Get original filename from job manager
+        job = job_manager.get_job(job_id)
+        original_filename = job.get("filename", "video") if job else "video"
 
         video_info = get_video_info(input_path)
         duration = get_video_duration(video_info)
@@ -284,10 +287,7 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
         else:
             resolution_filter = get_smart_scale_filter(width, height, options.resolution.value)
 
-        # Quality (CRF) - Apply codec-aware mapping if options.crf is a standard profile (not implemented as enum yet, but we can detect common values)
-        # For now, we trust the CRF value sent from the client as it's an int.
-        # But let's check if the client sent a profile string? No, models.py says int.
-        # So client side (app.js) must handle the mapping.
+        # Quality (CRF)
         crf_value = options.crf
 
         # Sharpening
@@ -295,7 +295,7 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
 
         # Audio
         original_audio_codec_name = get_original_audio_codec(video_info)
-        selected_audio_codec_option = options.audio_codec.value # e.g., "default", "copy", "aac", "flac"
+        selected_audio_codec_option = options.audio_codec.value
         
         # Audio Logic
         if selected_audio_codec_option == "default":
@@ -305,32 +305,23 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
 
         if resolved_audio_codec_key == "copy":
             if original_audio_codec_name:
-                # Step 1: Map FFmpeg codec name to our frontend key
                 original_codec_frontend_key = FFMPEG_TO_FRONTEND_AUDIO.get(
                     original_audio_codec_name.lower()
                 )
-                
-                # Step 2: Get compatible audio codecs for target container
                 compatible_audio = CONTAINER_CODEC_COMPATIBILITY.get(container, {}).get("audio", [])
                 
                 if original_codec_frontend_key and original_codec_frontend_key in compatible_audio:
-                     print(f"Copying audio: {original_audio_codec_name}")
+                     # Audio matches container
+                     pass
                 else:
-                    # Incompatible or unknown, choose best fallback
                     fallback = get_best_audio_fallback(container)
-                    reason = f"Unknown codec '{original_audio_codec_name}'" if not original_codec_frontend_key else f"Incompatible codec '{original_codec_frontend_key}'"
-                    print(f"Cannot copy audio: {reason} to {container}. Falling back to {fallback}")
                     resolved_audio_codec_key = fallback
             else:
                  resolved_audio_codec_key = "aac"
-                 print(f"No original audio track found for copying. Falling back to 'aac'.")
 
-        # Determine audio settings based on the final resolved_audio_codec_key
-        # The determine_audio_settings function will handle "copy" if that's the resolved key.
         audio_codec, output_channels, audio_bitrate = determine_audio_settings(
             resolved_audio_codec_key, container, input_channels
         )
-        # audio_codec_real is the actual FFmpeg codec string
         audio_codec_real = AUDIO_CODECS.get(audio_codec, "aac") if audio_codec != "copy" else "copy"
 
         # Build FFmpeg command
@@ -368,10 +359,8 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
             if audio_codec_real == "aac": cmd.extend(["-ar", "48000"])
             elif audio_codec_real == "libmp3lame": cmd.extend(["-ar", "44100"])
 
-        cmd.extend(["-progress", "pipe:1", "-y", str(output_path)])
+        cmd.extend(["-progress", "pipe:1", "-y", str(temp_path)])
         
-        print(f"Executing FFmpeg command: {' '.join(cmd)}")
-
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             universal_newlines=True, bufsize=1
@@ -379,9 +368,15 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
         
         job_manager.register_process(job_id, process)
 
+        recent_logs = []
         try:
             for line in process.stdout:
-                print(line.strip()) # Log ffmpeg output
+                line_str = line.strip()
+                if line_str:
+                    recent_logs.append(line_str)
+                    if len(recent_logs) > 30:
+                        recent_logs.pop(0)
+
                 if duration > 0:
                     progress = parse_ffmpeg_progress(line, duration)
                     if progress > job_manager.get_job(job_id).get("progress", 0):
@@ -391,24 +386,28 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
 
         process.wait()
 
-        if process.returncode == 0 and os.path.exists(output_path):
-            file_size = get_file_size_mb(output_path)
+        if process.returncode == 0 and os.path.exists(temp_path):
+            # Stage 2: Move to outputs with original name and collision check
+            final_output_path = get_unique_output_path(original_filename, container_ext)
+            move_temp_to_output(temp_path, final_output_path)
+            
+            file_size = get_file_size_mb(str(final_output_path))
             job_manager.complete_job(
-                job_id, output_path=str(output_path), file_size_mb=file_size
+                job_id, output_path=str(final_output_path), file_size_mb=file_size
             )
-            print(f"Transcoding completed for job {job_id}")
+            print(f"Transcoding completed for job {job_id}. Saved to: {final_output_path}")
         else:
-            # Check if it was cancelled
             job = job_manager.get_job(job_id)
             if job and job.get("status") == "cancelled":
-                handle_partial_file(output_path, "_cancelled")
+                handle_partial_file(temp_path, "_cancelled")
                 print(f"Transcoding cancelled for job {job_id}")
             else:
-                # Try to get error from ffmpeg output
-                error_log = "FFmpeg transcoding failed. Return code: " + str(process.returncode)
+                error_tail = "\n".join(recent_logs[-10:]) if recent_logs else "No logs captured"
+                error_log = f"FFmpeg failed (Code {process.returncode}).\nLast logs:\n{error_tail}"
                 job_manager.fail_job(job_id, error_log)
-                print(f"Transcoding failed for job {job_id}")
+                print(f"Transcoding failed for job {job_id}. Return code: {process.returncode}")
+                print(f"FFmpeg Error Output:\n{error_tail}")
 
     except Exception as e:
-        job_manager.fail_job(job_id, str(e))
+        job_manager.fail_job(job_id, f"Service error: {str(e)}")
         print(f"Transcoding error for job {job_id}: {e}")

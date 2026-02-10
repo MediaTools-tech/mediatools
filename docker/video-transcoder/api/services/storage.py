@@ -33,12 +33,37 @@ async def save_upload_file(upload_file: UploadFile, job_id: str) -> str:
     
     return file_path
 
-def get_output_path(job_id: str) -> Path:
+def get_temp_path(job_id: str, extension: str = "tmp") -> Path:
+    """Generate temporary file path for transcoding."""
+    os.makedirs(settings.TEMP_DIR, exist_ok=True)
+    return Path(settings.TEMP_DIR) / f"{job_id}.{extension}"
 
-    """Generate output file path for transcoded video"""
-
+def get_unique_output_path(original_filename: str, target_container: str) -> Path:
+    """Generate a unique output path to avoid overwriting existing files."""
     os.makedirs(settings.OUTPUT_DIR, exist_ok=True)
+    
+    stem = Path(original_filename).stem
+    ext = target_container.lower()
+    
+    base_path = Path(settings.OUTPUT_DIR) / f"{stem}.{ext}"
+    if not base_path.exists():
+        return base_path
+    
+    counter = 1
+    while True:
+        candidate = Path(settings.OUTPUT_DIR) / f"{stem}_{counter}.{ext}"
+        if not candidate.exists():
+            return candidate
+        counter += 1
 
+def move_temp_to_output(temp_path: Path, target_path: Path) -> Path:
+    """Move transcoded file from temp to final output directory."""
+    shutil.move(str(temp_path), str(target_path))
+    return target_path
+
+def get_output_path(job_id: str) -> Path:
+    """Generate output file path (Legacy/Internal use)."""
+    os.makedirs(settings.OUTPUT_DIR, exist_ok=True)
     return Path(settings.OUTPUT_DIR) / job_id
 
 
