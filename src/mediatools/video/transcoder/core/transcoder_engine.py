@@ -109,7 +109,7 @@ class TranscoderEngine:
             process_kwargs = {
                 "stdout": subprocess.PIPE,
                 "stderr": subprocess.PIPE,
-                "universal_newlines": True
+                "encoding": "utf-8"
             }
             if platform.system() == "Windows":
                 process_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
@@ -394,7 +394,7 @@ class TranscoderEngine:
         process_kwargs = {
             "stdout": subprocess.PIPE,
             "stderr": subprocess.STDOUT,
-            "universal_newlines": True,
+            "encoding": "utf-8",
             "bufsize": 1
         }
         if platform.system() == "Windows":

@@ -128,7 +128,7 @@ def get_video_info(input_path: str) -> Optional[Dict]:
         "-show_streams", "-show_format", str(input_path)
     ]
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        result = subprocess.run(cmd, capture_output=True, encoding="utf-8", check=True)
         return json.loads(result.stdout)
     except (subprocess.CalledProcessError, json.JSONDecodeError, FileNotFoundError):
         return None
@@ -363,7 +363,7 @@ def transcode_video(job_id: str, input_path: str, options: TranscodingOptions):
         
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            universal_newlines=True, bufsize=1
+            encoding="utf-8", bufsize=1
         )
         
         job_manager.register_process(job_id, process)
