@@ -15,7 +15,6 @@ LABEL org.opencontainers.image.description="Video Transcoder Service"
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
-    gosu \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
@@ -37,9 +36,12 @@ COPY frontend/ ./frontend/
 COPY shared/ ./shared/
 
 # Create storage directories and set permissions
-RUN mkdir -p /app/storage/uploads /app/storage/outputs /app/storage/temp && \
+RUN mkdir -p /storage/uploads /storage/outputs /storage/temp && \
     chown -R appuser:appuser /app && \
-    chmod -R 775 /app/storage
+    chown -R appuser:appuser /storage
+
+# Switch to non-root user
+USER appuser
 
 EXPOSE 8000
 

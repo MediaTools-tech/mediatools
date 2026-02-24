@@ -6,21 +6,20 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./storage:/app/storage
-      - ./api:/app/api  # Hot reload during development
+      - ./storage:/storage
+      - ./api:/app/api # Hot reload during development
       - ./frontend:/app/frontend
     environment:
       - DEBUG=true
     env_file:
       - .env
     restart: unless-stopped
-
   # Phase 2: Uncomment when ready
   # redis:
   #   image: redis:7-alpine
   #   ports:
   #     - "6379:6379"
-  
+
   # postgres:
   #   image: postgres:15-alpine
   #   environment:
@@ -32,5 +31,5 @@ services:
   #   volumes:
   #     - postgres_data:/var/lib/postgresql/data
 
-# volumes:
-#   postgres_data:
+  # volumes:
+  #   postgres_data:

@@ -45,7 +45,7 @@ A versatile video transcoding service that converts videos to various formats us
 
    # Start the container
    docker run -d -p 8000:8000 \
-     -v E:/test/:/app/storage \
+     -v E:/test/:/storage \
      baladockerbytes/video-transcoder:latest
    ```
 
@@ -73,7 +73,7 @@ A versatile video transcoding service that converts videos to various formats us
        ports:
          - "8000:8000"
        volumes:
-          - ./storage:/app/storage
+          - ./storage:/storage
        restart: unless-stopped
    ```
 
@@ -92,7 +92,7 @@ E:\>mkdir test\temp
 E:\>mkdir test\outputs
 
 docker run -d -p 8000:8000 \
-  -v E:/test/:/app/storage \
+  -v E:/test/:/storage \
   ghcr.io/mediatools-tech/video-transcoder:latest
 ```
 
@@ -101,9 +101,9 @@ docker run -d -p 8000:8000 \
 ```yaml
 # Alternative: Mount specific directories
 volumes:
-  - ./my_uploads:/app/storage/uploads    # Custom uploads location
-  - ./my_outputs:/app/storage/outputs    # Custom outputs location
-  - ./my_temp:/app/storage/temp          # Custom temporary files location
+  - ./my_uploads:/storage/uploads    # Custom uploads location
+  - ./my_outputs:/storage/outputs    # Custom outputs location
+  - ./my_temp:/storage/temp          # Custom temporary files location
 ```
 
 ## 🔌 API Reference
@@ -161,7 +161,7 @@ ws.onmessage = (event) => {
 ### Inside Container
 
 ```
-/app/storage/           # Main data directory
+/storage/                # Main data directory
 ├── uploads/            # Uploaded files for transcoding
 ├── outputs/            # Transcoded output files
 └── temp/               # Temporary files during transcoding
@@ -169,7 +169,7 @@ ws.onmessage = (event) => {
 
 ### On Your Host System
 
-By default, all data is stored in a single `./storage` folder that is mounted to `/app/storage` inside the container. You can customize this by modifying the volume mounts.
+By default, all data is stored in a single `./storage` folder that is mounted to `/storage` inside the container. You can customize this by modifying the volume mounts.
 
 ## 🛠️ Development
 
@@ -185,7 +185,7 @@ docker build -t mediatools-transcoder .
 
 # Run with development mounts
 docker run -d -p 8000:8000 \
-  -v "$(pwd)/storage":/app/storage \
+  -v "$(pwd)/storage":/storage \
   -v "$(pwd)/api":/app/api \
   -v "$(pwd)/frontend":/app/frontend \
   mediatools-transcoder

@@ -246,4 +246,3 @@ src/mediatools/video/transcoder/bin/ffprobe*
 src/mediatools/video/transcoder/transcoded/*
 temp
 temp/*
-

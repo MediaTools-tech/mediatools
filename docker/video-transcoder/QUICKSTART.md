@@ -36,11 +36,11 @@ This method uses a pre-built Docker image, ideal for users who just want to run 
 
 3.  **Run the Docker container:**
     ```bash
-    docker run -d -p 8000:8000 -v "$(pwd)/storage":/app/storage your-docker-hub-username/video-transcoder:latest
+    docker run -d -p 8000:8000 -v "$(pwd)/storage":/storage your-docker-hub-username/video-transcoder:latest
     ```
     -   `-d`: Runs the container in detached mode (in the background).
     -   `-p 8000:8000`: Maps port 8000 on your host to port 8000 in the container.
-    -   `-v "$(pwd)/storage":/app/storage`: Mounts your local `storage` directory to `/app/storage` inside the container. This ensures your files are saved and persist even if the container is removed. On Windows, use `"%cd%\storage"` instead of `$(pwd)/storage`.
+    -   `-v "$(pwd)/storage":/storage`: Mounts your local `storage` directory to `/storage` inside the container. This ensures your files are saved and persist even if the container is removed. On Windows, use `"%cd%\storage"` instead of `$(pwd)/storage`.
 
 4.  **Open browser:**
     Access the web application at: `http://localhost:8000`
