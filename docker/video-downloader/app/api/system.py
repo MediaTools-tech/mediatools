@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Optional, List
 import logging
 
-from app.core.settings_manager import settings_manager
+from core.settings_manager import settings_manager
 
 logger = logging.getLogger(__name__)
 
@@ -358,8 +358,8 @@ async def graceful_exit():
 @router.get("/health")
 async def health_check():
     """Health check endpoint."""
-    from app.core.download_service import download_service
-    from app.core.queue_manager import queue_manager
+    from core.download_service import download_service
+    from core.queue_manager import queue_manager
     
     return {
         "status": "healthy",

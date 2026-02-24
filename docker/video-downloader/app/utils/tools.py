@@ -12,7 +12,7 @@ import logging
 import requests
 from datetime import datetime, timedelta
 
-from app.core.settings_manager import settings_manager
+from core.settings_manager import settings_manager
 
 logger = logging.getLogger(__name__)
 

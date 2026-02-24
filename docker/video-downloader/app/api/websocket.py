@@ -104,7 +104,7 @@ def _safe_broadcast(message: Dict[str, Any]):
 
 def broadcast_queue_update():
     """Broadcast queue changes."""
-    from app.core.queue_manager import queue_manager
+    from core.queue_manager import queue_manager
     
     _safe_broadcast({
         "type": "queue_update",
@@ -156,9 +156,9 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     
     # Send initial status
-    from app.core.download_service import download_service
-    from app.core.queue_manager import queue_manager
-    from app.core.settings_manager import settings_manager
+    from core.download_service import download_service
+    from core.queue_manager import queue_manager
+    from core.settings_manager import settings_manager
     
     await manager.send_personal(websocket, {
         "type": "initial_state",
@@ -209,7 +209,7 @@ async def handle_client_message(websocket: WebSocket, message: Dict[str, Any]):
     
     elif msg_type == "get_status":
         # Client requests current status
-        from app.core.download_service import download_service
+        from core.download_service import download_service
         await manager.send_personal(websocket, {
             "type": "status_update",
             "data": download_service.get_status()
@@ -217,7 +217,7 @@ async def handle_client_message(websocket: WebSocket, message: Dict[str, Any]):
     
     elif msg_type == "get_queue":
         # Client requests queue status
-        from app.core.queue_manager import queue_manager
+        from core.queue_manager import queue_manager
         await manager.send_personal(websocket, {
             "type": "queue_update",
             "data": queue_manager.get_status()
@@ -237,8 +237,8 @@ def setup_callbacks():
     except RuntimeError:
         logger.error("Could not get event loop in setup_callbacks")
     
-    from app.core.download_service import download_service
-    from app.core.queue_manager import queue_manager
+    from core.download_service import download_service
+    from core.queue_manager import queue_manager
     
     # Set download service callbacks
     download_service.set_progress_callback(broadcast_status)

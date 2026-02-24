@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import Dict, Any, Optional
 import logging
 
-from app.core.settings_manager import settings_manager
+from core.settings_manager import settings_manager
 
 logger = logging.getLogger(__name__)
 

@@ -28,7 +28,7 @@ COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 
 # Copy application code
-COPY app/ ./app/
+COPY app/ .
 
 # Create storage directory structure and set ownership
 RUN mkdir -p /storage/{downloads,data,docs,bin} && \

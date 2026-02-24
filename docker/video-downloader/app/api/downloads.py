@@ -7,9 +7,9 @@ from pydantic import BaseModel, HttpUrl
 from typing import Optional
 import logging
 
-from app.core.download_service import download_service
-from app.core.download_context import DownloadStatus
-from app.core.queue_manager import queue_manager
+from core.download_service import download_service
+from core.download_context import DownloadStatus
+from core.queue_manager import queue_manager
 
 logger = logging.getLogger(__name__)
 

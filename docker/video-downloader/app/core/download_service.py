@@ -32,9 +32,9 @@ from spotipy.oauth2 import SpotifyOAuth
 import glob
 import traceback
 
-from app.core.settings_manager import settings_manager
-from app.core.queue_manager import queue_manager
-from app.core.download_context import (
+from core.settings_manager import settings_manager
+from core.queue_manager import queue_manager
+from core.download_context import (
     DownloadContext, DownloadStatus, DownloadType, 
     DownloadProgress, download_context
 )

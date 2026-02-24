@@ -8,7 +8,7 @@ from typing import List, Optional
 import logging
 from urllib.parse import unquote
 
-from app.core.queue_manager import queue_manager
+from core.queue_manager import queue_manager
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ async def get_failed_urls():
 @router.post("/retry/{url:path}")
 async def retry_failed_url(url: str, background_tasks: BackgroundTasks):
     """Move a failed URL back to the queue for retry."""
-    from app.core.download_service import download_service
+    from core.download_service import download_service
     
     decoded_url = unquote(url)
     success = queue_manager.retry_failed_url(decoded_url)
@@ -143,8 +143,8 @@ async def get_queue_status():
 @router.get("/session")
 async def check_session():
     """Check if there's a previous session with pending data."""
-    from app.core.settings_manager import settings_manager
-    from app.core.download_service import download_service
+    from core.settings_manager import settings_manager
+    from core.download_service import download_service
     
     # Only offer prompt if:
     # 1. Multisession support is enabled
@@ -184,7 +184,7 @@ class SessionActionRequest(BaseModel):
 @router.post("/session/action")
 async def handle_session_action(request: SessionActionRequest, background_tasks: BackgroundTasks):
     """Handle user action for previous session data."""
-    from app.core.download_service import download_service
+    from core.download_service import download_service
     
     action = request.action.lower()
     

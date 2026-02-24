@@ -33,10 +33,10 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Video Downloader Docker...")
     
     # Initialize core services
-    from app.core.settings_manager import settings_manager
-    from app.core.download_service import download_service
-    from app.utils.tools import tool_manager
-    from app.api.websocket import setup_callbacks
+    from core.settings_manager import settings_manager
+    from core.download_service import download_service
+    from utils.tools import tool_manager
+    from api.websocket import setup_callbacks
     
     # Set up WebSocket callbacks
     setup_callbacks()
@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down Video Downloader Docker...")
     try:
-        from app.core.download_service import download_service
+        from core.download_service import download_service
         download_service.cancel()
         logger.info("Active downloads cancelled.")
     except Exception as e:
@@ -90,7 +90,7 @@ if STATIC_DIR.exists():
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # Include API routers
-from app.api import downloads, queue, settings, system, websocket
+from api import downloads, queue, settings, system, websocket
 
 app.include_router(downloads.router)
 app.include_router(queue.router)
@@ -113,7 +113,7 @@ async def index(request: Request):
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
     """Settings page."""
-    from app.core.settings_manager import settings_manager
+    from core.settings_manager import settings_manager
     
     return templates.TemplateResponse("settings.html", {
         "request": request,
@@ -125,7 +125,7 @@ async def settings_page(request: Request):
 @app.get("/history", response_class=HTMLResponse)
 async def history_page(request: Request):
     """History page."""
-    from app.core.queue_manager import queue_manager
+    from core.queue_manager import queue_manager
     
     return templates.TemplateResponse("history.html", {
         "request": request,
@@ -140,8 +140,8 @@ async def history_page(request: Request):
 @app.get("/health")
 async def health_check():
     """Health check endpoint for Docker."""
-    from app.core.settings_manager import settings_manager
-    from app.core.download_service import download_service
+    from core.settings_manager import settings_manager
+    from core.download_service import download_service
     
     return {
         "status": "healthy",
@@ -167,7 +167,7 @@ async def not_found_handler(request: Request, exc):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "app.main:app",
+        "main:app",
         host="0.0.0.0",
         port=8000,
         # reload=True

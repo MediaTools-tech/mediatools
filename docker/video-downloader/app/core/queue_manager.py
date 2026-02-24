@@ -11,7 +11,7 @@ from typing import List, Optional, Tuple, Dict, Any
 import logging
 import re
 
-from app.core.settings_manager import settings_manager
+from core.settings_manager import settings_manager
 
 logger = logging.getLogger(__name__)
 
