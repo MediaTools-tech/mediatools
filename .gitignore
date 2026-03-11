@@ -223,26 +223,31 @@ apps/video/downloader/spotdl_cache
 src/mediatools/video/downloader/data/queue_old.txt
 
 clean_pycache.py
-supporting_images_for_doc
-*.json
+supporting_images_for_doc/
 walkthrough.md
-src/mediatools/video/downloader/data/settings.json
+
+# Application Data & Settings
+*.json
 src/mediatools/video/downloader/data/queue.txt
 src/mediatools/video/downloader/data/queue_old.txt
 src/mediatools/video/downloader/data/failed_url.txt
 src/mediatools/video/downloader/data/failed_url_old.txt
 src/mediatools/video/downloader/data/first_run.flag
+
+src/mediatools/video/transcoder/data/queue.txt
+src/mediatools/video/transcoder/data/first_run.flag
+
+# Build & Binaries (External tools)
 src/mediatools/video/downloader/bin/ffmpeg*
 src/mediatools/video/downloader/bin/ffprobe*
 src/mediatools/video/downloader/bin/yt-dlp*
 src/mediatools/video/downloader/bin/spotdl*
 src/mediatools/video/downloader/bin/deno*
-src/mediatools/video/downloader/downloads/*
-src/mediatools/video/transcoder/data/settings.json
-src/mediatools/video/transcoder/data/queue.txt
-src/mediatools/video/transcoder/data/first_run.flag
+
 src/mediatools/video/transcoder/bin/ffmpeg*
 src/mediatools/video/transcoder/bin/ffprobe*
-src/mediatools/video/transcoder/transcoded/*
-temp
-temp/*
+
+# Output & Temp Folders
+src/mediatools/video/downloader/downloads/
+src/mediatools/video/transcoder/transcoded/
+temp/
