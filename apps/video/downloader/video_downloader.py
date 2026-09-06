@@ -65,7 +65,7 @@ class VideoDownloaderApp:
         self.settings = self.initialize_settings()
         first_run_setup(self.settings)
 
-        self.is_downloading = False
+        self._queue_processing_lock = threading.Lock()
         self.is_updating = False
         self.latest_downloaded_video = None
         self.success_frame = None
@@ -153,7 +153,7 @@ class VideoDownloaderApp:
             download_path_temp=self.download_path_temp,
             stopdl_process=self.stopdl_process,
             current_process=self.current_process,
-            is_downloading=self.is_downloading,
+            is_downloading=False,
             is_stopped=self.is_stopped,
             is_paused=self.is_paused,
             is_resumed=self.is_resumed,
@@ -406,18 +406,13 @@ class VideoDownloaderApp:
             )
 
     def process_queue(self):
-        """Process all URLs in the download queue"""
-        # Add a lock to prevent multiple queue processing threads
-        if (
-            hasattr(self, "_queue_processing_lock")
-            and self._queue_processing_lock.locked()
-        ):
+        """Process all URLs in the download queue (single consumer)."""
+        if not self._queue_processing_lock.acquire(blocking=False):
             return
 
-        if not hasattr(self, "_queue_processing_lock"):
-            self._queue_processing_lock = threading.Lock()
-
-        with self._queue_processing_lock:
+        try:
+            if not os.path.exists(self.download_context.ytdlp_path):
+                return
             while (
                 self.q_manager.has_queued_urls()
                 and not self.download_context.is_downloading
@@ -426,7 +421,14 @@ class VideoDownloaderApp:
                 url, download_type = self.q_manager.get_next_url()
                 if url:
                     self.download_context.download_type = download_type
-                    self.download_service.download_video(url, download_type)
+                    handled = self.download_service.download_video(url, download_type)
+                    if handled is False:
+                        break
+        finally:
+            try:
+                self._queue_processing_lock.release()
+            except RuntimeError:
+                pass
 
     def update_status(
         self,

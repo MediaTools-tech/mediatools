@@ -1,5 +1,4 @@
 import os
-import re
 import threading
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -83,15 +82,16 @@ class QueueManager:
         check_files()
 
     def _parse_file(self, filename):
-        """Only called when file actually changed"""
+        """Only called when file actually changed (thread-safe)"""
         # Your existing file parsing logic here
         entries = []
         try:
-            with open(filename, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        entries.append(line)
+            with self.queue_lock:
+                with open(filename, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            entries.append(line)
         except FileNotFoundError:
             pass
         return entries
@@ -99,14 +99,23 @@ class QueueManager:
     def set_gui_context(self, gui_context):
         self.gui_context = gui_context
 
-    def update_button_display(self):
+    def update_button_display(self, queue_count=None, failed_count=None):
         """Update the queue button and failed url button with current count"""
-        self.gui_context.buttons["queue_btn"].config(
-            text=f"{self.style_manager.get_emoji('queue')} Queue ({self.get_queue_count()})"
-        )
-        self.gui_context.buttons["failed_url_btn"].config(
-            text=f"{self.style_manager.get_emoji('error')} Failed ({self.get_failed_url_count()})"
-        )
+        if not self.gui_context or not getattr(self.gui_context, "buttons", None):
+            return
+        try:
+            if queue_count is None:
+                queue_count = self.get_queue_count()
+            if failed_count is None:
+                failed_count = self.get_failed_url_count()
+            self.gui_context.buttons["queue_btn"].config(
+                text=f"{self.style_manager.get_emoji('queue')} Queue ({queue_count})"
+            )
+            self.gui_context.buttons["failed_url_btn"].config(
+                text=f"{self.style_manager.get_emoji('error')} Failed ({failed_count})"
+            )
+        except Exception:
+            pass
 
     def _init_file_paths(self):
         """Initialize file paths from settings"""
@@ -147,7 +156,12 @@ class QueueManager:
             return []
 
     def check_file_entries(self, filepath):
-        """Check for white spaces or missing newline in last line"""
+        """Check for missing newline in last line and normalize blank lines.
+
+        Queue files are line-based (one URL per line, optionally prefixed
+        with ``audio:``). URLs may legally contain commas, so never split
+        entries on commas or whitespace — only fix line endings.
+        """
         if not filepath or not os.path.exists(filepath):
             return
 
@@ -161,34 +175,13 @@ class QueueManager:
                 if not lines:
                     return
 
-                update_file = False
-                new_lines = []
-                
-                content_without_newline = content.replace('\n', '_')
-                # Check 1: If file has whitespace-separated entries (not line-by-line)
-                if any(c.isspace() for c in content_without_newline) or ',' in content_without_newline:
-                    # print(f"Found whitespace-or comma separated entries in {filepath}, normalizing...")
-                    # Process content to treat whitespaces as separators
-                    entries = re.split(r'[,\s]+', content)
-                    entries = [entry.strip() for entry in entries if entry.strip()]
-                    new_lines = entries
-                    update_file = True
-                    
-                # Check 2: If last line doesn't end with newline
-                if not content.endswith("\n"):
-                    # print(f"Last line missing newline in {filepath}, fixing...")
-                    new_lines = lines
-                    update_file = True
+                expected = "".join(f"{line}\n" for line in lines)
+                if content == expected:
+                    return
 
-                # else:
-                #     # File is already in good format
-                #     return
-
-            if update_file:
-                with open(filepath, "w", encoding="utf-8") as f:
-                    for line in new_lines:
-                        f.write(f"{line}\n")
-                # print(f"Normalized {len(new_lines)} entries in {filepath}")
+            with open(filepath, "w", encoding="utf-8") as f:
+                for line in lines:
+                    f.write(f"{line}\n")
 
         except Exception as e:
             print(f"Error checking entries in {filepath}: {e}")
@@ -399,18 +392,49 @@ class QueueManager:
             # download_type = parts[1] if len(parts) > 1 else "video"
             return url, download_type
 
-    def remove_url(self, url=None):
-        """Remove URL from queue (thread-safe)"""
+    @staticmethod
+    def _to_entry(url, download_type="video"):
+        """Build queue-file entry for a URL."""
+        url = (url or "").strip()
+        if url.startswith("audio:"):
+            return url
+        if download_type == "audio":
+            return "audio:" + url
+        return url
+
+    @staticmethod
+    def _entry_url(entry):
+        """Return raw URL without audio: prefix."""
+        if entry.startswith("audio:"):
+            return entry.removeprefix("audio:")
+        return entry
+
+    def remove_url(self, url=None, download_type=None):
+        """Remove URL from queue (thread-safe).
+
+        Returns True if an entry was removed, False otherwise.
+        Idempotent: removing an already-removed URL is a no-op.
+        """
         with self.queue_lock:
             urls = self._read_file_lines(self.queue_file)
-            if urls:
-                if url:
-                    # Remove specific URL
-                    urls = [u for u in urls if u.split(",")[0] != url]
+            if not urls:
+                return False
+            if url:
+                target = (url or "").strip()
+                target_bare = target.removeprefix("audio:")
+                if download_type:
+                    expected = self._to_entry(target, download_type)
+                    filtered = [u for u in urls if u != expected]
                 else:
-                    # Remove first URL
-                    urls = urls[1:]
-                self._write_file_lines(self.queue_file, urls)
+                    filtered = [u for u in urls if self._entry_url(u) != target_bare]
+                removed = len(filtered) != len(urls)
+                if removed:
+                    self._write_file_lines(self.queue_file, filtered)
+                return removed
+            else:
+                # Remove first URL (head == in-progress item)
+                self._write_file_lines(self.queue_file, urls[1:])
+                return True
 
     def get_queue_count(self):
         """Get number of URLs in queue (thread-safe)"""

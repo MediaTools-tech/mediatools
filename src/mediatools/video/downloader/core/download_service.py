@@ -180,9 +180,11 @@ class DownloadService:
         """
         Prepares and initiates the download for a given URL.
         Acts as a dispatcher to platform-specific handlers.
+        Returns True if the URL was dequeued/handled, False if skipped
+        (e.g. yt-dlp missing — caller must break to avoid busy-loop).
         """
         if not self.is_ytdlp_downloaded():
-            return
+            return False
 
         self._prepare_download_context(url, download_type)
         self._update_initial_gui_status(download_type)
@@ -205,12 +207,14 @@ class DownloadService:
                 0, lambda: self.context.update_status("Download failed", error=True)
             )
             self.queue_manager.add_failed_url(url, download_type, "Download failed")
-            self.queue_manager.remove_url()
+            self.queue_manager.remove_url(url, download_type)
+            return True
         finally:
             self.context.is_downloading = False
             self.root.after(
                 0, self.context.update_queue_display, self.context.status_label_fg
             )
+        return True
 
     def _get_url_type(self, url):
         """Determine the type of URL (spotify, youtube, or generic)."""
@@ -332,6 +336,8 @@ class DownloadService:
         num_of_tracks_skipped = 0
         num_of_tracks_succeeded = 0
         for i, track in enumerate(tracks):
+            if self.context.is_paused or self.context.is_stopped:
+                break
             if self.is_playlist_url:
                 self.video_index_in_playlist = i + 1
             youtube_url = track['youtube_url']
@@ -345,11 +351,16 @@ class DownloadService:
             if self.download(youtube_url, download_type):
                 num_of_tracks_succeeded += 1
                 self._post_process_downloaded_file(download_type, file_name_base)
+            elif self.context.is_paused or self.context.is_stopped:
+                break
             
         if self.is_playlist_url and (len(tracks) - num_of_tracks_skipped) > 0:
             self.create_m3u_playlist(collection_folder, self.context.download_path)
 
-        self.queue_manager.remove_url()
+        if self.context.is_paused or self.context.is_stopped:
+            self.is_yt_download = False
+            return
+        self.queue_manager.remove_url(url, download_type)
         if num_of_tracks_succeeded > 0:
             if self.is_playlist_url:
                 self.update_status_skipped_count_download_count(num_of_tracks_skipped, len(tracks))
@@ -398,13 +409,14 @@ class DownloadService:
                 self.context.final_filename_check = os.path.basename(final_file_path)
 
     def _handle_generic_download(self, url, download_type):
-        """Handles the download for generic URLs."""
-        if self.download(url, download_type):
-            self.queue_manager.remove_url()
+        """Handles the download for generic URLs. Single dequeue owner."""
+        success = self.download(url, download_type)
+        if self.context.is_paused or self.context.is_stopped:
+            return
+        # Dequeue exactly once by explicit URL (idempotent).
+        self.queue_manager.remove_url(url, download_type)
+        if success:
             self.update_status_download_complete()
-        else:
-            # Failure is already handled in download(), just need to remove from queue
-            self.queue_manager.remove_url()
 
     def is_ytdlp_downloaded(self):
         if not os.path.exists(self.context.ytdlp_path):
@@ -471,7 +483,6 @@ class DownloadService:
             if collection_type in ["episode", "show"]:
                 self.queue_manager.add_failed_url(url, download_type, "Spotify shows/podcasts not supported")
                 self.update_status_download_failed()
-                self.queue_manager.remove_url()
                 return
 
             urls_and_metadata = self.check_if_collection_id_json_file_exists(collection_id) if not is_single_track else None
@@ -495,7 +506,8 @@ class DownloadService:
             self.queue_manager.add_failed_url(url, download_type, "Download failed")
             self.update_status_download_failed()
         finally:
-            self.queue_manager.remove_url()
+            if not self.context.is_paused:
+                self.queue_manager.remove_url(url, download_type)
             self.context.is_downloading = False
             self.is_spotdl_download = False
 
@@ -751,7 +763,7 @@ class DownloadService:
                 self.url_extraction_status = "No activity detected for 15 minutes. Exiting extraction loop. Try using credentials."
                 self.queue_manager.add_failed_url(url, download_type, "Download failed")
                 self.update_status_download_failed()
-                self.queue_manager.remove_url()
+                self.queue_manager.remove_url(url, download_type)
                 if self.context.stopdl_process:
                     try:
                         self.stop_download_core(self.context.stopdl_process)
@@ -803,7 +815,7 @@ class DownloadService:
                         already_downloaded_tracks.append(spotdl_url)
                     elif already_downloaded_tracks == self.urls_spotdl and self.url_extraction_status == "done":
                         self.url_extraction_status = "exit"
-                        self.queue_manager.remove_url()
+                        self.queue_manager.remove_url(url, download_type)
                         self.update_status_download_complete()
                         self.context.is_downloading = False
                         self.is_spotdl_download = False
@@ -816,7 +828,7 @@ class DownloadService:
 
         if already_downloaded_tracks != self.urls_spotdl or self.url_extraction_status == "error":
             self.queue_manager.add_failed_url(url, download_type, "Download failed")
-            self.queue_manager.remove_url()
+            self.queue_manager.remove_url(url, download_type)
             self.update_status_download_failed()
             return
 
@@ -1604,7 +1616,7 @@ class DownloadService:
     def update_status_download_failed(self):
         self.root.after(
             0,
-            self.context.update_queue_display(fg=self.context.status_label_fg),
+            lambda: self.context.update_queue_display(fg=self.context.status_label_fg),
         )
         self.status_text = f"{self.style_manager.get_emoji('error')} Download Failed!."
         self.root.after(
@@ -1620,7 +1632,7 @@ class DownloadService:
     def update_status_download_complete(self):
         self.root.after(
             0,
-            self.context.update_queue_display(fg=self.context.status_label_fg),
+            lambda: self.context.update_queue_display(fg=self.context.status_label_fg),
         )
         self.status_text = f"✓ Download complete."
         self.root.after(
@@ -1635,7 +1647,7 @@ class DownloadService:
     def update_status_skipped_count_download_count(self, skipped_count, total_count):
         self.root.after(
             0,
-            self.context.update_queue_display(fg=self.context.status_label_fg),
+            lambda: self.context.update_queue_display(fg=self.context.status_label_fg),
         )
         self.status_text = f"✓ Download complete.   Duplicate tracks skipped {skipped_count},   Downloaded {total_count-skipped_count},   Out of {total_count}"
         self.root.after(
@@ -1650,7 +1662,7 @@ class DownloadService:
     def update_status_skipped(self, file_name):
         self.root.after(
             0,
-            self.context.update_queue_display(fg=self.context.status_label_fg),
+            lambda: self.context.update_queue_display(fg=self.context.status_label_fg),
         )
         self.status_text = f"File skipped. Already exists: {file_name}"
         self.root.after(
@@ -1988,7 +2000,11 @@ class DownloadService:
             self.context.update_status(status_text, percent=0)
 
     def _finalize_download(self, download_type):
-        """Handles final actions after a download attempt (success or failure)."""
+        """Handles final actions after a download attempt (success or failure).
+
+        Queue ownership lives in the _handle_* methods — this only sets
+        status text so a single download can never dequeue twice.
+        """
         if self.context.is_stopped or self.context.is_paused:
             status = "paused" if self.context.is_paused else "stopped"
             emoji = self.style_manager.get_emoji('pause' if self.context.is_paused else 'stop')
@@ -2001,12 +2017,9 @@ class DownloadService:
 
         if self.files_skipped_current > self.files_skipped_prev:
             self.status_text = "Skipped. Check if already downloaded"
-            if not self.is_spotdl_download:
-                self.queue_manager.remove_url()
             self.files_skipped_prev = self.files_skipped_current
         elif not self.is_spotdl_download and not self.is_yt_download:
              self.status_text = "✓ Download complete"
-             self.queue_manager.remove_url()
 
         if self.context.final_filename_check and self.check_files_exist_by_base(self.context.final_filename_check.rsplit('.', 1)[0], self.context.download_path):
              base_name = self.get_base_name_from_ytdlp_file(self.context.final_filename_check)
@@ -2566,8 +2579,8 @@ class DownloadService:
         else:
             self.context.is_stopped = True
             self.context.is_paused = False
-            # Get current URL and remove from queue
-            current_url = self.queue_manager.remove_url(current_url)
+            # Remove current URL from queue (no return value)
+            self.queue_manager.remove_url(current_url)
 
         # Stop the download process if active
         if process and self.context.is_downloading:
@@ -2925,7 +2938,7 @@ class DownloadService:
             # Update queue display immediately
             self.root.after(
                 0,
-                self.context.update_queue_display(fg=self.context.status_label_fg),
+                lambda: self.context.update_queue_display(fg=self.context.status_label_fg),
             )
 
             # Additional cleanup if needed

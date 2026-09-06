@@ -251,3 +251,5 @@ src/mediatools/video/transcoder/bin/ffprobe*
 src/mediatools/video/downloader/downloads/
 src/mediatools/video/transcoder/transcoded/
 temp/
+bug_report.md
+Prompt.txt
